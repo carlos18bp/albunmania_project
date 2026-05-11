@@ -3,136 +3,171 @@ trigger: manual
 description: Project intelligence and lessons learned. Reference for project-specific patterns, preferences, and key insights discovered during development.
 ---
 
-# Lessons Learned — Base Django React Next Feature
+# Lessons Learned — Albunmanía
 
-This file captures important patterns, preferences, and project intelligence that help work more effectively with this codebase. Updated as new insights are discovered.
-
----
-
-## 1. Architecture Patterns
-
-### Content Storage: Structured JSON over CMS
-- Proposal sections, portfolio works, and blog posts use Django `JSONField` for content
-- Each proposal section's `content_json` maps directly to a React component's props interface
-- Blog supports dual format: structured JSON (preferred) with HTML fallback via `dangerouslySetInnerHTML` (sanitized with DOMPurify)
-- This avoids the need for a full CMS while keeping content rich and structured
-
-### Single Django App: `content`
-- All models, views, serializers, and services live in the `content` app
-- This works for now but may need splitting if scope grows significantly
-- Models are already split into individual files under `content/models/`
-
-### Service Layer Pattern
-- Business logic lives in `content/services/`, not in views
-- Views are thin FBV wrappers that call service methods
+Patrones, preferencias e inteligencia del proyecto que ayudan a trabajar más eficazmente con este codebase. Se actualiza al detectar nuevos insights.
 
 ---
 
-## 2. Code Style & Conventions
+## 1. Patrones de arquitectura heredados del template (reusables verbatim)
 
-### Backend: Function-Based Views (FBV)
-- **All** DRF views use `@api_view` decorators, not class-based views
-- Never convert to CBV unless explicitly requested
+### Single Django app
+- Todo el dominio vive en `backend/albunmania_app/` (post-rename A2). Modelos, views, serializers, services bajo subdirectorios.
+- No hay split en múltiples Django apps todavía — el dominio del release 01 cabe en un solo app.
 
-### Frontend: Zustand Stores
-- State management uses Zustand with TypeScript
-- HTTP requests go through centralized API client in `lib/api/`
+### Service layer
+- Lógica de negocio en `services/`, **no** en views.
+- Views son thin wrappers FBV (`@api_view` + decoradores) que llaman a service methods.
+- Referencia: `services/email_service.py` del template.
 
-### Bilingual Content Pattern
-- Models have paired fields: `title_en`/`title_es`, `content_json_en`/`content_json_es`, etc.
-- Frontend reads the appropriate field based on current locale via `next-intl`
-- Proposals have a `language` field (`es`/`en`) that determines which default content to use
+### URLs split por dominio
+- `urls/<dominio>.py` (ej: `urls/auth.py`, `urls/captcha.py`) — no monolítico.
+- Registro central en `urls/__init__.py`.
 
-### Naming Conventions
-- Backend: snake_case for everything (Python standard)
-- Frontend components: PascalCase (`BusinessProposal/Greeting.tsx`)
-- Frontend hooks: camelCase with `use` prefix (`useExpirationTimer.ts`)
-- Frontend stores: camelCase (`useProposalStore.ts`)
+### Serializers split por operación
+- `<model>_list.py`, `<model>_detail.py`, `<model>_create_update.py` — uno por uso.
+- Permite distinta validación/campos por flujo sin condicionales.
+
+### Views function-based con DRF decorators
+- **Todas** las views usan `@api_view([...])` y `@permission_classes([...])`.
+- Nunca convertir a class-based views salvo petición explícita.
+
+### Management commands para fake data
+- Pattern: `create_<entity>.py` por modelo (factory-boy + faker).
+- Comando paraguas `create_fake_data` orquesta los individuales.
+- `delete_fake_data` protege superusers.
+
+### Test helpers compartidos
+- `conftest.py` global en `backend/` con fixtures cross-app (`api_client`, etc.).
+- Tests por capa: `tests/{models,serializers,views,services,utils,commands}/`.
 
 ---
 
-## 3. Development Workflow
+## 2. Convenciones de código
 
-### Backend Commands Always Need venv
+### Backend (Python)
+- snake_case en todo (PEP 8).
+- Lint con `ruff` (config heredada).
+- Imports absolutos siempre (no relativos).
+
+### Frontend (TypeScript)
+- Components: PascalCase (`SwipeCard.tsx`).
+- Hooks: camelCase con `use` (`useSwipeGesture.ts`).
+- Stores: camelCase (`authStore.ts`, `inventoryStore.ts`).
+- Tests colocados en `__tests__/` junto al archivo testeado.
+
+### Bilingual content (Albunmanía-specific)
+- Modelos con campos paralelos cuando aplica: `title_es`/`title_en`/`title_pt`.
+- Frontend lee según locale activo via `next-intl`.
+- Locale por defecto: `es` (mercado primario Colombia).
+
+---
+
+## 3. Workflow de desarrollo
+
+### Backend siempre con venv activo
 ```bash
-source venv/bin/activate && <command>
-# or
-venv/bin/python <command>
+source backend/venv/bin/activate && <command>
+# ej:
+source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/test_auth_endpoints.py -v
 ```
 
-### Huey Immediate Mode in Development
-- When `DJANGO_ENV != 'production'`, Huey tasks execute synchronously
-- No need to run Redis or Huey worker for development
-- Tasks still need to be importable and functional
+### Huey en modo inmediato en desarrollo
+- Si `DJANGO_ENV != 'production'`, las tareas Huey se ejecutan **síncronamente** en el mismo proceso.
+- No requiere Redis ni worker separado para dev.
+- Las tareas siguen necesitando ser importables y funcionar.
 
-### Frontend Dev Proxy
-- Next.js proxies `/api`, `/admin`, `/static`, `/media` to Django at `127.0.0.1:8000`
-- Both servers must be running simultaneously for full functionality
-- In production, everything goes through Django (no separate Next.js server)
+### Frontend dev proxy
+- Next.js proxy a Django en `127.0.0.1:8000` para `/api`, `/admin`, `/static`, `/media`.
+- Ambos servidores corriendo simultáneos en dev.
+- En producción todo va por Django (Nginx → Gunicorn).
 
-### Test Execution Rules
-- Never run the full test suite — always specify files
-- Backend: `pytest backend/content/tests/<specific_file> -v`
-- Frontend: `npm test -- <specific_file>`
-- E2E: max 2 files per `npx playwright test` invocation
-- Use `E2E_REUSE_SERVER=1` when dev server is already running
-
----
-
-## 4. Staging Deployment
-
-### Build Flow
-1. Frontend: `npm run build` → generates static output
-2. Backend: `python manage.py collectstatic` → copies to `backend/staticfiles/`
-3. Restart: `sudo systemctl restart base_django_react_next_feature_staging && sudo systemctl restart base_django_react_next_feature-staging-huey`
-
-### Django Serves Next.js Pages
-- The catch-all view in `base_feature_project/views.py` serves pre-rendered Next.js pages
-- This is the LAST URL pattern — all other routes take priority
+### Reglas duras de testing (del CLAUDE.md raíz)
+- **Nunca** `pytest` sin path. Siempre archivo o módulo específico.
+- **Backend**: `source venv/bin/activate && pytest path/to/test_file.py -v`.
+- **Frontend unit**: `npm test -- path/to/file.spec.ts`.
+- **E2E**: máximo 2 archivos por `npx playwright test`. Usar `E2E_REUSE_SERVER=1` si dev server ya corre.
+- Cada test verifica **UNA** conducta observable.
+- Mock solo en boundaries (APIs externas, clock, email).
+- AAA pattern: Arrange → Act → Assert.
 
 ---
 
-## 5. Email System
+## 4. Patrones específicos de Albunmanía (a establecer durante Bloque B)
 
-### Template Registry Pattern
-- All emails defined in `EmailTemplateRegistry` with default content
-- Admin can override content via `EmailTemplateConfig` model
-- Admin can disable specific emails via `is_active` flag
-- Preview rendering available for all templates
+### Bilingüismo del dominio
+- Modelos con descripción visible al usuario llevan campos `_es`/`_en`/`_pt` cuando aplica (ej: `Album.name`, `Sticker.name`).
+- Modelos internos (Match, Trade, AdImpression) sin variantes — son datos.
 
-### 24h Cooldown Rule
-- `last_automated_email_at` field on `BusinessProposal` tracks last automated email
-- All automated email tasks check this before sending
-- Manual sends (admin clicks "Send") bypass the cooldown
+### Inventario por toque (UX clave)
+- `UserSticker.count` semántica: 0 = falta, 1 = pegada, 2+ = repetida.
+- Sincronización **debounced** cliente → servidor cada 2s.
+- Conflictos: last-write-wins (no CRDT — release 01 no lo justifica).
 
-### Automations Pause
-- `automations_paused` flag on `BusinessProposal` stops all automated emails
-- Each Huey task checks this flag early and returns if paused
+### QR firmado con HMAC
+- Patrón estándar: payload JSON + `hashlib.hmac` con `DJANGO_SECRET_KEY` derivada.
+- Verificación server-side antes de aceptar match.
+- Para QRs públicos compartibles: incluir `expires_at` y firmar también la expiración.
+
+### Match offline (cache catálogo en SW)
+- Service Worker cachea catálogo del álbum activo + inventario propio en IndexedDB.
+- Cruce de inventarios al escanear QR cara-a-cara se hace **en cliente**, sin llamada al servidor.
+- Solo el `POST /api/v1/match/qr/confirm` requiere conexión.
+
+### Reseñas: agregados cacheados en Profile
+- Signal `post_save` y `post_delete` sobre `Review` recalcula `Profile.rating_avg`, `rating_count`, `positive_pct`.
+- Operación atómica (UPDATE single-row).
+- Idempotente — si falla a mitad, próxima reseña recalcula desde cero.
+- Evita N+1 al renderizar listas en Match (Swipe Card incluye preview compacto).
+
+### Banner CPM frecuencia
+- Server-side decide qué banner mostrar (rotación ponderada + segmentación geo + presupuesto).
+- Cliente respeta frecuencia local: máximo 1 banner cada 5 swipes (contador en Zustand store).
 
 ---
 
-## 6. Proposal System Specifics
+## 5. Anti-patrones explícitos a evitar
 
-### Section Types Are Fixed
-- 12 section types defined in `ProposalSection.SectionType` choices
-- Each maps to a specific React component in `components/BusinessProposal/`
-- Unique together constraint: `(proposal, section_type)` — one of each per proposal
-
-### Heat Score (1-10)
-- Pre-computed and cached in `cached_heat_score` field
-- Updated by tracking endpoint and periodic task (`refresh_all_heat_scores`)
-- Based on: view count, section time, recency, engagement patterns
+- ❌ **No** convertir views a class-based.
+- ❌ **No** usar raw SQL con input del usuario (siempre ORM o `cursor.execute` con `%s` parametrizado).
+- ❌ **No** desactivar CSRF globalmente. Solo `@csrf_exempt` en webhooks externos con verificación de firma.
+- ❌ **No** exponer `fields = '__all__'` en serializers — siempre lista explícita (evita leak de password hashes, tokens, fechas internas).
+- ❌ **No** correr `pytest` sin path.
+- ❌ **No** generar PR sin actualizar `tasks/active_context.md`.
+- ❌ **No** agregar features no pedidas en la épica activa (scope creep).
+- ❌ **No** introducir abstracciones para hipotéticos casos futuros (3 líneas similares > abstracción prematura).
+- ❌ **No** comentarios que repitan el qué (el código ya lo dice). Solo el por qué cuando no es obvio.
 
 ---
 
-## 7. Testing Insights
+## 6. Decisiones de diseño Albunmanía-specific (acumuladas)
 
-### Backend conftest.py
-- Custom coverage report with Unicode progress bars replaces default pytest-cov output
-- `api_client` fixture provides unauthenticated DRF APIClient
-- Content tests have their own `conftest.py` with model-specific fixtures
+### Por qué `is_visible` en Review en vez de soft-delete
+- Trazabilidad histórica para auditoría y disputas legales.
+- Las reseñas ocultas siguen contabilizando para integridad pero no afectan agregados públicos.
+- Permite restauración rápida si la moderación se equivoca.
 
-### E2E Flow Definitions
-- Every navigation flow must be registered in `docs/USER_FLOW_MAP.md` and `frontend/e2e/flow-definitions.json`
-- E2E tests must reflect real user integrations
-- Follow quality standards from `docs/TESTING_QUALITY_STANDARDS.md`
+### Por qué WhatsApp deep links sin API empresarial
+- Cero costo recurrente de WhatsApp Business API.
+- Opt-in mutuo por trade respeta privacidad sin necesidad de número verificado.
+- Cierre del intercambio sucede en el canal donde la comunidad ya está cómoda.
+
+### Por qué Web Push estándar W3C (no Firebase FCM)
+- Datos propios, sin intermediario externo.
+- VAPID es estándar y soportado por todos los navegadores principales.
+- Sin lock-in con Google.
+
+### Por qué AdImpression particionada por mes
+- Tabla más caliente del sistema durante el Mundial (impresiones por usuario por slot por día).
+- Particionado mensual permite queries rápidas + archivado/drop trivial.
+- Reportes a anunciantes filtran por mes naturalmente.
+
+---
+
+## 7. Insights heredados del bootstrap (mayo 2026)
+
+- El template `base_django_react_next_feature` traía 6 modelos demo (Blog, Product, Sale, User, PasswordCode, StagingPhaseBanner) — solo User y PasswordCode se conservan.
+- El template usa **reCAPTCHA**; Albunmanía exige **hCaptcha** según propuesta. Migración mínima de var names + paquete pip.
+- El template trae custom `django_attachments` app — se reusa para covers de álbumes, imágenes de cromos y avatars (no reinventar).
+- `easy-thumbnails` ya configurado con aliases small/medium/large — reutilizar para cromos.
+- `django-cleanup` evita archivos huérfanos al borrar registros — clave para storage limpio.
