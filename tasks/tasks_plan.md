@@ -7,7 +7,7 @@
 - **Bootstrap**: ✅ completado (commits `4170de8` → `fb51414`).
 - **Cleanup pre-desarrollo (Bloque A)**: ✅ completado (commits `0d2d857` → `8084a4d`), pusheado a `origin/master`.
 - **Implementación Release 01 (Bloque B)**: 🟡 en curso.
-  - Sprint 1: Epic 1 ✅ completada (commits `f94434c` → `424a160`). Epics 2/6/10 pendientes.
+  - Sprint 1: ✅ **completo** — Epic 1 (commits `f94434c`→`424a160`), Epic 2 backend (`3053345`), tests backend (`5fada27`), Epic 2/6/10 frontend (esta sesión).
 
 ## Bloque A — Cleanup pre-desarrollo (8 fases)
 
@@ -29,9 +29,9 @@
 | Epic | Nombre | Estado | Dependencias | Notas |
 |------|--------|--------|--------------|-------|
 | **1** | Auth & Onboarding | ✅ done | A6 (allauth, hcaptcha) | Commits f94434c→424a160. Cobertura módulos nuevos ≥89%. Suite backend 152/152, frontend 124/124 verde. |
-| **2** | Catálogo Multi-Álbum & Inventario | ⚪ pending | Epic 1 | BATCH paralelo tras Epic 1 |
-| **6** | Presenting Sponsor | ⚪ pending | Epic 1 | BATCH paralelo tras Epic 1 |
-| **10** | Dark mode + theming dinámico | ⚪ pending | Epic 1 | BATCH paralelo tras Epic 1 |
+| **2** | Catálogo Multi-Álbum & Inventario | ✅ done | Epic 1 | Backend + frontend + tests. Inventory tap debounced 2s, badge edición especial, filtros. |
+| **6** | Presenting Sponsor | ✅ done | Epic 1 | Sponsor model + endpoint público + admin gated, splash + header band + theming dinámico. |
+| **10** | Dark mode + theming dinámico | ✅ done | Epic 1 | next-themes (preexistente) + capa Sponsor CSS vars en `SponsorThemeProvider`. |
 
 ### Sprint 2 — Match + comunicación
 

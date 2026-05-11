@@ -321,10 +321,10 @@ Creación, venta y canje de tarjetas de regalo digitales con saldo configurable,
   - [ ] Soporte multi-idioma nativo — Estructura preparada para servir todo el contenido del sitio en dos o más idiomas, con selector de idioma visible y persistencia de preferencia del usuario.
   - [ ] Flujo de traducción integrado — Panel administrativo para gestionar las traducciones de cada sección sin necesidad de intervención técnica, con indicador de contenido pendiente por traducir.
   - [ ] Detección automática de idioma — El sitio detecta el idioma preferido del navegador del visitante y lo redirige automáticamente a la versión correspondiente, mejorando la experiencia desde el primer momento.
-- [ ] **Motor de Tematización Dinámica (Dark Mode)** (+20%) — Albunmanía con modo claro y oscuro automático según la preferencia del sistema operativo del usuario. Estándar absoluto en apps de coleccionistas (Album Master, Control Álbum) — reduce la fatiga visual durante sesiones largas de match y refuerza la percepción de marca premium.
-  - [ ] Paleta de colores dual — Diseño de dos sistemas de color completos (claro y oscuro) con variables CSS que se alternan de forma instantánea, manteniendo coherencia visual en ambos modos.
-  - [ ] Detección automática de preferencia del sistema — El sitio detecta la preferencia de tema del sistema operativo del usuario (prefers-color-scheme) y aplica el modo correspondiente desde la primera visita.
-  - [ ] Persistencia de elección del usuario — La preferencia manual del usuario se almacena y respeta en futuras visitas, prevaleciendo sobre la configuración del sistema operativo.
+- [x] **Motor de Tematización Dinámica (Dark Mode)** (+20%) — Albunmanía con modo claro y oscuro automático según la preferencia del sistema operativo del usuario. Estándar absoluto en apps de coleccionistas (Album Master, Control Álbum) — reduce la fatiga visual durante sesiones largas de match y refuerza la percepción de marca premium.
+  - [x] Paleta de colores dual — Diseño de dos sistemas de color completos (claro y oscuro) con variables CSS que se alternan de forma instantánea, manteniendo coherencia visual en ambos modos.
+  - [x] Detección automática de preferencia del sistema — El sitio detecta la preferencia de tema del sistema operativo del usuario (prefers-color-scheme) y aplica el modo correspondiente desde la primera visita.
+  - [x] Persistencia de elección del usuario — La preferencia manual del usuario se almacena y respeta en futuras visitas, prevaleciendo sobre la configuración del sistema operativo.
   - [ ] Transición fluida entre modos — Animación suave y elegante al alternar entre modo claro y oscuro, sin parpadeos ni saltos visuales que interrumpan la experiencia de navegación.
   - [ ] Adaptación de imágenes y multimedia — Las imágenes, íconos y elementos gráficos se ajustan automáticamente al modo activo, optimizando contraste y legibilidad en cada contexto.
 - [ ] **Chat en Vivo First-Party** (+40%) — Sistema de chat en tiempo real completamente alojado en la infraestructura del cliente — sin Intercom, Drift ni LiveChat — donde los agentes atienden desde el mismo panel administrativo. Los datos son 100% propios, sin costos de suscripción crecientes ni riesgo de que la herramienta muestre anuncios de competidores.
@@ -381,15 +381,15 @@ Flujo de ingreso restringido a cuentas Google verificadas con más de 30 días d
 
 Catálogo del álbum precargado con búsqueda predictiva, ediciones especiales destacadas y registro de inventario por toque rápido (0 / 1 / 2+).
 
-- [ ] **Catálogo del álbum con filtros** — Vista del catálogo completo con filtros por equipo, número, jugador, disponibilidad y radio de proximidad. Paginación y vista de tarjetas con badge de edición especial.
+- [x] **Catálogo del álbum con filtros** — Vista del catálogo completo con filtros por equipo, número, jugador, disponibilidad y radio de proximidad. Paginación y vista de tarjetas con badge de edición especial.
 
   - Configuración: Filtros aplicados via query params. Lazy load de imágenes de cromos. Cacheable en Service Worker para acceso offline.
 
-- [ ] **Contador rápido 0/1/2+ por toque** — El usuario marca su inventario tocando cada cromo. Un toque = pegada (1), segundo toque = repetida (2+), pulsación larga = borra. UX inspirada en Album Master, optimizada para velocidad.
+- [x] **Contador rápido 0/1/2+ por toque** — El usuario marca su inventario tocando cada cromo. Un toque = pegada (1), segundo toque = repetida (2+), pulsación larga = borra. UX inspirada en Album Master, optimizada para velocidad.
 
   - Configuración: Estado local optimista en cliente con sincronización debounced al backend cada 2 segundos. Conflictos last-write-wins.
 
-- [ ] **Ediciones especiales destacadas** — Láminas premium (Mbappé, escudo metalizado, lámina 00, edición Coca-Cola) con halo dorado, valor estimado de mercado y filtro dedicado.
+- [x] **Ediciones especiales destacadas** — Láminas premium (Mbappé, escudo metalizado, lámina 00, edición Coca-Cola) con halo dorado, valor estimado de mercado y filtro dedicado.
 
   - Configuración: Campos is_special_edition, special_tier y market_value_estimate en Sticker. UI diferencia visualmente con animación dorada.
 
@@ -459,13 +459,13 @@ Gestión completa del rol Comerciante: alta, perfil, listing en mapa, suscripci�
 
 Configuración del branding del Presenting Sponsor: logo en splash, header persistente discreto, colores y mensajes en comunicaciones oficiales.
 
-- [ ] **Configuración del Presenting Sponsor** — El Web Manager configura la marca activa: logo, colores primario/secundario, texto del mensaje, vigencia. Solo un sponsor activo a la vez.
+- [x] **Configuración del Presenting Sponsor** — El Web Manager configura la marca activa: logo, colores primario/secundario, texto del mensaje, vigencia. Solo un sponsor activo a la vez.
 
   - Configuración: Aplicación dinámica de colores via CSS variables. Logo servido como imagen optimizada con fallback. Vigencia controlada por active_from/active_until.
 
-- [ ] **Splash screen con logo del sponsor** — Al abrir la PWA, el splash screen muestra logo de Albunmanía + 'Presentado por [Marca]' con la paleta del sponsor.
+- [x] **Splash screen con logo del sponsor** — Al abrir la PWA, el splash screen muestra logo de Albunmanía + 'Presentado por [Marca]' con la paleta del sponsor.
 
-- [ ] **Header persistente discreto** — Banda inferior o lateral con 'Presentado por [Logo]' visible en todas las pantallas, sin invadir UX.
+- [x] **Header persistente discreto** — Banda inferior o lateral con 'Presentado por [Logo]' visible en todas las pantallas, sin invadir UX.
 
 - [ ] **Branding sutil en notificaciones oficiales** — Emails y notificaciones push oficiales incluyen pie con 'Albunmanía + [Marca]'.
 
