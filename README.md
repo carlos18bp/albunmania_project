@@ -1,8 +1,8 @@
-# 🚀 Base Django React Next Feature
+# 🚀 Albunmanía
 
-> Base template for developing projects with Django REST Framework + Next.js + React
+> Plataforma comunitaria PWA para intercambio de cromos del Mundial 26 en Colombia y Latinoamérica.
 
-This repository serves as a foundation for rapid implementation of future projects using Django backend and Next.js + React frontend, with RESTful architecture and JWT authentication.
+Albunmanía conecta coleccionistas a través de match dual (swipe por proximidad + QR presencial en cambiatones), catálogo del álbum precargado y cierre de intercambios vía WhatsApp con opt-in. El proyecto, encargado por **ProjectApp**, combina una experiencia móvil instalable con tres motores de monetización (Presenting Sponsor anchor, Listing de Comerciantes y Banners CPM) y panel administrativo multi-rol (Coleccionista, Comerciante, Web Manager, Admin) sobre stack Django + DRF y Next.js + React + TypeScript.
 
 [![Django](https://img.shields.io/badge/Django-6.0+-092E20?style=flat&logo=django)](https://www.djangoproject.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16+-000000?style=flat&logo=next.js)](https://nextjs.org/)
@@ -1061,7 +1061,9 @@ The project includes complete documentation:
 
 ## 🎯 Reference Projects
 
-Real implementation examples built on top of this base:
+> **REVIEW** — esta sección viene del template base. Mantener solo si aporta contexto a los desarrolladores nuevos de Albunmanía; en caso contrario eliminar al promover a staging.
+
+Implementaciones de referencia construidas sobre el template base:
 
 ### Health & Fitness
 - [💪 KORE Health](https://github.com/carlos18bp/kore_project) — Personalized health platform with subscription billing, biomechanical evaluations (KORE Index), Wompi payments, and role-based access (CUSTOMER / TRAINER / ADMIN)
@@ -1082,30 +1084,7 @@ Real implementation examples built on top of this base:
 
 ## 🔧 Customization
 
-### Change Project Name
-
-If you want to use this base for a new project:
-
-1. **Search and replace** all occurrences of `base_feature`:
-
-```bash
-# Use ag (the silver searcher) or grep
-ag base_feature
-# Or
-grep -r "base_feature" .
-
-# Replace in files
-find . -type f -exec sed -i 's/base_feature/your_new_name/g' {} +
-```
-
-2. **Rename directories**:
-
-```bash
-mv backend/base_feature_project backend/your_project
-mv backend/base_feature_app backend/your_app
-```
-
-3. **Update imports** in Python and references in configuration.
+> **CANDIDATA A BORRADO** — la customization de nombre ya se ejecutó al bootstrappear Albunmanía con `/new-project-setup`. Conservar solo las subsecciones genéricas ("Add New Models", "Add New Pages") si siguen siendo útiles, o eliminar la sección completa al promover a staging.
 
 ### Add New Models
 
@@ -1180,4 +1159,4 @@ This project is under the MIT License. See `LICENSE` file for more details.
 
 **⭐ If this project helps you, consider giving it a star!**
 
-*Last updated: February 2026*
+*Last updated: May 2026*
