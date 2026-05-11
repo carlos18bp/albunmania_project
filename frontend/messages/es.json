@@ -38,6 +38,19 @@
     "forgotPassword": "Olvidé mi contraseña",
     "invalidCredentials": "Credenciales inválidas. Intenta de nuevo."
   },
+  "catalog": {
+    "title": "Catálogo",
+    "edition": "Edición {year}",
+    "totalStickers": "{count} cromos",
+    "search": "Buscar por nombre o número…",
+    "filterTeam": "Equipo",
+    "filterSpecialOnly": "Solo ediciones especiales",
+    "empty": "No hay cromos que coincidan con los filtros.",
+    "tapHint": "Toca un cromo para marcarlo (1 ✓), tócalo otra vez para repetidos (2×, 3×…). Mantén presionado para borrar.",
+    "stateMissing": "faltante",
+    "statePasted": "pegado",
+    "stateRepeated": "repetido"
+  },
   "onboarding": {
     "step1Title": "Elige tu álbum activo",
     "step2Title": "Permitir geolocalización",

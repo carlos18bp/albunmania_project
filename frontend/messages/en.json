@@ -38,6 +38,19 @@
     "forgotPassword": "Forgot password",
     "invalidCredentials": "Invalid credentials. Please try again."
   },
+  "catalog": {
+    "title": "Catalogue",
+    "edition": "{year} edition",
+    "totalStickers": "{count} stickers",
+    "search": "Search by name or number…",
+    "filterTeam": "Team",
+    "filterSpecialOnly": "Special editions only",
+    "empty": "No stickers match these filters.",
+    "tapHint": "Tap a sticker to mark it (1 ✓), tap again for repeats (2×, 3×…). Long press to clear.",
+    "stateMissing": "missing",
+    "statePasted": "pasted",
+    "stateRepeated": "repeated"
+  },
   "onboarding": {
     "step1Title": "Pick your active album",
     "step2Title": "Allow geolocation",

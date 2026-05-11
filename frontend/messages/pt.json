@@ -38,6 +38,19 @@
     "forgotPassword": "Esqueci minha senha",
     "invalidCredentials": "Credenciais inválidas. Tente novamente."
   },
+  "catalog": {
+    "title": "Catálogo",
+    "edition": "Edição {year}",
+    "totalStickers": "{count} figurinhas",
+    "search": "Buscar por nome ou número…",
+    "filterTeam": "Time",
+    "filterSpecialOnly": "Apenas edições especiais",
+    "empty": "Nenhuma figurinha corresponde aos filtros.",
+    "tapHint": "Toque numa figurinha para marcá-la (1 ✓), toque outra vez para repetidas (2×, 3×…). Pressione e segure para apagar.",
+    "stateMissing": "faltando",
+    "statePasted": "colada",
+    "stateRepeated": "repetida"
+  },
   "onboarding": {
     "step1Title": "Escolha seu álbum ativo",
     "step2Title": "Permitir geolocalização",
