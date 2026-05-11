@@ -7,6 +7,20 @@ export const metadata: Metadata = {
   title: 'Albunmanía — Intercambio de cromos del Mundial 26',
   description:
     'Plataforma comunitaria PWA para intercambio de cromos del Mundial 26 en Colombia y Latinoamérica. Match dual swipe + QR presencial, cierre por WhatsApp.',
+  manifest: '/manifest.webmanifest',
+  themeColor: '#0b0b10',
+  appleWebApp: {
+    capable: true,
+    title: 'Albunmanía',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/icon-512.png', sizes: '512x512' }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
