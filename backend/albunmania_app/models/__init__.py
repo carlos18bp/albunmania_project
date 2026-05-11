@@ -10,6 +10,10 @@ from .match import Match
 from .like import Like
 from .trade import Trade
 from .trade_whatsapp_optin import TradeWhatsAppOptIn
+from .merchant_subscription_payment import MerchantSubscriptionPayment
+from .ad_campaign import AdCampaign
+from .ad_creative import AdCreative
+from .ad_impression import AdClick, AdImpression
 
 __all__ = [
     'User',
@@ -24,4 +28,9 @@ __all__ = [
     'Like',
     'Trade',
     'TradeWhatsAppOptIn',
+    'MerchantSubscriptionPayment',
+    'AdCampaign',
+    'AdCreative',
+    'AdImpression',
+    'AdClick',
 ]

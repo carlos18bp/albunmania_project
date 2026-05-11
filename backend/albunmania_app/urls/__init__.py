@@ -14,4 +14,6 @@ urlpatterns = [
     path('', include('albunmania_app.urls.trade')),
     path('', include('albunmania_app.urls.trade_whatsapp')),
     path('', include('albunmania_app.urls.stats')),
+    path('', include('albunmania_app.urls.merchant')),
+    path('', include('albunmania_app.urls.ad')),
 ]
