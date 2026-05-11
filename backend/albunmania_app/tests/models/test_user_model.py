@@ -3,10 +3,10 @@ from django.contrib.auth import get_user_model
 
 
 @pytest.mark.django_db
-def test_user_default_role_customer():
+def test_user_default_role_collector():
     User = get_user_model()
     user = User.objects.create_user(email='user@example.com', password='pass1234')
-    assert user.role == User.Role.CUSTOMER
+    assert user.role == User.Role.COLLECTOR
 
 
 @pytest.mark.django_db

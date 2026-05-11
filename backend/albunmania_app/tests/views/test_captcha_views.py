@@ -34,7 +34,7 @@ def test_get_site_key_returns_empty_when_unset(api_client, settings):
 
 
 @pytest.mark.django_db
-@patch('albunmania_app.views.captcha_views.verify_recaptcha', return_value=True)
+@patch('albunmania_app.views.captcha_views.verify_hcaptcha', return_value=True)
 def test_verify_captcha_success(mock_verify, api_client):
     """Return success when captcha token is valid."""
     url = reverse('captcha-verify')
@@ -46,7 +46,7 @@ def test_verify_captcha_success(mock_verify, api_client):
 
 
 @pytest.mark.django_db
-@patch('albunmania_app.views.captcha_views.verify_recaptcha', return_value=False)
+@patch('albunmania_app.views.captcha_views.verify_hcaptcha', return_value=False)
 def test_verify_captcha_failure(mock_verify, api_client):
     """Return 400 when captcha token is invalid."""
     url = reverse('captcha-verify')
@@ -75,7 +75,7 @@ def test_verify_recaptcha_returns_false_without_token():
 def test_verify_recaptcha_returns_false_on_request_exception():
     """Return false when captcha provider request raises an exception."""
     with override_settings(RECAPTCHA_SECRET_KEY='secret'):
-        with patch('albunmania_app.views.captcha_views.requests.post', side_effect=requests.RequestException) as mock_post:
+        with patch('albunmania_app.services.captcha_service.requests.post', side_effect=requests.RequestException) as mock_post:
             assert verify_recaptcha('token') is False
         mock_post.assert_called_once()
 
@@ -84,11 +84,13 @@ def test_verify_recaptcha_returns_false_on_request_exception():
 def test_verify_recaptcha_returns_false_when_api_fails():
     """Return false when captcha provider response reports unsuccessful verification."""
     class ApiFailureResponse:
+        status_code = 200
+
         def json(self):
             return {'success': False}
 
     with override_settings(RECAPTCHA_SECRET_KEY='secret'):
-        with patch('albunmania_app.views.captcha_views.requests.post', return_value=ApiFailureResponse()) as mock_post:
+        with patch('albunmania_app.services.captcha_service.requests.post', return_value=ApiFailureResponse()) as mock_post:
             assert verify_recaptcha('token') is False
         mock_post.assert_called_once()
 

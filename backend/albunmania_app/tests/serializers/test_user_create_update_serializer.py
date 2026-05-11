@@ -13,7 +13,7 @@ def test_user_create_update_serializer_creates_with_password():
         'first_name': 'First',
         'last_name': 'Last',
         'phone': '123',
-        'role': User.Role.CUSTOMER,
+        'role': User.Role.COLLECTOR,
     }
 
     serializer = UserCreateUpdateSerializer(data=payload)
