@@ -14,6 +14,7 @@ from .merchant_subscription_payment import MerchantSubscriptionPayment
 from .ad_campaign import AdCampaign
 from .ad_creative import AdCreative
 from .ad_impression import AdClick, AdImpression
+from .review import REVIEW_TAGS, Review, ReviewReport
 
 __all__ = [
     'User',
@@ -33,4 +34,7 @@ __all__ = [
     'AdCreative',
     'AdImpression',
     'AdClick',
+    'Review',
+    'ReviewReport',
+    'REVIEW_TAGS',
 ]

@@ -3,10 +3,11 @@
 Wired in `apps.py` ready() so they load once at app start.
 """
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import MerchantProfile, Profile, User
+from .models import MerchantProfile, Profile, Review, User
+from .services.review_aggregates import recompute_for
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -31,3 +32,19 @@ def ensure_merchant_profile(sender, instance: User, created: bool, **kwargs):
     """
     if instance.role == User.Role.MERCHANT.value:
         MerchantProfile.objects.get_or_create(user=instance)
+
+
+@receiver(post_save, sender=Review)
+def recompute_aggregates_on_save(sender, instance: Review, **kwargs):
+    """Refresh Profile reputation aggregates after any Review change.
+
+    This catches both creation and edits (incl. moderator hides via
+    `is_visible=False`). The recompute reads from `Review` so it always
+    reflects the current visibility state.
+    """
+    recompute_for(instance.reviewee_id)
+
+
+@receiver(post_delete, sender=Review)
+def recompute_aggregates_on_delete(sender, instance: Review, **kwargs):
+    recompute_for(instance.reviewee_id)
