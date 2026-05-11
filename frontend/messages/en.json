@@ -38,6 +38,26 @@
     "forgotPassword": "Forgot password",
     "invalidCredentials": "Invalid credentials. Please try again."
   },
+  "merchants": {
+    "title": "Where to buy packs?",
+    "subtitle": "Stationeries, newsstands and official distributors with active subscription.",
+    "filterCity": "Filter by city…",
+    "empty": "No active merchants in this area yet.",
+    "myBusinessTitle": "My business",
+    "myBusinessSubtitle": "Update what collectors see on the map.",
+    "subscriptionActive": "Subscription active",
+    "subscriptionInactive": "Subscription inactive",
+    "fieldName": "Business name",
+    "fieldType": "Type",
+    "fieldAddress": "Address",
+    "fieldStock": "Declared stock",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Changes saved."
+  },
+  "ads": {
+    "label": "Sponsored"
+  },
   "whatsapp": {
     "optInTitle": "Share my WhatsApp for this trade",
     "optInBody": "Your number is shared only if the other person also accepts. Scoped to this match — you can revoke at any time.",

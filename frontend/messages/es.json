@@ -38,6 +38,26 @@
     "forgotPassword": "Olvidé mi contraseña",
     "invalidCredentials": "Credenciales inválidas. Intenta de nuevo."
   },
+  "merchants": {
+    "title": "¿Dónde comprar sobres?",
+    "subtitle": "Papelerías, kioscos y distribuidores oficiales con suscripción al día.",
+    "filterCity": "Filtrar por ciudad…",
+    "empty": "No hay comerciantes activos en esta zona todavía.",
+    "myBusinessTitle": "Mi negocio",
+    "myBusinessSubtitle": "Actualiza la información que verán los coleccionistas en el mapa.",
+    "subscriptionActive": "Suscripción activa",
+    "subscriptionInactive": "Suscripción inactiva",
+    "fieldName": "Nombre del negocio",
+    "fieldType": "Tipo",
+    "fieldAddress": "Dirección",
+    "fieldStock": "Stock declarado",
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "saved": "Cambios guardados."
+  },
+  "ads": {
+    "label": "Publicidad"
+  },
   "whatsapp": {
     "optInTitle": "Compartir mi WhatsApp para este intercambio",
     "optInBody": "Tu número solo se comparte si la otra persona también acepta. Vale solo para este match — puedes revocarlo en cualquier momento.",

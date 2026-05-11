@@ -38,6 +38,26 @@
     "forgotPassword": "Esqueci minha senha",
     "invalidCredentials": "Credenciais inválidas. Tente novamente."
   },
+  "merchants": {
+    "title": "Onde comprar pacotinhos?",
+    "subtitle": "Papelarias, bancas e distribuidores oficiais com assinatura ativa.",
+    "filterCity": "Filtrar por cidade…",
+    "empty": "Ainda não há comerciantes ativos nesta área.",
+    "myBusinessTitle": "Meu negócio",
+    "myBusinessSubtitle": "Atualize o que os colecionadores verão no mapa.",
+    "subscriptionActive": "Assinatura ativa",
+    "subscriptionInactive": "Assinatura inativa",
+    "fieldName": "Nome do negócio",
+    "fieldType": "Tipo",
+    "fieldAddress": "Endereço",
+    "fieldStock": "Estoque declarado",
+    "save": "Salvar alterações",
+    "saving": "Salvando…",
+    "saved": "Alterações salvas."
+  },
+  "ads": {
+    "label": "Publicidade"
+  },
   "whatsapp": {
     "optInTitle": "Compartilhar meu WhatsApp para esta troca",
     "optInBody": "Seu número só é compartilhado se a outra pessoa também aceitar. Vale só para este match — pode revogar a qualquer momento.",

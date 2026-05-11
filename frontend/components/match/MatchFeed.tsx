@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+import BannerSlot from '@/components/ads/BannerSlot';
+import { useAdStore } from '@/lib/stores/adStore';
 import { useMatchStore } from '@/lib/stores/matchStore';
 import MutualMatchModal from './MutualMatchModal';
 import SwipeCard from './SwipeCard';
@@ -16,9 +18,20 @@ export default function MatchFeed() {
   const lastMutual = useMatchStore((s) => s.lastMutual);
   const clearLastMutual = useMatchStore((s) => s.clearLastMutual);
 
+  const noteSwipe = useAdStore((s) => s.noteSwipe);
+  const [bannerKey, setBannerKey] = useState(0);
+  const [showBanner, setShowBanner] = useState(false);
+
   useEffect(() => {
     void fetchFeed();
   }, [fetchFeed]);
+
+  const noteAndMaybeShowBanner = () => {
+    if (noteSwipe()) {
+      setShowBanner(true);
+      setBannerKey((k) => k + 1);
+    }
+  };
 
   const candidate = feed[currentIndex];
 
@@ -46,6 +59,7 @@ export default function MatchFeed() {
   }
 
   const handleLike = () => {
+    noteAndMaybeShowBanner();
     const offered = candidate.stickers_offered[0];
     const wanted = candidate.stickers_wanted[0] ?? candidate.stickers_offered[0];
     if (!offered) {
@@ -55,9 +69,19 @@ export default function MatchFeed() {
     void swipeLike(candidate, offered, wanted);
   };
 
+  const handlePass = () => {
+    noteAndMaybeShowBanner();
+    swipePass();
+  };
+
   return (
     <div className="flex flex-col items-center gap-6">
-      <SwipeCard candidate={candidate} onLike={handleLike} onPass={swipePass} />
+      <SwipeCard candidate={candidate} onLike={handleLike} onPass={handlePass} />
+      {showBanner && (
+        <div className="w-full max-w-md" data-testid="feed-banner-wrapper">
+          <BannerSlot slot="feed" refreshKey={bannerKey} />
+        </div>
+      )}
       {lastMutual && lastMutual.mutual && (
         <MutualMatchModal
           matchId={lastMutual.match_id}

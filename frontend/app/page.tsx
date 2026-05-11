@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import BannerSlot from '@/components/ads/BannerSlot';
+
 export default function HomePage() {
   return (
     <main>
@@ -60,6 +62,10 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-6 py-6">
+        <BannerSlot slot="home" />
       </section>
     </main>
   );
