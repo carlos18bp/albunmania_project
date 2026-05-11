@@ -333,3 +333,39 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 ### `cannot_block_self` enforced server-side
 - El endpoint `POST /admin/users/{id}/active/` rechaza con 400 si `target.id == request.user.id`.
 - Razón: prevenir lockout accidental del único Web Manager. Listo para extender a "no se puede bloquear el último admin restante" en V2.
+
+---
+
+## 13. Decisiones cerradas en Epics 13 (Analítica/KPIs) + 14 (Manual interactivo)
+
+### Composite endpoint en lugar de uno por bloque
+- `/admin/analytics/overview/` devuelve los 7 bloques (community, ads, returning_vs_new, devices, top_stickers, matches_trend, heatmap) en un solo payload.
+- Razón: una request en lugar de siete reduce latencia perceptible y simplifica el frontend (un único loading state, un único error). Si en el futuro algún bloque crece a >1s, lo extraemos a su propio endpoint sin romper el contrato — el frontend simplemente puede ignorar ese campo.
+
+### Heatmap entrega coords, no imagen renderizada
+- El endpoint devuelve `[{lat, lng, weight}]` como JSON.
+- Razón: V1 simple sin sumar deps de visualización pesadas. La capa Leaflet con `leaflet.heat` queda para V2 — V1 expone los datos crudos para que el equipo los pueda explotar (export CSV, exportar a Tableau/Looker, etc).
+
+### Devices placeholder honesto, no inventado
+- Sin instrumentación de UA todavía, el bloque devuelve estimaciones razonables (78% mobile, 17% desktop, 5% tablet) marcadas con asterisco en la UI.
+- Razón: mejor que mostrar nada (rompe el grid del dashboard) o números falsos sin advertencia (engañan al equipo). Cuando se agregue tracking real de UA en `User`/`Session`, el cálculo se vuelve real sin tocar el frontend.
+
+### CSV export sincrónico en memoria
+- `csv.writer(StringIO())` arma el archivo en memoria y lo entrega como `Content-Disposition: attachment`.
+- Razón: para volúmenes esperados (<10k rows) es trivial y evita la complejidad de Huey + storage temporal + URL firmada. PDFs sí requerirán esa pipeline en V2.
+
+### MiniBarChart sin chart lib externa
+- Barras horizontales con `style.width = '${value/max*100}%'`. Etiqueta + valor en grid de 3 columnas.
+- Razón: cubre todos los charts del dashboard sin sumar `recharts` (~80kB) o `chart.js` (~70kB). Si más adelante necesitamos pie charts, sparklines, etc., evaluaremos una dep — pero hoy no.
+
+### Manual content separado del rendering (Epic 14)
+- El componente `ManualPage` y la búsqueda client-side ya estaban del Bloque A. Epic 14 fue puramente expansión de `lib/manual/content.ts` (un solo archivo, 9 secciones × 14 procesos).
+- Razón: el schema es estable y permite añadir contenido sin tocar JS. Aceptamos que el manual puede deriver de la realidad si nadie actualiza `content.ts` — mitigación: pull-request review check-list incluye "¿el manual sigue siendo correcto?".
+
+### Búsqueda por keywords explícitos, no por contenido full-text
+- Cada `ManualProcess` tiene `keywords: string[]`. La búsqueda matchea sobre keywords + título + summary.
+- Razón: contenido bilingüe en formato `{es, en}` complica un full-text genérico. Los keywords cubren los términos que el usuario buscaría (rol, verbo, sustantivo) en cualquiera de los dos idiomas. Funciona client-side sin index ni service.
+
+### CSV usa "Albunman" en vez de "Albunmanía" para tests case-insensitive
+- Bug encontrado en test: `b'albunmania' in res.content.lower()` falla porque `í` (UTF-8 0xC3 0xAD) no se lowercase a 'i'.
+- Fix: usar el prefijo `albunman` que matchea ambas escrituras. Lección: los tests de contenido bytes deben evitar caracteres ASCII-extended cuando el lowercase no preserva la equivalencia — o usar `.decode('utf-8').lower()` antes del match.

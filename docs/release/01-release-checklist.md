@@ -173,41 +173,41 @@ Panel administrativo para que el equipo de ProjectApp gestione contenido, los 3 
 
 Dashboard de métricas comunitarias y publicitarias en tiempo real para entender el comportamiento de Albunmanía y tomar decisiones basadas en datos.
 
-- [ ] **Cromos Más Buscados y Más Ofertados** — Identifica cuáles son los cromos con mayor demanda y oferta. Útil para medir 'rareza' percibida y planear campañas.
+- [x] **Cromos Más Buscados y Más Ofertados** — Identifica cuáles son los cromos con mayor demanda y oferta. Útil para medir 'rareza' percibida y planear campañas.
 
-- [ ] **Visitantes Nuevos vs. Recurrentes** — Mide la fidelización de la comunidad y evalúa el impacto de notificaciones push sobre el retorno a la plataforma.
+- [x] **Visitantes Nuevos vs. Recurrentes** — Mide la fidelización de la comunidad y evalúa el impacto de notificaciones push sobre el retorno a la plataforma.
 
-- [ ] **Dispositivos de la Audiencia** — Cuántos usuarios entran desde móvil, tablet o escritorio. Importante para priorizar la experiencia de la PWA.
+- [x] **Dispositivos de la Audiencia** — Cuántos usuarios entran desde móvil, tablet o escritorio. Importante para priorizar la experiencia de la PWA.
 
-- [ ] **Mapa de Calor de Actividad** — Visualiza dónde se concentran los coleccionistas activos. Insumo clave para vender publicidad a marcas con presencia local.
+- [x] **Mapa de Calor de Actividad** — Visualiza dónde se concentran los coleccionistas activos. Insumo clave para vender publicidad a marcas con presencia local.
 
 - [ ] **Fuentes de Tráfico** — De dónde llegan los usuarios: orgánico, redes sociales, enlaces directos o campañas. Permite invertir mejor en marketing.
 
-- [ ] **Tendencia de Matches e Intercambios** — Evolución de matches generados e intercambios completados en el tiempo. Indicador clave de salud de la comunidad.
+- [x] **Tendencia de Matches e Intercambios** — Evolución de matches generados e intercambios completados en el tiempo. Indicador clave de salud de la comunidad.
 
 ### Dashboard de KPIs y Métricas
 
 Panel de control complementario al módulo de analítica, con indicadores clave para monitorear la salud de la comunidad y la rentabilidad publicitaria de Albunmanía.
 
-- [ ] **KPIs Comunitarios en Tiempo Real** — Usuarios activos, matches generados, intercambios completados, % de álbumes completos, retención por cohorte.
+- [x] **KPIs Comunitarios en Tiempo Real** — Usuarios activos, matches generados, intercambios completados, % de álbumes completos, retención por cohorte.
 
-- [ ] **KPIs Publicitarios** — Impresiones, CTR, alcance geográfico y rendimiento por campaña. Métricas vendibles a anunciantes.
+- [x] **KPIs Publicitarios** — Impresiones, CTR, alcance geográfico y rendimiento por campaña. Métricas vendibles a anunciantes.
 
 - [ ] **Alertas de Rendimiento** — Notificaciones automáticas cuando una campaña cae bajo umbral o un KPI comunitario muestra anomalía.
 
-- [ ] **Exportación de Reportes** — Descarga de reportes en CSV/PDF para compartir con anunciantes, inversionistas o el equipo de ProjectApp.
+- [x] **Exportación de Reportes** — Descarga de reportes en CSV/PDF para compartir con anunciantes, inversionistas o el equipo de ProjectApp.
 
 ### Manual de Usuario Interactivo
 
 Wiki interactivo no técnico, con índice navegable y buscador, que describe los procesos, flujos, roles y reglas de Albunmanía. Pensado para que cualquier persona del equipo de ProjectApp entienda el sistema sin pedir ayuda al desarrollador.
 
-- [ ] **Buscador y Navegación por Índice** — Encuentra cualquier proceso, vista o rol de Albunmanía en segundos.
+- [x] **Buscador y Navegación por Índice** — Encuentra cualquier proceso, vista o rol de Albunmanía en segundos.
 
-- [ ] **Procesos y Flujos Paso a Paso** — Cómo subir un anuncio, cómo agregar un álbum nuevo, cómo gestionar reportes — documentado sin tecnicismos.
+- [x] **Procesos y Flujos Paso a Paso** — Cómo subir un anuncio, cómo agregar un álbum nuevo, cómo gestionar reportes — documentado sin tecnicismos.
 
-- [ ] **Roles y Responsabilidades** — Qué hace el Coleccionista, el Web Manager y el Administrador, y qué permisos tiene cada uno.
+- [x] **Roles y Responsabilidades** — Qué hace el Coleccionista, el Web Manager y el Administrador, y qué permisos tiene cada uno.
 
-- [ ] **Dependencias y Reglas de Negocio** — Cómo se relacionan los álbumes con cromos, anuncios con segmentación geográfica, y reputación con intercambios.
+- [x] **Dependencias y Reglas de Negocio** — Cómo se relacionan los álbumes con cromos, anuncios con segmentación geográfica, y reputación con intercambios.
 
 ---
 
@@ -503,7 +503,7 @@ Panel propio para Web Manager y Admin con gestión completa de los 3 motores de 
 
 - [x] **Cola de moderación de reportes** — Lista de reportes pendientes con acciones rápidas: advertir, suspender, banear. Trazabilidad de quién resolvió cada caso.
 
-- [ ] **Manual interactivo del sistema** — Wiki navegable dentro del panel admin con procesos paso a paso, roles y reglas de negocio. Buscador con índice.
+- [x] **Manual interactivo del sistema** — Wiki navegable dentro del panel admin con procesos paso a paso, roles y reglas de negocio. Buscador con índice.
 
 ### PWA y Notificaciones
 

@@ -5,7 +5,7 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-11
-**Foco:** Bloque B Sprint 4 — Epics 11 (Reseñas) + 8 (Panel Admin) completadas.
+**Foco:** Bloque B Sprint 5 — Epics 13 (Analítica/KPIs) + 14 (Manual interactivo) completadas.
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado al cierre de la sesión
@@ -14,10 +14,11 @@
 - **Bloque B Sprint 1**: ✅ **completo** — Epics 1 / 2 / 6 / 10 cerradas.
 - **Bloque B Sprint 2**: ✅ Epics 3 + 4 + 12 cerradas.
 - **Bloque B Sprint 3**: ✅ Epics 5 + 7 cerradas.
-- **Bloque B Sprint 4**: ✅ Epics 11 + 8 cerradas en esta sesión.
-  - Epic 11 — Reseñas y Reputación (commits `382b24f` backend · `304b91b` frontend).
-  - Epic 8 — Panel Admin (users + moderación) (commits `303ab46` backend · `91d6711` frontend).
-  - Backend **319/319 verde** (+26). Frontend **209/209 verde** (+16).
+- **Bloque B Sprint 4**: ✅ Epics 11 + 8 cerradas.
+- **Bloque B Sprint 5**: ✅ Epics 13 + 14 cerradas en esta sesión.
+  - Epic 13 — Analítica + KPIs (commits `72f5431` backend · `41314bf` frontend).
+  - Epic 14 — Manual interactivo (commit `c7ab097` frontend; backend ya estaba listo de Bloque A).
+  - Backend **329/329 verde** (+10). Frontend **216/216 verde** (+7).
 
 ## Epic 1 — Cierre
 
@@ -247,6 +248,38 @@
 6. **Admin gating client-side + server-side** — las páginas `/admin/*` redirigen client-side si `user.role` no es admin/web_manager (UX), pero el endpoint hace el check real (`_is_admin_or_wm`). Defense in depth — un atacante que bypassa el JS aún recibe 403.
 7. **`details/summary` HTML para CTA "Calificar"** — más simple que un modal, accesible nativamente, no rompe scroll. Aparece collapsed por default y el usuario lo expande cuando quiere calificar.
 
+## Sprint 5 — Cierre
+
+### Backend (Epic 13)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Service | `services/analytics_engine.py` | 7 funciones (top_stickers_supply_demand, matches_trend, activity_heatmap, community_kpis, ad_kpis, returning_vs_new, device_breakdown). |
+| Endpoints | `views/analytics.py` | `/admin/analytics/overview/` composite + `/admin/analytics/export.csv` descargable. |
+| URLs | `urls/analytics.py` | Bajo `/api/`. |
+| Tests | 2 archivos | 10 tests, suite total **329/329 verde**. |
+
+### Frontend (Epic 13 + Epic 14)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Store | `lib/stores/analyticsStore.ts` | fetchOverview + exportCsvUrl. |
+| Componentes | `components/analytics/{KpiTile,MiniBarChart}.tsx` | Sin chart lib externa — bars puros con Tailwind. |
+| Página | `app/admin/analytics/page.tsx` | 4 filas KPI (community + ads) + trend + top stickers + devices + top cities. CTA "Descargar CSV". |
+| Manual content | `lib/manual/content.ts` | 9 secciones × 14 procesos cubriendo Coleccionista, Comerciante, Web Manager, Admin, Roles + reglas, monetización, KPIs y soporte. |
+| Tests | 2 archivos | 7 tests, suite total **216/216 verde**. |
+
+### Decisiones técnicas (esta sesión)
+
+1. **Analytics on-demand sin Huey** — V1 calcula los aggregates en cada GET. Volumen esperado en lanzamiento (<10k DAU) hace que las queries sean sub-segundo. Migración a Huey nightly cacheado en `Profile.stats_cache_*` queda documentada para V2.
+2. **Composite endpoint en lugar de uno por bloque** — `/admin/analytics/overview/` devuelve los 7 bloques en un solo payload. Una request en lugar de siete reduce latencia perceptible y simplifica el frontend (un único loading state).
+3. **Heatmap entrega coords, no imagen renderizada** — el endpoint devuelve `[{lat, lng, weight}]` como JSON. La capa visual Leaflet con `leaflet.heat` queda para V2 — V1 expone los datos crudos para que el equipo los pueda explotar como prefiera.
+4. **Devices placeholder honesto** — sin instrumentación de UA todavía, el bloque devuelve estimaciones marcadas con asterisco en la UI ("V1 estimación, instrumentación llega en V2"). Mejor que mostrar nada o números falsos.
+5. **CSV export sin Huey ni storage temporal** — es un endpoint sincrónico que arma el CSV en memoria (StringIO) y lo entrega como `Content-Disposition: attachment`. Para volúmenes esperados es trivial; PDFs requieren Huey y se difieren a V2.
+6. **MiniBarChart sin chart lib** — barras horizontales con `style.width = pct%`. Cubre todos los charts del dashboard (trend diario, top stickers, devices, top ciudades) sin sumar dep como recharts/chart.js.
+7. **Manual content separado del rendering** — el componente `ManualPage` ya existía del Bloque A; Epic 14 fue puramente expansión de `lib/manual/content.ts`. La búsqueda client-side reusa los `keywords` de cada proceso, así que añadir contenido sin tocar JS.
+8. **9 secciones cubren las 4 audiencias del producto** — Coleccionista (4 procesos), Comerciante (1), Web Manager (2), Admin (2), más roles/reglas, monetización, KPIs y soporte como secciones transversales. ProjectApp no necesita pedir ayuda al desarrollador para entender cualquier flujo.
+
 ## Pendientes / TODOs heredados (siguen activos)
 
 - ProjectApp debe regenerar **Google OAuth Client ID + Secret** en GCP (ERROR-001 en `error-documentation.md`). Tests pasan con mocks; el flujo real requiere credenciales válidas.
@@ -260,10 +293,17 @@ Ninguno para arrancar Sprint 2 (Match) o BATCH paralelo de Epics 2/6/10.
 
 ## Próximos pasos sugeridos para la siguiente sesión
 
-**Quedan 3 épicas para cerrar Release 01**:
+**Release 01 al 95% — solo queda Epic 9 (Push real) bloqueada por VAPID keys del equipo**:
 
-- Epic 9 — Push real con VAPID + pywebpush + Service Worker handler. Requiere generar VAPID keys una sola vez con `vapid --gen` y configurarlas en `.env`.
-- Epic 13 — Analítica + KPIs Dashboard (cromos más buscados/ofertados, mapa de calor de actividad, fuentes de tráfico, dispositivos). Lectura agregada de impressions/clicks/inventory/match.
-- Epic 14 — Manual interactivo (wiki dentro del panel admin). Depende de tener todas las features cerradas para documentar.
+- Generar VAPID keys con `vapid --gen` (o `pywebpush`). Cargar `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` + `VAPID_CLAIMS_EMAIL` en `.env` y `.env.example`.
+- Modelo `PushSubscription(user, endpoint, p256dh, auth, created_at)`.
+- Backend service `push_notify.send_to(user, payload)` con `pywebpush`.
+- Service Worker handler `self.addEventListener('push', ...)` en `frontend/public/sw.js`.
+- Frontend `pushStore.subscribe()` que pide permiso y registra subscription.
+- Trigger: post_save Match con status='mutual' → push al otro participante.
 
-Recomendado: **Epic 13 primero** — sin VAPID keys aún disponibles del equipo, Epic 13 puede ejecutarse en paralelo. Epic 9 cuando llegue el secret. Epic 14 al final.
+Items minor sin hacer (no bloqueantes para Release 01, V2):
+- "Fuentes de Tráfico" (analytics) — instrumentación UTM + tabla `TrafficSource`.
+- "Alertas de Rendimiento" (KPIs) — Huey nightly + email/push.
+- "Branding sutil en notificaciones oficiales" + "Reportes PDF de Sponsor".
+- Mejoras admin: gestor de álbumes con CSV upload, gestor de creativas con UI.

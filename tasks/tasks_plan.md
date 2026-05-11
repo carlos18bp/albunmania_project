@@ -60,8 +60,8 @@
 
 | Epic | Nombre | Estado | Dependencias |
 |------|--------|--------|--------------|
-| **13** | Analítica + KPIs Dashboard | ⚪ pending | Datos reales de Sprints 1-4 |
-| **14** | Manual interactivo | ⚪ pending | Features cerradas |
+| **13** | Analítica + KPIs Dashboard | ✅ done (sin Fuentes de Tráfico ni Alertas) | Datos reales de Sprints 1-4 | Commits 72f5431 + 41314bf. 7 funciones agregadas + composite endpoint + CSV export. |
+| **14** | Manual interactivo | ✅ done | Features cerradas | Commit c7ab097. 9 secciones × 14 procesos. Buscador y rendering ya estaban del Bloque A. |
 
 ## Inventario actual del template (a purgar en A3)
 
