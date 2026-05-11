@@ -200,3 +200,35 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 - El template trae custom `django_attachments` app — se reusa para covers de álbumes, imágenes de cromos y avatars (no reinventar).
 - `easy-thumbnails` ya configurado con aliases small/medium/large — reutilizar para cromos.
 - `django-cleanup` evita archivos huérfanos al borrar registros — clave para storage limpio.
+
+---
+
+## 9. Decisiones cerradas en Epic 3 (Match)
+
+### Match QR offline-first: cliente es source of truth, server es sanity check
+- El cruce `compute_offline_cross` es **una sola función** definida en `services/qr_cross.py` (Python) y portada byte-equivalente a `lib/stores/qrStore.ts` (TypeScript).
+- En cambiatones físicos, el cliente la corre offline (sin red) sobre los inventarios cacheados con `idb-keyval`.
+- Cuando la red vuelve, `POST /match/qr/confirm/` envía los items propuestos. **El server vuelve a correr `compute_offline_cross` con los inventarios reales en DB** y rechaza con 400 cualquier item no derivable. Así un cliente malicioso no puede fabricar trades de cromos que no posee.
+
+### Haversine inline en lugar de PostGIS o `haversine` package
+- `services/match_engine.py` usa `math.radians/sin/cos` puro para calcular distancias entre dos coordenadas.
+- Bounding-box prefilter SQL (`lat_approx BETWEEN x AND y`) recorta candidatos antes del cálculo trigonométrico Python — mantiene la complejidad en O(K) donde K << total usuarios.
+- PostGIS deferido a V2 (no soportado por MySQL en stack actual).
+
+### Match canonical pair: `user_a < user_b` enforzado en DB
+- `models.CheckConstraint(condition=Q(user_a__lt=F('user_b')))` + `UniqueConstraint(user_a, user_b, channel)`.
+- El helper `Match.canonical_pair(x, y)` ordena los ids antes de cualquier insert.
+- Beneficio: una pareja no puede tener dos rows del mismo canal sin importar quién likeó primero.
+
+### Django 5.1+: `CheckConstraint(condition=...)` (no `check=`)
+- `check=` fue deprecado y eliminado. Si una migración fue creada en Django <5.1 hay que regenerarla o el `makemigrations` revienta.
+
+### HMAC-SHA256 propio para QR tokens (sin PyJWT)
+- Stdlib (`hmac`, `hashlib`, `base64`) cubre el caso simple sin sumar dep.
+- Payload `<user_id>|<exp_unix>` base64url, sig base64url, separados por `.`.
+- TTL default 24h. Verificación con `hmac.compare_digest` (constant-time).
+- Decisión: comparación `exp_unix <= now()` (no `<`) para que `ttl=0` siempre expire.
+
+### `idb-keyval` sobre `localStorage`
+- API trivial (`get`/`set` async), 4kB minified, evita el límite ~5MB y la sincronía de localStorage.
+- Solo se usa dentro de stores `'use client'` y guard `typeof window !== 'undefined'` para no romper SSR.

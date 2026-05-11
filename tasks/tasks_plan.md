@@ -37,7 +37,7 @@
 
 | Epic | Nombre | Estado | Dependencias | Notas |
 |------|--------|--------|--------------|-------|
-| **3** | Motor de Match (swipe + QR presencial) | ⚪ pending | Epic 2 | Secuencial |
+| **3** | Motor de Match (swipe + QR presencial) | ✅ done | Epic 2 | Commits be9a4e9→4e59975. Backend 245/245, frontend 169/169. Haversine inline, HMAC tokens, idb-keyval offline cache. |
 | **4** | WhatsApp Opt-in + Push básico | ⚪ pending | Epic 3 | Secuencial |
 | **9** | PWA Push notifications real | ⚪ pending | A7 + Epic 3 | BATCH paralelo a Epic 4 |
 | **12** | Stats avanzadas (racha + ETA + ranking) | ⚪ pending | Epic 2 | BATCH paralelo a Epic 4 |

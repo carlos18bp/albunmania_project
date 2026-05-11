@@ -405,19 +405,19 @@ Catálogo del álbum precargado con búsqueda predictiva, ediciones especiales d
 
 Sistema dual de matching: por proximidad geográfica con mecánica swipe estilo Tinder, y por escaneo QR cara a cara en cambiatones físicos.
 
-- [ ] **Match por swipe con proximidad** — Algoritmo que cruza cromos disponibles del usuario A vs faltantes del usuario B (y viceversa) priorizando cercanía geográfica. UI de swipe estilo Tinder.
+- [x] **Match por swipe con proximidad** — Algoritmo que cruza cromos disponibles del usuario A vs faltantes del usuario B (y viceversa) priorizando cercanía geográfica. UI de swipe estilo Tinder.
 
   - Configuración: Query con haversine en MySQL (o cálculo en aplicación). Radio configurable por usuario (5/10/25/50 km). Match mutuo dispara notificación push.
 
   - Flujo: Usuario abre Match → backend devuelve top N candidatos cercanos con cromos compatibles → swipe right = like → si hay like mutuo se crea Match → notificación push → habilita compartir WhatsApp.
 
-- [ ] **Match QR presencial offline** — En cambiatones físicos, los coleccionistas escanean el QR del otro. La app cruza inventarios y muestra todos los intercambios posibles. Funciona 100% offline una vez cargado el inventario.
+- [x] **Match QR presencial offline** — En cambiatones físicos, los coleccionistas escanean el QR del otro. La app cruza inventarios y muestra todos los intercambios posibles. Funciona 100% offline una vez cargado el inventario.
 
   - Configuración: QR contiene user_id firmado con HMAC. Inventario completo cacheado en Service Worker. Cruce ejecutado en cliente sin llamada al servidor.
 
   - Flujo: Usuario A muestra su QR personal → usuario B escanea con cámara → app local cruza inventarios → muestra lista de intercambios posibles ordenados por valor → ambos confirman → se crea Match con channel='qr_presencial'.
 
-- [ ] **QRs compartibles de cromos disponibles y faltantes** — El usuario genera dos QRs distintos: uno con su lista de cromos disponibles para intercambiar, otro con su lista de faltantes. Ambos compartibles por WhatsApp e Instagram con un toque.
+- [x] **QRs compartibles de cromos disponibles y faltantes** — El usuario genera dos QRs distintos: uno con su lista de cromos disponibles para intercambiar, otro con su lista de faltantes. Ambos compartibles por WhatsApp e Instagram con un toque.
 
   - Configuración: QR contiene URL pública firmada con expiración. Página pública mostrando la lista, sin requerir login del visitante.
 

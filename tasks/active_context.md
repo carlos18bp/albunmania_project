@@ -5,17 +5,17 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-11
-**Foco:** Bloque B Sprint 1 — Epics 2 + 6 + 10 cierre BATCH paralelo.
+**Foco:** Bloque B Sprint 2 — Epic 3 (Match swipe + QR presencial) **completada**.
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado al cierre de la sesión
 
 - **Bloque A** (cleanup post-bootstrap): completo, **pusheado a `origin/master`**.
 - **Bloque B Sprint 1**: ✅ **completo** — Epics 1 / 2 / 6 / 10 cerradas.
-  - ✅ Epic 1 — Auth & Onboarding (5 commits aislados, sesión previa).
-  - ✅ Epic 2 — Catálogo + Inventario (backend + frontend + tests).
-  - ✅ Epic 6 — Presenting Sponsor (backend + theming + splash + header band).
-  - ✅ Epic 10 — Dark mode + theming dinámico (next-themes + sponsor CSS vars).
+- **Bloque B Sprint 2**: ✅ Epic 3 (Match) cerrada en esta sesión.
+  - Commits backend: `be9a4e9` (models) · `bb415f6` (services) · `150d2b4` (endpoints) · `19eb194` (tests).
+  - Commit frontend: `4e59975` (stores + componentes + páginas + i18n).
+  - Backend 245/245 verde. Frontend 169/169 verde.
 
 ## Epic 1 — Cierre
 
@@ -99,6 +99,44 @@
 3. **Splash auto-dismiss 1800ms** — visible solo después de `loaded` para no flashear el fallback antes de saber si hay sponsor.
 4. **`lib/utils.cn`** — helper minimal sin clsx/tailwind-merge (no estaban en deps); evita pull adicional.
 
+## Epic 3 — Cierre
+
+### Backend (16 archivos)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Models | `models/{match,like,trade}.py` + `__init__.py` | Match con check constraint `user_a < user_b` + unique por `(pair, channel)`. Like con `find_mirror()`. Trade snapshot vía JSONField `items`. |
+| Migration | `0004_match_like_trade.py` | Aplicada. **Nota Django 5.1+**: `CheckConstraint` ahora usa `condition=` (no `check=`). |
+| Services | `services/match_engine.py` | Haversine inline + bounding-box prefilter. Sin nueva dep. Ranking `(matches_count desc, distance_km asc)`. |
+| Services | `services/qr_token.py` | HMAC-SHA256 con `SECRET_KEY`, payload `<user_id>\|<exp>`, base64url. Constant-time verify. |
+| Services | `services/qr_cross.py` | Función pura `compute_offline_cross()` reusada server-side como sanity check y portada a TS para offline. |
+| Views | `views/match.py` | 6 endpoints: feed, like (mutual detection + Trade auto-create), mine, detail, qr/me, qr/scan, qr/confirm. |
+| Views | `views/trade.py` | Public `trade/share/<token>/` con `?kind=available\|wanted`. |
+| Serializers | `serializers/match.py` | 8 serializers (incluye `ProfilePreviewSerializer`). |
+| URLs | `urls/{match,trade}.py` + `__init__.py` | Prefijos `/api/match/` y `/api/trade/`. |
+| Tests | 10 archivos nuevos | 52 tests, suite total **245/245 verde**. |
+
+### Frontend (15 archivos)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Stores | `lib/stores/matchStore.ts` | feed/like/swipe/mine + lastMutual. |
+| Stores | `lib/stores/qrStore.ts` | Persistencia con `idb-keyval` (myInventory + lastCross). Incluye `computeOfflineCross()` mirror exacto del server. |
+| Components | `components/match/{SwipeCard,MatchFeed,MutualMatchModal,QRDisplay,QRScanner,QRCrossResults}.tsx` | Swipe estilo card + scanner zxing + cruce offline + modal mutual. |
+| Pages | `app/match/page.tsx` (tabs swipe/mine), `app/match/qr/page.tsx`, `app/match/[matchId]/page.tsx`, `app/share/[token]/page.tsx` (pública) | |
+| Header | `components/layout/Header.tsx` | Link "Match" para autenticados. |
+| i18n | `messages/{es,en,pt}.json` | Sección `match.*` (24 keys × 3 idiomas). |
+| Tests | 4 nuevos test modules | 20 tests, suite total **169/169 verde**. |
+
+### Decisiones técnicas (esta sesión)
+
+1. **Haversine inline** en `match_engine` — sin nueva dep, y permite el bounding-box prefilter en SQL antes del cálculo trigonométrico Python.
+2. **`compute_offline_cross` duplicado server/client** — la función es la fuente de verdad: el cliente la usa offline, el server la corre como sanity check antes de persistir cualquier `qr_presencial` Match. Si el cliente miente, el endpoint rechaza con 400 `invalid_item`.
+3. **HMAC-SHA256 propio** (sin PyJWT) — payload + base64url + `hmac.compare_digest`. Cubre el caso simple sin sumar dep.
+4. **Match canonical pair**: `user_a < user_b` enforzado vía CheckConstraint para garantizar unicidad por par. El helper `Match.canonical_pair()` resuelve el orden en la view.
+5. **Django 5.1+**: `models.CheckConstraint(condition=...)` (no `check=`). Documentado en lessons-learned.
+6. **idb-keyval** para offline-first QR: 4kB minified, API trivial. La snapshot de inventario se persiste tras cada cambio de `inventoryStore.entries` desde la página `/match/qr`.
+
 ## Pendientes / TODOs heredados (siguen activos)
 
 - ProjectApp debe regenerar **Google OAuth Client ID + Secret** en GCP (ERROR-001 en `error-documentation.md`). Tests pasan con mocks; el flujo real requiere credenciales válidas.
@@ -112,10 +150,10 @@ Ninguno para arrancar Sprint 2 (Match) o BATCH paralelo de Epics 2/6/10.
 
 ## Próximos pasos sugeridos para la siguiente sesión
 
-**Sprint 2 — Match** (la épica más dependiente de Sprint 1, ahora desbloqueable):
+**Sprint 2 cierre** — completar las épicas que dependen de Match:
 
-- `/feature-dev:feature-dev` Epic 3 — Match swipe (proximidad geográfica) + Match QR presencial offline. Necesita inventario + sticker catalog cerrados (ahora ✅) y profile geo-coordinates (✅ Epic 1).
-- `/feature-dev:feature-dev` Epic 4 — Reseñas / Reputación post-trade.
-- `/feature-dev:feature-dev` Epic 7 — Listing Comerciantes en mapa (depende de MerchantProfile ya creado en Epic 1).
+- `/feature-dev:feature-dev` Epic 4 — WhatsApp opt-in por trade + deep link wa.me. Costo bajo, alto impacto: el Trade ya existe (Epic 3), solo falta toggle de opt-in y construcción del link.
+- `/feature-dev:feature-dev` Epic 9 — Push real con VAPID + pywebpush + Service Worker handler. Habilita la notificación de mutual.
+- `/feature-dev:feature-dev` Epic 12 — Stats avanzadas (racha, ETA, ranking por ciudad). Independiente del resto.
 
-Recomendado: **Epic 3 primero** — es el core del producto y desbloquea Epic 4 (reseñas) e Epic 8 (notificaciones de match).
+Recomendado: **Epic 4 + Epic 12 en BATCH** (no comparten archivos), Epic 9 como sesión propia (requiere generar VAPID keys + diseñar push payloads).
