@@ -10,4 +10,6 @@ urlpatterns = [
     path('', include('albunmania_app.urls.album')),
     path('', include('albunmania_app.urls.inventory')),
     path('', include('albunmania_app.urls.sponsor')),
+    path('', include('albunmania_app.urls.match')),
+    path('', include('albunmania_app.urls.trade')),
 ]
