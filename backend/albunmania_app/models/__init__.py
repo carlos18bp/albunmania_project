@@ -6,6 +6,9 @@ from .album import Album
 from .sticker import Sticker
 from .user_sticker import UserSticker
 from .sponsor import Sponsor
+from .match import Match
+from .like import Like
+from .trade import Trade
 
 __all__ = [
     'User',
@@ -16,4 +19,7 @@ __all__ = [
     'Sticker',
     'UserSticker',
     'Sponsor',
+    'Match',
+    'Like',
+    'Trade',
 ]
