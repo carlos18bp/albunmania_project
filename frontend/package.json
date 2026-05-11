@@ -33,6 +33,7 @@
     "@zxing/browser": "^0.1.5",
     "axios": "^1.15.2",
     "fuse.js": "^7.3.0",
+    "idb-keyval": "^6.2.2",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
