@@ -3,6 +3,8 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import WhatsAppLinkButton from '@/components/whatsapp/WhatsAppLinkButton';
+import WhatsAppOptInToggle from '@/components/whatsapp/WhatsAppOptInToggle';
 import { api } from '@/lib/services/http';
 import type { MatchSummary } from '@/lib/stores/matchStore';
 
@@ -13,6 +15,7 @@ export default function MatchDetailPage() {
   const [match, setMatch] = useState<MatchSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bothOpted, setBothOpted] = useState(false);
 
   useEffect(() => {
     if (!matchId) return;
@@ -59,14 +62,16 @@ export default function MatchDetailPage() {
         </ul>
       </section>
 
-      <button
-        type="button"
-        disabled
-        title="Disponible cuando ambos opt-in en Epic 4"
-        className="w-full rounded-lg bg-emerald-600 px-4 py-3 font-medium text-white opacity-50 cursor-not-allowed"
-      >
-        Coordinar por WhatsApp (próximamente)
-      </button>
+      {match.trade && (
+        <section className="space-y-3">
+          <h2 className="font-medium">WhatsApp</h2>
+          <WhatsAppOptInToggle
+            tradeId={match.trade.id}
+            onChange={(s) => setBothOpted(s.both_opted_in)}
+          />
+          <WhatsAppLinkButton tradeId={match.trade.id} enabled={bothOpted} />
+        </section>
+      )}
     </main>
   );
 }
