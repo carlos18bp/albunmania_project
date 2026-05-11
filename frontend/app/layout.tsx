@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Providers from './providers';
+import SponsorSplash from '@/components/sponsor/SponsorSplash';
+import SponsorHeaderBand from '@/components/sponsor/SponsorHeaderBand';
 
 export const metadata: Metadata = {
   title: 'Albunmanía — Intercambio de cromos del Mundial 26',
@@ -28,7 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" suppressHydrationWarning>
       <body className="antialiased">
         <Providers>
+          <SponsorSplash />
           <Header />
+          <SponsorHeaderBand />
           {children}
           <footer className="border-t border-border mt-16">
             <div className="max-w-6xl mx-auto px-6 py-10 text-sm text-muted-foreground">

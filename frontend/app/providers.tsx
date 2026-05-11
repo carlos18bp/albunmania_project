@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getAccessToken } from '@/lib/services/tokens';
 import { ThemeProvider } from '@/components/theme-provider';
+import SponsorThemeProvider from '@/components/sponsor/SponsorThemeProvider';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -39,5 +40,9 @@ export default function Providers({ children }: ProvidersProps) {
     inner
   );
 
-  return <ThemeProvider>{withGoogle}</ThemeProvider>;
+  return (
+    <ThemeProvider>
+      <SponsorThemeProvider>{withGoogle}</SponsorThemeProvider>
+    </ThemeProvider>
+  );
 }
