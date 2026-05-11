@@ -1,0 +1,36 @@
+{
+  "common": {
+    "appName": "Albunmanía",
+    "tagline": "Troca de figurinhas da Copa do Mundo 26",
+    "loading": "Carregando…",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "search": "Buscar",
+    "close": "Fechar",
+    "noAffiliation": "Sem afiliação oficial com FIFA ou Panini."
+  },
+  "nav": {
+    "home": "Início",
+    "manual": "Manual",
+    "signIn": "Entrar",
+    "signUp": "Cadastrar-se",
+    "signOut": "Sair",
+    "account": "Conta",
+    "dashboard": "Meu álbum",
+    "match": "Match",
+    "map": "Mapa",
+    "notifications": "Notificações"
+  },
+  "auth": {
+    "signInTitle": "Entrar no Albunmanía",
+    "signUpTitle": "Criar conta",
+    "signInWithGoogle": "Entrar com Google",
+    "signUpWithGoogle": "Cadastrar-me com Google",
+    "googleAccountAgeRule": "Só aceitamos contas Google com mais de 30 dias.",
+    "captchaPrompt": "Verifique que você não é um robô.",
+    "forgotPassword": "Esqueci minha senha",
+    "invalidCredentials": "Credenciais inválidas. Tente novamente."
+  }
+}

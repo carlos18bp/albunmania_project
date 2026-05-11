@@ -1,12 +1,13 @@
-export const SUPPORTED_LOCALES = ['en', 'es'] as const;
+export const SUPPORTED_LOCALES = ['es', 'en', 'pt'] as const;
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
-export const DEFAULT_LOCALE: SupportedLocale = 'en';
+export const DEFAULT_LOCALE: SupportedLocale = 'es';
 
 export const LOCALE_LABELS: Record<SupportedLocale, string> = {
-  en: 'English',
   es: 'Español',
+  en: 'English',
+  pt: 'Português',
 };
 
 export function isValidLocale(locale: string): locale is SupportedLocale {

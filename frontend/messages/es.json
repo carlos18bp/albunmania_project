@@ -1,0 +1,36 @@
+{
+  "common": {
+    "appName": "Albunmanía",
+    "tagline": "Intercambio de cromos del Mundial 26",
+    "loading": "Cargando…",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "search": "Buscar",
+    "close": "Cerrar",
+    "noAffiliation": "No afiliado oficialmente con FIFA o Panini."
+  },
+  "nav": {
+    "home": "Inicio",
+    "manual": "Manual",
+    "signIn": "Entrar",
+    "signUp": "Registrarse",
+    "signOut": "Cerrar sesión",
+    "account": "Cuenta",
+    "dashboard": "Mi álbum",
+    "match": "Match",
+    "map": "Mapa",
+    "notifications": "Notificaciones"
+  },
+  "auth": {
+    "signInTitle": "Entrar a Albunmanía",
+    "signUpTitle": "Crear cuenta",
+    "signInWithGoogle": "Entrar con Google",
+    "signUpWithGoogle": "Registrarme con Google",
+    "googleAccountAgeRule": "Solo aceptamos cuentas Google con más de 30 días de antigüedad.",
+    "captchaPrompt": "Verifica que no eres un robot.",
+    "forgotPassword": "Olvidé mi contraseña",
+    "invalidCredentials": "Credenciales inválidas. Intenta de nuevo."
+  }
+}

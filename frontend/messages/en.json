@@ -1,0 +1,36 @@
+{
+  "common": {
+    "appName": "Albunmanía",
+    "tagline": "World Cup 26 sticker trading",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "search": "Search",
+    "close": "Close",
+    "noAffiliation": "Not officially affiliated with FIFA or Panini."
+  },
+  "nav": {
+    "home": "Home",
+    "manual": "Manual",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "account": "Account",
+    "dashboard": "My album",
+    "match": "Match",
+    "map": "Map",
+    "notifications": "Notifications"
+  },
+  "auth": {
+    "signInTitle": "Sign in to Albunmanía",
+    "signUpTitle": "Create your account",
+    "signInWithGoogle": "Sign in with Google",
+    "signUpWithGoogle": "Sign up with Google",
+    "googleAccountAgeRule": "We only accept Google accounts older than 30 days.",
+    "captchaPrompt": "Verify you are not a robot.",
+    "forgotPassword": "Forgot password",
+    "invalidCredentials": "Invalid credentials. Please try again."
+  }
+}
