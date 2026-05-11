@@ -167,8 +167,8 @@ def test_weekly_slow_queries_report_includes_slow_query_data(settings, tmp_path)
 
     slow_query = SimpleNamespace(
         time_taken=1200.0,
-        request=SimpleNamespace(path='/api/products/'),
-        query='SELECT * FROM product WHERE id = 1',
+        request=SimpleNamespace(path='/api/v1/sample/'),
+        query='SELECT * FROM auth_user WHERE id = 1',
     )
 
     with (
@@ -185,7 +185,7 @@ def test_weekly_slow_queries_report_includes_slow_query_data(settings, tmp_path)
         weekly_slow_queries_report.call_local()
 
     content = (tmp_path / 'logs' / 'silk-reports' / 'silk-report-2025-06-09.log').read_text()
-    assert '/api/products/' in content
+    assert '/api/v1/sample/' in content
     assert '1200ms' in content
 
 

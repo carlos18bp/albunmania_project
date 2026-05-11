@@ -3,19 +3,13 @@ import { render, screen } from '@testing-library/react';
 
 import HomePage from '../page';
 
-jest.mock('../../components/blog/BlogCarousel', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
-jest.mock('../../components/product/ProductCarousel', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
 describe('HomePage', () => {
-  it('renders template heading', () => {
+  it('renders the Albunmanía landing heading', () => {
     render(<HomePage />);
-    expect(screen.getByRole('heading', { name: 'Everything you need, in one place' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /Albunmanía — la comunidad colombiana de intercambio de cromos/i,
+      }),
+    ).toBeInTheDocument();
   });
 });

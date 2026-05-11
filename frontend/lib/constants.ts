@@ -5,9 +5,6 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   DASHBOARD: '/dashboard',
   BACKOFFICE: '/backoffice',
-  CATALOG: '/catalog',
-  BLOGS: '/blogs',
-  CHECKOUT: '/checkout',
   MANUAL: '/manual',
 } as const;
 
@@ -19,12 +16,6 @@ export const API_ENDPOINTS = {
   RESET_PASSWORD: '/auth/verify-passcode-and-reset-password/',
   UPDATE_PASSWORD: '/auth/update-password/',
   VALIDATE_TOKEN: '/auth/validate-token/',
-  BLOGS: '/blogs-data/',
-  BLOG_DETAIL: (id: number) => `/blogs-data/${id}/`,
-  PRODUCTS: '/products/',
-  PRODUCT_DETAIL: (id: number) => `/products/${id}/`,
-  SALES: '/sales/',
-  CREATE_SALE: '/create-sale/',
   USERS: '/users/',
 } as const;
 

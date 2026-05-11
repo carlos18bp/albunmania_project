@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Header from '@/components/layout/Header';
-import StagingGate from '@/components/staging/StagingGate';
 import Providers from './providers';
 
 export const metadata: Metadata = {
-  title: 'Base Django + React + Next Feature Template',
-  description: 'A template for building web applications with Django and React',
+  title: 'Albunmanía — Intercambio de cromos del Mundial 26',
+  description:
+    'Plataforma comunitaria PWA para intercambio de cromos del Mundial 26 en Colombia y Latinoamérica. Match dual swipe + QR presencial, cierre por WhatsApp.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,15 +14,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" suppressHydrationWarning>
       <body className="antialiased">
         <Providers>
-          <StagingGate>
-            <Header />
-            {children}
-            <footer className="border-t border-border mt-16">
-              <div className="max-w-6xl mx-auto px-6 py-10 text-sm text-muted-foreground">
-                &copy; 2026 Base Django + React + Next Feature Template
-              </div>
-            </footer>
-          </StagingGate>
+          <Header />
+          {children}
+          <footer className="border-t border-border mt-16">
+            <div className="max-w-6xl mx-auto px-6 py-10 text-sm text-muted-foreground">
+              &copy; 2026 Albunmanía · No afiliado oficialmente con FIFA o Panini.
+            </div>
+          </footer>
         </Providers>
       </body>
     </html>
