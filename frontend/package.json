@@ -1,6 +1,7 @@
 {
-  "name": "frontend",
+  "name": "albunmania-frontend",
   "version": "0.1.0",
+  "description": "PWA de intercambio de cromos del Mundial 26 — Albunmanía (Cliente: ProjectApp)",
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS=--no-deprecation next dev",

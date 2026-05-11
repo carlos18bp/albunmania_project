@@ -1,5 +1,5 @@
 [Unit]
-Description=Huey Task Queue for albunmania_project
+Description=Albunmanía Huey Task Queue (push, reports, billing, match cleanup)
 After=network.target redis.service
 
 [Service]
