@@ -5,8 +5,9 @@
 ## Estado global
 
 - **Bootstrap**: ✅ completado (commits `4170de8` → `fb51414`).
-- **Cleanup pre-desarrollo (Bloque A)**: 🟡 en curso. A1 ejecutándose (memoria que estás leyendo).
-- **Implementación Release 01 (Bloque B)**: ⚪ pendiente — arranca tras Bloque A.
+- **Cleanup pre-desarrollo (Bloque A)**: ✅ completado (commits `0d2d857` → `8084a4d`), pusheado a `origin/master`.
+- **Implementación Release 01 (Bloque B)**: 🟡 en curso.
+  - Sprint 1: Epic 1 ✅ completada (commits `f94434c` → `424a160`). Epics 2/6/10 pendientes.
 
 ## Bloque A — Cleanup pre-desarrollo (8 fases)
 
@@ -27,7 +28,7 @@
 
 | Epic | Nombre | Estado | Dependencias | Notas |
 |------|--------|--------|--------------|-------|
-| **1** | Auth & Onboarding | ⚪ pending | A6 (allauth, hcaptcha) | **Bloqueante para Sprint 1 paralelo** |
+| **1** | Auth & Onboarding | ✅ done | A6 (allauth, hcaptcha) | Commits f94434c→424a160. Cobertura módulos nuevos ≥89%. Suite backend 152/152, frontend 124/124 verde. |
 | **2** | Catálogo Multi-Álbum & Inventario | ⚪ pending | Epic 1 | BATCH paralelo tras Epic 1 |
 | **6** | Presenting Sponsor | ⚪ pending | Epic 1 | BATCH paralelo tras Epic 1 |
 | **10** | Dark mode + theming dinámico | ⚪ pending | Epic 1 | BATCH paralelo tras Epic 1 |

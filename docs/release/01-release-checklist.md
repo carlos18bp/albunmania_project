@@ -39,9 +39,9 @@ Cada vista es una pantalla o sección de Albunmanía. Su propósito es guiar al 
 
 - [ ] **Inicio (Landing)** — Hero claro con la propuesta de valor de Albunmanía, llamado a la acción para registrarse y vista previa del catálogo del álbum sin necesidad de login.
 
-- [ ] **Login con Google + Captcha** — Autenticación vía Google OAuth con captcha integrado. Solo se permiten cuentas Google verificadas con más de 30 días de antigüedad.
+- [x] **Login con Google + Captcha** — Autenticación vía Google OAuth con captcha integrado. Solo se permiten cuentas Google verificadas con más de 30 días de antigüedad.
 
-- [ ] **Onboarding** — Flujo guiado para configurar el álbum activo, permisos de geolocalización (con explicación clara) y preferencias de notificación.
+- [x] **Onboarding** — Flujo guiado para configurar el álbum activo, permisos de geolocalización (con explicación clara) y preferencias de notificación.
 
 - [ ] **Dashboard del Coleccionista** — Vista principal del usuario con resumen de cromos pegados, faltantes, repetidos y matches sugeridos por proximidad.
 
@@ -363,17 +363,17 @@ Creación, venta y canje de tarjetas de regalo digitales con saldo configurable,
 
 Flujo de ingreso restringido a cuentas Google verificadas con más de 30 días de antigüedad, con captcha anti-bot y onboarding guiado de permisos.
 
-- [ ] **Login con Google OAuth** — El usuario inicia sesión con su cuenta de Google. El sistema valida la antigüedad de la cuenta (>30 días) antes de permitir el registro. Cuentas más nuevas reciben mensaje explicativo.
+- [x] **Login con Google OAuth** — El usuario inicia sesión con su cuenta de Google. El sistema valida la antigüedad de la cuenta (>30 días) antes de permitir el registro. Cuentas más nuevas reciben mensaje explicativo.
 
   - Configuración: Google Client ID/Secret en variables de entorno. Scope: profile, email. Claim de fecha de creación validado server-side.
 
   - Flujo: Usuario toca 'Entrar con Google' → popup OAuth → backend valida token y antigüedad → si OK, crea User + Profile y emite JWT → frontend redirige a onboarding o dashboard.
 
-- [ ] **Captcha anti-bot en primer ingreso** — hCaptcha integrado en la pantalla previa al OAuth para reducir bots y multicuentas.
+- [x] **Captcha anti-bot en primer ingreso** — hCaptcha integrado en la pantalla previa al OAuth para reducir bots y multicuentas.
 
   - Configuración: hCaptcha sitekey en frontend, secret en backend. Validación server-side antes de procesar el callback OAuth.
 
-- [ ] **Onboarding de permisos** — Flujo de tres pasos: selección de álbum activo, permiso de geolocalización del navegador (con explicación clara), opt-in de notificaciones push y compartición de WhatsApp en futuros matches.
+- [x] **Onboarding de permisos** — Flujo de tres pasos: selección de álbum activo, permiso de geolocalización del navegador (con explicación clara), opt-in de notificaciones push y compartición de WhatsApp en futuros matches.
 
   - Flujo: Tras login exitoso → paso 1: seleccionar álbum → paso 2: solicitar geo del navegador con explicación → paso 3: pedir permiso de push y configurar opt-in de WhatsApp → guardar Profile → al dashboard.
 

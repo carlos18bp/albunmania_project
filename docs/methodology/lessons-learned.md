@@ -164,7 +164,36 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 
 ---
 
-## 7. Insights heredados del bootstrap (mayo 2026)
+## 7. Decisiones cerradas en Epic 1 (Auth & Onboarding)
+
+### Por qué People API en vez de claims del id_token para verificar account age
+- El id_token de Google **no incluye** `created_at`. Solo trae `iat` (token issuance) y `sub` (user id).
+- La única vía oficial es **People API** `metadata.sources[].createTime` con scope `profile`. Requiere `access_token` (no id_token).
+- El frontend usa `useGoogleLogin({ flow: 'implicit' })` para obtener access_token. El backend lo recibe y consulta People API.
+- En DEBUG mode + access_token ausente, el backend **bypass-ea** la verificación con un warning de log para no romper dev local con clientes legacy. En prod ese mismo path devuelve 403.
+
+### Por qué hCaptcha y no reCAPTCHA
+- Spec del cliente lo pide explícitamente.
+- Tiene **test keys oficiales** que siempre devuelven success en cualquier token: `sitekey=10000000-ffff-ffff-ffff-000000000001`, `secret=0x0000000000000000000000000000000000000000`. Las usamos en dev y CI.
+- El servicio backend (`services/captcha_service.py`) abstrae el provider; el shim `verify_recaptcha` mantiene la API antigua durante una sesión de transición.
+
+### Por qué Profile y MerchantProfile en lugar de extender User
+- Mantiene `User` pequeño y compatible con `AbstractBaseUser` estándar.
+- Profile lleva campos de presentación pública + opt-ins; MerchantProfile lleva datos de negocio. Permite borrar/reescribir cualquiera sin tocar el modelo de auth.
+- `Profile.rating_*` son **agregados cacheados** (recomputados por signal post_save de Review en Epic 11) — evita N+1 al renderizar listas de coleccionistas en Match (Swipe Card).
+- `MerchantProfile.is_listing_visible` es property, no field, para que el filtro de mapa siempre lea estado fresco.
+
+### Por qué role + Group espejo en lugar de solo Role enum
+- Permitir permissions de Django (Group-based) sobre el rol sin reinventar permisos.
+- `User.assign_role()` es el único punto que toca `groups` para mantener coherencia.
+
+### Por qué endpoint `/captcha/` Y `/google-captcha/` simultáneos
+- El frontend en `sign-in/up` viejo apunta a `/google-captcha/site-key/`. Mantener el alias evita romper despliegues a medio actualizar.
+- Quitamos el alias en una próxima épica (cuando todos los sitios apunten al nuevo path).
+
+---
+
+## 8. Insights heredados del bootstrap (mayo 2026)
 
 - El template `base_django_react_next_feature` traía 6 modelos demo (Blog, Product, Sale, User, PasswordCode, StagingPhaseBanner) — solo User y PasswordCode se conservan.
 - El template usa **reCAPTCHA**; Albunmanía exige **hCaptcha** según propuesta. Migración mínima de var names + paquete pip.
