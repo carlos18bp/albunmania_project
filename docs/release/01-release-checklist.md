@@ -441,17 +441,17 @@ Cierre de matches a través de WhatsApp deep links con consentimiento explícito
 
 Gestión completa del rol Comerciante: alta, perfil, listing en mapa, suscripción mensual y dashboard propio.
 
-- [ ] **Alta de comerciante por Web Manager** — El Web Manager invita o aprueba comerciantes desde el panel admin. Asigna rol Comerciante al usuario y le habilita el dashboard propio.
+- [x] **Alta de comerciante por Web Manager** — El Web Manager invita o aprueba comerciantes desde el panel admin. Asigna rol Comerciante al usuario y le habilita el dashboard propio.
 
   - Configuración: Solicitudes de alta también vía formulario público con aprobación manual.
 
-- [ ] **Dashboard del comerciante** — Vista exclusiva donde el comerciante actualiza dirección, horarios, stock declarado y ve métricas básicas (visitas a su listing, intercambios cerca de su local).
+- [x] **Dashboard del comerciante** — Vista exclusiva donde el comerciante actualiza dirección, horarios, stock declarado y ve métricas básicas (visitas a su listing, intercambios cerca de su local).
 
-- [ ] **Listing geolocalizado en mapa** — Los comerciantes activos aparecen en un mapa filtrable por ciudad cuando un coleccionista busca '¿Dónde comprar sobres cerca?'. Solo se muestran comerciantes con suscripción al día.
+- [x] **Listing geolocalizado en mapa** — Los comerciantes activos aparecen en un mapa filtrable por ciudad cuando un coleccionista busca '¿Dónde comprar sobres cerca?'. Solo se muestran comerciantes con suscripción al día.
 
   - Configuración: Mapa Leaflet con clusters. Query optimizada por bounding box + filtro de status='active'.
 
-- [ ] **Suscripción mensual de comerciante** — Cada comerciante paga $150-250K COP/mes. Sistema registra pagos, vencimientos y desactiva listing si la suscripción expira sin renovar.
+- [x] **Suscripción mensual de comerciante** — Cada comerciante paga $150-250K COP/mes. Sistema registra pagos, vencimientos y desactiva listing si la suscripción expira sin renovar.
 
   - Configuración: Pagos manuales registrados por Web Manager en V1 (transferencia/Nequi). Pasarela de pago automática puede agregarse en V2.
 
@@ -477,15 +477,15 @@ Configuración del branding del Presenting Sponsor: logo en splash, header persi
 
 Inventario publicitario rotativo con segmentación geográfica, control de frecuencia y reportes de impresiones.
 
-- [ ] **Gestión de campañas y creatividades** — El Web Manager crea campañas con presupuesto en impresiones, vigencia y segmentación geográfica. Cada campaña puede tener múltiples creatividades rotativas.
+- [x] **Gestión de campañas y creatividades** — El Web Manager crea campañas con presupuesto en impresiones, vigencia y segmentación geográfica. Cada campaña puede tener múltiples creatividades rotativas.
 
   - Configuración: Subida de imagen, headline, body y URL de clic. Validación de tamaño y formato.
 
-- [ ] **Rotación ponderada de banners** — Selección de qué banner mostrar en cada slot basado en peso, segmentación geográfica, presupuesto restante y frecuencia (máximo 1 cada 5 swipes).
+- [x] **Rotación ponderada de banners** — Selección de qué banner mostrar en cada slot basado en peso, segmentación geográfica, presupuesto restante y frecuencia (máximo 1 cada 5 swipes).
 
   - Configuración: Algoritmo de rotación en backend. Frecuencia controlada en cliente vía contador de swipes.
 
-- [ ] **Tracking de impresiones y clics** — Cada banner servido genera un registro de AdImpression con slot, ciudad y user_id. Clics se trackean con redirect intermedio.
+- [x] **Tracking de impresiones y clics** — Cada banner servido genera un registro de AdImpression con slot, ciudad y user_id. Clics se trackean con redirect intermedio.
 
   - Configuración: Tabla particionada por mes. Redirect server-side con UTM tracking.
 

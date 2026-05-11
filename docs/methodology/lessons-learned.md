@@ -260,3 +260,37 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 ### ETA = `remaining / (weekly_velocity / 7)` sin smoothing
 - Regresión simple en V1. `None` cuando velocity == 0 (no podemos predecir nada). `0` cuando completion == 100%.
 - Smoothing exponencial / multi-week regression difiere a V2 cuando tengamos data real para validar overfit.
+
+---
+
+## 11. Decisiones cerradas en Epics 5 (Comerciantes) + 7 (Banners CPM)
+
+### Frequency cap de banners en cliente, no en server
+- `adStore.noteSwipe()` cuenta swipes y devuelve `true` cada N (default 5). El backend solo decide *cuál* creative servir.
+- Razón: un round-trip por swipe rompería el UX (swipe es la interacción más caliente). El conteo en cliente es "good enough" para un slot publicitario; si el usuario refresca, vuelve a contar — eso es aceptable y mantiene el feed snappy.
+
+### Click via 302 redirect server-side, no link directo al anunciante
+- El `<a>` apunta a `/api/ads/click/{impression_id}/`, no directo al `click_url`. El endpoint registra `AdClick` y devuelve un 302.
+- Beneficios: (1) registra el click incluso si el usuario cierra la pestaña justo al hacer clic; (2) el `Referer` que llega al sitio del anunciante es `wa.me`/landing limpio, no expone `impression_id`; (3) facilita futuro fraud detection (el server ve cada click).
+
+### Listing público de comerciantes filtra subscripción al día por default
+- Query base: `subscription_status='active' AND subscription_expires_at > now()`. La property `is_listing_visible` es defensa secundaria.
+- Razón: los merchants morosos no deben aparecer en el mapa público — es la palanca de cobranza más fuerte que tenemos.
+
+### `register_payment` extiende desde `max(now, current_expiry)`
+- Pre-pagos consecutivos se acumulan correctamente (merchant paga 3 meses adelantados → 90 días, no 30).
+- Pagos tras vencimiento parten desde hoy (no recuperan el tiempo perdido).
+- Comportamiento documentado en docstring + cubierto por test `test_consecutive_payment_extends_from_existing_expiry`.
+
+### Mapa Leaflet con `dynamic(..., {ssr:false})`
+- `react-leaflet` toca `window` en module init → rompe SSR de Next.js.
+- Solución: el componente `MerchantMap` (server-render-safe) hace `dynamic(import('./MerchantMapInner'), {ssr:false})`. El "Inner" es el real con `MapContainer`.
+- Sin `next/dynamic` el wrapping requeriría `'use client'` + `useEffect` truco; este es más limpio y testable.
+
+### Weighted rotation = `creative.weight * campaign.weight`
+- Multiplicación, no suma — permite al Web Manager priorizar (a) toda una campaña con `campaign.weight=10` o (b) una creative específica dentro de una campaña con `creative.weight=10`.
+- Default ambos a 1 → rotación uniforme entre creatives elegibles.
+
+### Reportes PDF/CSV de campañas diferidos a V2
+- El item del checklist "Reportes para anunciantes (PDF/CSV descargable)" requiere generación con Huey + storage temporal + descarga firmada. Los datos *ya están* en `AdImpression`/`AdClick`; el endpoint `/ads/admin/campaigns/{id}/stats/` los expone como JSON.
+- Decisión: V1 entrega los datos en JSON desde el panel admin. PDF/CSV se difiere a V2 cuando exista demanda real de un anunciante específico.

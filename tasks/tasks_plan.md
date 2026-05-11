@@ -46,8 +46,8 @@
 
 | Epic | Nombre | Estado | Dependencias |
 |------|--------|--------|--------------|
-| **5** | Comerciantes (listing + suscripción + mapa) | ⚪ pending | Epic 1 (rol) |
-| **7** | Banners CPM (campañas + creativas + tracking) | ⚪ pending | Epic 1 |
+| **5** | Comerciantes (listing + suscripción + mapa) | ✅ done | Epic 1 (rol) |
+| **7** | Banners CPM (campañas + creativas + tracking) | ✅ done (sin reportes PDF) | Epic 1 |
 
 ### Sprint 4 — Trust loop + admin
 

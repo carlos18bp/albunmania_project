@@ -5,7 +5,7 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-11
-**Foco:** Bloque B Sprint 2 — Epics 3 + 4 + 12 completadas.
+**Foco:** Bloque B Sprint 3 — Epics 5 + 7 (Comerciantes + Banners CPM) completadas.
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado al cierre de la sesión
@@ -13,10 +13,10 @@
 - **Bloque A** (cleanup post-bootstrap): completo, **pusheado a `origin/master`**.
 - **Bloque B Sprint 1**: ✅ **completo** — Epics 1 / 2 / 6 / 10 cerradas.
 - **Bloque B Sprint 2**: ✅ Epics 3 + 4 + 12 cerradas.
-  - Epic 3 — Match (commits `be9a4e9`→`448266a`).
-  - Epic 4 — WhatsApp opt-in por trade (commits `8718fe0` backend · `45d5e81` frontend).
-  - Epic 12 — Stats avanzadas (commits `2bac403` backend · `6ca420d` frontend).
-  - Backend **266/266 verde** (+21). Frontend **180/180 verde** (+11).
+- **Bloque B Sprint 3**: ✅ Epics 5 + 7 cerradas en esta sesión.
+  - Epic 5 — Comerciantes (commits `a9cf6fc` backend · `630a7be` frontend).
+  - Epic 7 — Banners CPM (commits `13c2ca4` backend · `6dc5a87` frontend).
+  - Backend **293/293 verde** (+27). Frontend **193/193 verde** (+13).
 
 ## Epic 1 — Cierre
 
@@ -174,6 +174,43 @@
 5. **Streak con grace day** — la racha cuenta días consecutivos hacia atrás desde hoy. Si el usuario no pegó hoy pero sí ayer, la racha sigue contando ayer y anteriores (un día de gracia evita que se pierda toda la racha por una mala notificación).
 6. **ETA = remaining / (weekly_velocity / 7)** — regresión simple sin smoothing. `None` si `velocity == 0`, `0` si el álbum está completo.
 
+## Sprint 3 — Cierre
+
+### Backend (Epic 5 + Epic 7)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Model | `models/merchant_subscription_payment.py` | Audit trail por pago (Web Manager). |
+| Models | `models/{ad_campaign,ad_creative,ad_impression}.py` | AdCampaign + AdCreative + AdImpression + AdClick (en mismo archivo). |
+| Migración | `0006_merchant_payment_and_ads.py` | Aplicada. |
+| Services | `services/merchant_subscription.py` | `register_payment` extiende `subscription_expires_at` desde `max(now, current_expiry)`. |
+| Services | `services/ad_engine.py` | `serve_banner` weighted random + sanity (status, vigencia, geo, presupuesto) en transacción atómica. |
+| Endpoints | `views/merchant.py` | Public list (city/geo bbox), GET/PATCH dashboard (no self-extend), admin promote, admin payment. |
+| Endpoints | `views/ad.py` | Public serve (204 si nada), click 302, admin CRUD campañas, stats CTR. |
+| Tests | 4 archivos | 27 tests, suite total **293/293 verde**. |
+
+### Frontend (Epic 5 + Epic 7)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Stores | `lib/stores/merchantStore.ts` | publicList + dashboard + updateDashboard. |
+| Stores | `lib/stores/adStore.ts` | fetchBanner, noteSwipe (1/5 frequency cap), clickUrl. |
+| Components | `components/merchant/{MerchantList,MerchantMap,MerchantMapInner,MerchantDashboardForm}.tsx` | Map dinámico (SSR-safe), formulario con badge de suscripción. |
+| Components | `components/ads/BannerSlot.tsx` | Anchor → click endpoint, sin leak de impression_id a ad-blockers. |
+| Pages | `app/merchants/page.tsx` (público) + `app/merchants/me/page.tsx` (auth) | |
+| Integration | `app/page.tsx` (banner home) + `components/match/MatchFeed.tsx` (banner feed gated por noteSwipe) | |
+| i18n | `messages/{es,en,pt}.json` | Secciones `merchants.*` y `ads.*`. |
+| Tests | 4 archivos | 13 tests, suite **193/193 verde**. |
+
+### Decisiones técnicas (esta sesión)
+
+1. **Frequency cap en cliente** — el counter `swipesSinceLastBanner` vive en `adStore` (Zustand). El backend solo decide *cuál* creative servir; el ritmo lo controla el cliente para no romper el UX con un round-trip por swipe.
+2. **Click via 302 redirect server-side** — el `<a>` apunta a `/api/ads/click/{id}/`, no directo al sitio del anunciante. Permite registrar el click incluso si el cliente cierra la pestaña justo al hacer clic, y mantiene el impression_id fuera del `Referer` enviado al sitio destino.
+3. **Listing solo si suscripción al día** — query default filtra `subscription_status='active' AND subscription_expires_at > now()`. La property `is_listing_visible` queda como guardia secundaria para callers que no usan el endpoint público.
+4. **`register_payment` extiende desde `max(now, current_expiry)`** — pre-pagos consecutivos se acumulan; pagos tras vencimiento parten desde hoy. Comportamiento documentado y testeado.
+5. **Mapa Leaflet con `dynamic(..., {ssr:false})`** — leaflet rompe en SSR (toca `window`). El wrapper `MerchantMap` import dinámico evita el error sin sumar dep.
+6. **AdCreative weight × Campaign weight** — la ponderación combina ambos. Permite al Web Manager priorizar una campaña entera o solo una creative específica dentro de ella.
+
 ## Pendientes / TODOs heredados (siguen activos)
 
 - ProjectApp debe regenerar **Google OAuth Client ID + Secret** en GCP (ERROR-001 en `error-documentation.md`). Tests pasan con mocks; el flujo real requiere credenciales válidas.
@@ -187,11 +224,11 @@ Ninguno para arrancar Sprint 2 (Match) o BATCH paralelo de Epics 2/6/10.
 
 ## Próximos pasos sugeridos para la siguiente sesión
 
-**Sprint 3 — Monetización (BATCH 2 épicas paralelas)**:
+**Sprint 4 — Trust loop + admin**:
 
-- Epic 5 — Comerciantes (listing geolocalizado + suscripción + dashboard comerciante). Reusa MerchantProfile creado en Epic 1.
-- Epic 7 — Banners CPM (campañas + creativas + tracking de impresiones).
+- Epic 11 — Reseñas y Reputación post-trade (rating 1-5 + tags + respuesta + agregados cacheados en Profile). Reusa `Trade` (Epic 3) y `Profile.rating_*` (Epic 1).
+- Epic 8 — Panel Admin (gestión + cola moderación + manual stub). Depende de Epics 2/5/6/7 (todas cerradas).
 
-**Sprint 2 pendiente única — Epic 9** (Push real, requiere generar VAPID keys + Service Worker handler).
+**Sprint 2 pendiente única — Epic 9** (Push real con VAPID + pywebpush + Service Worker).
 
-Recomendado: **Sprint 3 BATCH paralelo** — Epic 5 y Epic 7 son independientes y desbloquean los dos motores de monetización adicionales. Epic 9 puede ir luego como sesión propia.
+Recomendado: **Epic 11 primero** (cierra el trust loop antes de exponer admin). Epic 9 cuando el equipo genere VAPID keys.
