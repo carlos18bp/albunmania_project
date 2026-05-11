@@ -1,13 +1,13 @@
-# Base Django React Next Feature — Claude Code Configuration
+# Albunmanía — Claude Code Configuration
 
 ## Project Identity
 
-- **Name**: Base Django React Next Feature (Template project)
-- **Domain**: N/A (template — not deployed to production)
+- **Name**: Albunmanía
+- **Domain**: Coleccionismo / intercambio de cromos · Cliente: ProjectApp
 - **Stack**: Django + DRF (backend) / Next.js + React + TypeScript (frontend) / MySQL 8 / Redis / Huey
-- **Server path**: `/home/ryzepeck/webapps/base_django_react_next_feature_staging` (staging only)
-- **Services**: `base_django_react_next_feature_staging` (Gunicorn), `base_django_react_next_feature-staging-huey`
-- **Note**: This is a **template project** used as the starting point for new Django+Next.js projects
+- **Server path**: `/home/ryzepeck/webapps/albunmania_staging` (staging only)
+- **Services**: `albunmania_staging` (Gunicorn), `albunmania-staging-huey`
+- **Note**: Plataforma comunitaria PWA para intercambio de cromos del Mundial 26 en Colombia y Latinoamérica, con match dual (swipe por proximidad + QR presencial), tres motores de monetización (Presenting Sponsor, Listing Comerciantes, Banner CPM) y panel admin multi-rol.
 
 ---
 
@@ -338,7 +338,7 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 
 ---
 
-## Lessons Learned — Base Django React Next Feature
+## Lessons Learned — Albunmanía
 
 ### Architecture Patterns
 
@@ -378,7 +378,7 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 
 ---
 
-## Error Documentation — Base Django React Next Feature
+## Error Documentation — Albunmanía
 
 No documented errors (clean template).
 
