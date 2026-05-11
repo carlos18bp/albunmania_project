@@ -9,6 +9,7 @@ from .sponsor import Sponsor
 from .match import Match
 from .like import Like
 from .trade import Trade
+from .trade_whatsapp_optin import TradeWhatsAppOptIn
 
 __all__ = [
     'User',
@@ -22,4 +23,5 @@ __all__ = [
     'Match',
     'Like',
     'Trade',
+    'TradeWhatsAppOptIn',
 ]
