@@ -232,3 +232,31 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 ### `idb-keyval` sobre `localStorage`
 - API trivial (`get`/`set` async), 4kB minified, evita el límite ~5MB y la sincronía de localStorage.
 - Solo se usa dentro de stores `'use client'` y guard `typeof window !== 'undefined'` para no romper SSR.
+
+---
+
+## 10. Decisiones cerradas en Epics 4 (WhatsApp) + 12 (Stats)
+
+### Per-trade WhatsApp opt-in — `TradeWhatsAppOptIn` separado de `Profile.whatsapp_optin`
+- `Profile.whatsapp_optin` queda como preferencia general del usuario (puede usarse para sugerencias UI).
+- El deep link `wa.me` solo se construye si **ambos** participantes flippearon `TradeWhatsAppOptIn(opted_in=True)` para el mismo Trade.
+- Beneficio: consentimiento explícito por caso, revocable sin afectar otros trades. Cumple con la propuesta del cliente ("no global").
+
+### Plantilla wa.me server-side (no client-side)
+- `services/whatsapp_link.build_whatsapp_link()` construye el mensaje pre-llenado y URL-encodea con `urllib.parse.quote`.
+- Razón: si la plantilla se construyera en el cliente, el usuario podría editarla arbitrariamente (suplantación, spam, etc.). Server-side garantiza control y permite a futuro respetar `Profile.locale` para mensajes en es/en/pt.
+
+### `wa.me` requiere número en formato digits-only
+- `wa.me/<digits>` no acepta `+`, `-`, espacios, ni paréntesis. Extracción: `''.join(c for c in e164 if c.isdigit())`.
+
+### Stats on-demand en V1, Huey nightly diferido a V2
+- `compute_stats(user)` se ejecuta en cada `GET /stats/me/`. Para volúmenes esperados en lanzamiento (<10k usuarios activos diarios) es trivial.
+- Cuando los volúmenes lo justifiquen, mover a `tasks.py` con Huey nightly cacheando en `Profile.stats_cache_*` fields. Documentado para no olvidarlo.
+
+### Streak con grace day (1 día)
+- La racha cuenta días consecutivos hacia atrás desde hoy. Si el usuario no pegó hoy pero sí ayer, la racha sigue contando ayer y anteriores.
+- Sin grace day, una notificación tarde o un día ocupado mata toda la racha — mala UX. Un día de gracia balancea engagement vs honestidad numérica.
+
+### ETA = `remaining / (weekly_velocity / 7)` sin smoothing
+- Regresión simple en V1. `None` cuando velocity == 0 (no podemos predecir nada). `0` cuando completion == 100%.
+- Smoothing exponencial / multi-week regression difiere a V2 cuando tengamos data real para validar overfit.

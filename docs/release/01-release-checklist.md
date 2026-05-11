@@ -397,7 +397,7 @@ Catálogo del álbum precargado con búsqueda predictiva, ediciones especiales d
 
   - Configuración: Endpoint dedicado con índices full-text en MySQL. Debounce de 300ms en frontend.
 
-- [ ] **Estadísticas avanzadas con racha y ETA** — Dashboard del coleccionista con racha de días consecutivos, % completo del álbum, láminas añadidas en últimos 7 días, ETA de finalización y comparativa con coleccionistas de la ciudad.
+- [x] **Estadísticas avanzadas con racha y ETA** — Dashboard del coleccionista con racha de días consecutivos, % completo del álbum, láminas añadidas en últimos 7 días, ETA de finalización y comparativa con coleccionistas de la ciudad.
 
   - Configuración: Cálculo nocturno por Huey y caché en Profile. ETA calculada por regresión simple sobre velocidad reciente.
 
@@ -425,11 +425,11 @@ Sistema dual de matching: por proximidad geográfica con mecánica swipe estilo 
 
 Cierre de matches a través de WhatsApp deep links con consentimiento explícito de ambas partes y plantilla pre-llenada del intercambio.
 
-- [ ] **Opt-in explícito de WhatsApp** — Tras un match mutuo, cada usuario decide si comparte su WhatsApp con el otro. Solo si ambos aceptan se genera el deep link.
+- [x] **Opt-in explícito de WhatsApp** — Tras un match mutuo, cada usuario decide si comparte su WhatsApp con el otro. Solo si ambos aceptan se genera el deep link.
 
   - Configuración: Campo whatsapp_optin en Profile. Bandera por-match para que el opt-in sea explícito en cada caso, no global.
 
-- [ ] **Deep link de WhatsApp con plantilla pre-llenada** — Al confirmar el opt-in mutuo, la app abre WhatsApp con un mensaje pre-llenado que lista los cromos a intercambiar y datos básicos del trade.
+- [x] **Deep link de WhatsApp con plantilla pre-llenada** — Al confirmar el opt-in mutuo, la app abre WhatsApp con un mensaje pre-llenado que lista los cromos a intercambiar y datos básicos del trade.
 
   - Configuración: URL wa.me con query string text= y plantilla generada server-side. Idioma según preferencia del usuario.
 
