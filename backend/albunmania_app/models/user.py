@@ -31,15 +31,17 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
-        CUSTOMER = 'customer', 'Customer'
-        ADMIN = 'admin', 'Admin'
+        COLLECTOR = 'collector', 'Coleccionista'
+        MERCHANT = 'merchant', 'Comerciante'
+        WEB_MANAGER = 'web_manager', 'Web Manager'
+        ADMIN = 'admin', 'Administrador'
 
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=50, blank=True)
 
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.CUSTOMER)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.COLLECTOR)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -52,3 +54,23 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    def assign_role(self, role: 'User.Role') -> None:
+        """Set role and sync membership with the matching Django Group.
+
+        Each Albunmanía role maps 1:1 with a Group of the same name. Assigning
+        a role removes the user from other Albunmanía groups and adds them to
+        the new one (idempotent). Triggers MerchantProfile creation for the
+        Merchant role through the post_save signal on User.
+        """
+        from django.contrib.auth.models import Group
+
+        all_role_names = {choice.value for choice in self.Role}
+        for group in self.groups.filter(name__in=all_role_names):
+            self.groups.remove(group)
+
+        target_group, _ = Group.objects.get_or_create(name=role.value)
+        self.groups.add(target_group)
+
+        self.role = role.value
+        self.save(update_fields=['role'])
