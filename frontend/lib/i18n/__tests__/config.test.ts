@@ -22,13 +22,14 @@ describe('i18n config', () => {
   });
 
   describe('constants', () => {
-    it('exposes DEFAULT_LOCALE as "en"', () => {
-      expect(DEFAULT_LOCALE).toBe('en');
+    it('exposes DEFAULT_LOCALE as "es" (Albunmanía primary market)', () => {
+      expect(DEFAULT_LOCALE).toBe('es');
     });
 
-    it('exposes SUPPORTED_LOCALES containing "en" and "es"', () => {
-      expect(SUPPORTED_LOCALES).toContain('en');
+    it('exposes SUPPORTED_LOCALES containing "es", "en" and "pt"', () => {
       expect(SUPPORTED_LOCALES).toContain('es');
+      expect(SUPPORTED_LOCALES).toContain('en');
+      expect(SUPPORTED_LOCALES).toContain('pt');
     });
 
     it('exposes LOCALE_LABELS with English display name', () => {

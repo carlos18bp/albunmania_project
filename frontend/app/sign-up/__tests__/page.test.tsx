@@ -26,18 +26,10 @@ jest.mock('@react-oauth/google', () => ({
   ),
 }));
 
-jest.mock('react-google-recaptcha', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const React = require('react');
-  const MockRecaptcha = React.forwardRef(
-    ({ onChange: _onChange }: { onChange?: (token: string | null) => void }, ref: any) => {
-      React.useImperativeHandle(ref, () => ({ reset: () => {} }));
-      return <div data-testid="mock-recaptcha" />;
-    },
-  );
-  MockRecaptcha.displayName = 'MockRecaptcha';
-  return MockRecaptcha;
-});
+jest.mock('@/components/auth/HCaptchaWidget', () => ({
+  __esModule: true,
+  default: () => <div data-testid="mock-hcaptcha" />,
+}));
 
 jest.mock('../../../lib/services/http', () => ({
   api: { get: jest.fn().mockRejectedValue(new Error('no key')), post: jest.fn() },

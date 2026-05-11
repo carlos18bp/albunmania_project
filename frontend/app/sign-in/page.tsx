@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FormEvent, useState, useEffect, useRef } from 'react';
+import { FormEvent, useState, useEffect } from 'react';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import ReCAPTCHA from 'react-google-recaptcha';
+import HCaptchaWidget from '@/components/auth/HCaptchaWidget';
 
 import { useAuthStore } from '@/lib/stores/authStore';
 import { api } from '@/lib/services/http';
@@ -29,12 +29,15 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [siteKey, setSiteKey] = useState<string>('');
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-
   useEffect(() => {
-    api.get('google-captcha/site-key/')
+    // Read sitekey from the new endpoint (with fallback to the legacy alias).
+    api.get('captcha/site-key/')
       .then((res) => setSiteKey(res.data.site_key || ''))
-      .catch(() => {});
+      .catch(() => {
+        api.get('google-captcha/site-key/')
+          .then((res) => setSiteKey(res.data.site_key || ''))
+          .catch(() => {});
+      });
   }, []);
 
   const onSubmit = async (e: FormEvent) => {
@@ -51,9 +54,9 @@ export default function SignInPage() {
     try {
       await signIn({ email, password, captcha_token: captchaToken ?? undefined });
       router.replace('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials');
-      recaptchaRef.current?.reset();
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setError(axiosErr.response?.data?.error || 'Invalid credentials');
       setCaptchaToken(null);
     } finally {
       setLoading(false);
@@ -128,16 +131,13 @@ export default function SignInPage() {
             />
           </div>
 
-          {siteKey && (
-            <div className="flex justify-center">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={siteKey}
-                onChange={(token) => setCaptchaToken(token)}
-                onExpired={() => setCaptchaToken(null)}
-              />
-            </div>
-          )}
+          <div className="flex justify-center">
+            <HCaptchaWidget
+              sitekey={siteKey || undefined}
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          </div>
 
           <button
             className="bg-primary text-primary-foreground rounded-full px-5 py-3 w-full disabled:opacity-50 hover:bg-primary/90"

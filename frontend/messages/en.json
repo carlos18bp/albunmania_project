@@ -9,6 +9,9 @@
     "back": "Back",
     "search": "Search",
     "close": "Close",
+    "next": "Next",
+    "skip": "Skip",
+    "finish": "Finish",
     "noAffiliation": "Not officially affiliated with FIFA or Panini."
   },
   "nav": {
@@ -29,8 +32,26 @@
     "signInWithGoogle": "Sign in with Google",
     "signUpWithGoogle": "Sign up with Google",
     "googleAccountAgeRule": "We only accept Google accounts older than 30 days.",
+    "googleAccountAgeError": "Your Google account is too new (minimum {min} days). Try again once your account is older.",
     "captchaPrompt": "Verify you are not a robot.",
+    "captchaError": "We could not verify the captcha. Please try again.",
     "forgotPassword": "Forgot password",
     "invalidCredentials": "Invalid credentials. Please try again."
+  },
+  "onboarding": {
+    "step1Title": "Pick your active album",
+    "step2Title": "Allow geolocation",
+    "step3Title": "Notifications and contact",
+    "geoExplanation": "Your approximate location is only used to surface nearby trades. We never share your exact location.",
+    "geoRequest": "Allow location",
+    "geoRequesting": "Requesting…",
+    "geoOptin": "Remember my location consent",
+    "pushOptin": "Push notifications for matches",
+    "pushOptinHelp": "Get notified instantly about new matches and nearby missing stickers.",
+    "whatsappOptin": "WhatsApp closing opt-in",
+    "whatsappOptinHelp": "Only if the other person also accepts. Your number is shared trade by trade.",
+    "whatsappPlaceholder": "+573001234567",
+    "whatsappE164Required": "You must enter your WhatsApp number to enable the opt-in.",
+    "submitFailed": "We could not save your preferences. Please try again."
   }
 }

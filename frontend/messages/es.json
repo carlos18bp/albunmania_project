@@ -9,6 +9,9 @@
     "back": "Volver",
     "search": "Buscar",
     "close": "Cerrar",
+    "next": "Siguiente",
+    "skip": "Saltar",
+    "finish": "Finalizar",
     "noAffiliation": "No afiliado oficialmente con FIFA o Panini."
   },
   "nav": {
@@ -29,8 +32,26 @@
     "signInWithGoogle": "Entrar con Google",
     "signUpWithGoogle": "Registrarme con Google",
     "googleAccountAgeRule": "Solo aceptamos cuentas Google con más de 30 días de antigüedad.",
+    "googleAccountAgeError": "Tu cuenta de Google es demasiado nueva (mínimo {min} días). Vuelve a intentarlo cuando tu cuenta tenga más antigüedad.",
     "captchaPrompt": "Verifica que no eres un robot.",
+    "captchaError": "No pudimos verificar el captcha. Intenta de nuevo.",
     "forgotPassword": "Olvidé mi contraseña",
     "invalidCredentials": "Credenciales inválidas. Intenta de nuevo."
+  },
+  "onboarding": {
+    "step1Title": "Elige tu álbum activo",
+    "step2Title": "Permitir geolocalización",
+    "step3Title": "Notificaciones y contacto",
+    "geoExplanation": "Tu ubicación aproximada se usa solo para sugerirte intercambios cercanos. Nunca compartimos tu ubicación exacta.",
+    "geoRequest": "Permitir ubicación",
+    "geoRequesting": "Solicitando…",
+    "geoOptin": "Recordar mi consentimiento de ubicación",
+    "pushOptin": "Notificaciones push de match",
+    "pushOptinHelp": "Te avisamos al instante cuando aparece un match nuevo o un cromo buscado cerca.",
+    "whatsappOptin": "Cierre por WhatsApp opt-in",
+    "whatsappOptinHelp": "Solo si la otra persona también acepta. Tu número solo se comparte trade por trade.",
+    "whatsappPlaceholder": "+573001234567",
+    "whatsappE164Required": "Debes ingresar tu número de WhatsApp para activar el opt-in.",
+    "submitFailed": "No pudimos guardar tus preferencias. Intenta de nuevo."
   }
 }

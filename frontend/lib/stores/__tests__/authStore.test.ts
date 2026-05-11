@@ -151,10 +151,32 @@ describe('authStore', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
   });
 
-  it('throws when google login response is missing tokens', async () => {
+  it('throws GoogleLoginError(unknown) when google login response is missing tokens', async () => {
     mockApi.post.mockResolvedValueOnce({ data: { access: null, refresh: null } });
 
-    await expect(useAuthStore.getState().googleLogin({ credential: 'token' })).rejects.toThrow('Invalid token response');
+    await expect(
+      useAuthStore.getState().googleLogin({ credential: 'token' }),
+    ).rejects.toMatchObject({ code: 'unknown' });
+  });
+
+  it('throws GoogleLoginError(account_too_young) when backend returns 403', async () => {
+    mockApi.post.mockRejectedValueOnce({
+      response: { status: 403, data: { error: 'account_too_young', min_days: 30, account_age_days: 7 } },
+    });
+
+    await expect(
+      useAuthStore.getState().googleLogin({ credential: 'tok', access_token: 'at' }),
+    ).rejects.toMatchObject({ code: 'account_too_young', min_days: 30, account_age_days: 7 });
+  });
+
+  it('throws GoogleLoginError(captcha_failed) when backend returns 400 captcha_failed', async () => {
+    mockApi.post.mockRejectedValueOnce({
+      response: { status: 400, data: { error: 'captcha_failed', detail: 'hCaptcha verification failed.' } },
+    });
+
+    await expect(
+      useAuthStore.getState().googleLogin({ credential: 'tok', captcha_token: '' }),
+    ).rejects.toMatchObject({ code: 'captcha_failed' });
   });
 
   it('signs out and clears tokens', () => {
