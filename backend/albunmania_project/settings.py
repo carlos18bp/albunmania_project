@@ -252,10 +252,21 @@ EMAIL_BACKEND = os.getenv('DJANGO_EMAIL_BACKEND') or (
 )
 
 # ---------------------------------------------------------------------------
-# Google reCAPTCHA
+# Captcha (hCaptcha; reCAPTCHA kept as fallback during migration window)
 # ---------------------------------------------------------------------------
 RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '')
 RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '')
+
+# hCaptcha (Albunmanía spec). The captcha service falls back to RECAPTCHA_*
+# if HCAPTCHA_* is not set, so the migration is incremental.
+# Test keys (always succeed) for local dev / CI:
+#   sitekey: 10000000-ffff-ffff-ffff-000000000001
+#   secret:  0x0000000000000000000000000000000000000000
+HCAPTCHA_SITEKEY = os.getenv('DJANGO_HCAPTCHA_SITEKEY', '')
+HCAPTCHA_SECRET = os.getenv('DJANGO_HCAPTCHA_SECRET', '')
+
+# WhatsApp deep link base (used by Match WhatsApp opt-in flow in Epic 4).
+WHATSAPP_DEEP_LINK_BASE = os.getenv('WHATSAPP_DEEP_LINK_BASE', 'https://wa.me/')
 
 # ---------------------------------------------------------------------------
 # Logging

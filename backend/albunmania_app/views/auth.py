@@ -19,7 +19,21 @@ from albunmania_app.utils.auth_utils import (
     send_password_reset_code,
     send_verification_code
 )
-from albunmania_app.views.captcha_views import verify_recaptcha
+from albunmania_app.services.captcha_service import verify_hcaptcha
+from albunmania_app.services.google_account_age import (
+    MIN_ACCOUNT_AGE_DAYS,
+    verify_account_age,
+)
+
+
+def verify_recaptcha(token: str) -> bool:
+    """Backwards-compat shim during the captcha migration window.
+
+    Older code paths (sign_up, sign_in, password reset) still import
+    `verify_recaptcha`. Route them through the hCaptcha service so they
+    benefit from the migration without further edits.
+    """
+    return verify_hcaptcha(token)
 
 User = get_user_model()
 
@@ -206,7 +220,38 @@ def google_login(request):
             {'error': 'Email is required'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
+    # hCaptcha verification (Albunmanía spec — applies on first ingress).
+    captcha_token = request.data.get('captcha_token', '')
+    if not verify_hcaptcha(captcha_token):
+        logger.info('Google login rejected: hCaptcha verification failed.')
+        return Response(
+            {'error': 'captcha_failed', 'detail': 'hCaptcha verification failed.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Account age rule: only Google accounts older than MIN_ACCOUNT_AGE_DAYS
+    # are allowed to register / sign in. We only enforce on account creation
+    # (returning users keep working even if the People API call fails later).
+    access_token = request.data.get('access_token', '')
+    user_already_exists = User.objects.filter(email=email).exists()
+
+    if not user_already_exists:
+        is_old_enough, age_days = verify_account_age(access_token)
+        if not is_old_enough:
+            logger.info(
+                'Google sign-up rejected for %s: account too young (age_days=%s).',
+                email, age_days,
+            )
+            return Response(
+                {
+                    'error': 'account_too_young',
+                    'min_days': MIN_ACCOUNT_AGE_DAYS,
+                    'account_age_days': age_days,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
     # Get or create user
     user, created = User.objects.get_or_create(
         email=email,

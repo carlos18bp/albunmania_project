@@ -227,6 +227,8 @@ def test_google_login_creates_user_with_payload(api_client, monkeypatch):
         return DummyResponse(status_code=200, payload=payload)
 
     monkeypatch.setattr(auth_views.requests, 'get', fake_get)
+    # Bypass the People-API account age check (covered by dedicated tests).
+    monkeypatch.setattr(auth_views, 'verify_account_age', lambda token, min_days=30: (True, 365))
 
     response = api_client.post(
         reverse('google_login'),
