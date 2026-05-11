@@ -38,6 +38,26 @@
     "forgotPassword": "Esqueci minha senha",
     "invalidCredentials": "Credenciais inválidas. Tente novamente."
   },
+  "whatsapp": {
+    "optInTitle": "Compartilhar meu WhatsApp para esta troca",
+    "optInBody": "Seu número só é compartilhado se a outra pessoa também aceitar. Vale só para este match — pode revogar a qualquer momento.",
+    "linkWaiting": "Coordenar pelo WhatsApp (aguardando opt-in mútuo)",
+    "linkLoading": "Gerando link…",
+    "linkOpen": "Coordenar pelo WhatsApp"
+  },
+  "stats": {
+    "loading": "Carregando estatísticas…",
+    "needAlbum": "Selecione um álbum ativo para ver suas estatísticas.",
+    "completionPct": "% completo",
+    "pasted": "Coladas",
+    "repeated": "Repetidas",
+    "weeklyVelocity": "Última semana",
+    "streak": "Sequência",
+    "etaLabel": "ETA conclusão",
+    "etaComplete": "Completo!",
+    "rankingNeedConfig": "Selecione um álbum ativo e preencha sua cidade para ver o ranking.",
+    "rankingEmpty": "Ainda não há colecionadores ativos em {city}."
+  },
   "match": {
     "tabSwipe": "Perto de você",
     "tabMine": "Meus matches",

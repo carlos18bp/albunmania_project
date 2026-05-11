@@ -38,6 +38,26 @@
     "forgotPassword": "Forgot password",
     "invalidCredentials": "Invalid credentials. Please try again."
   },
+  "whatsapp": {
+    "optInTitle": "Share my WhatsApp for this trade",
+    "optInBody": "Your number is shared only if the other person also accepts. Scoped to this match — you can revoke at any time.",
+    "linkWaiting": "Coordinate over WhatsApp (waiting for mutual opt-in)",
+    "linkLoading": "Generating link…",
+    "linkOpen": "Coordinate over WhatsApp"
+  },
+  "stats": {
+    "loading": "Loading stats…",
+    "needAlbum": "Select an active album to see your stats.",
+    "completionPct": "% complete",
+    "pasted": "Pasted",
+    "repeated": "Repeated",
+    "weeklyVelocity": "Last week",
+    "streak": "Streak",
+    "etaLabel": "Finish ETA",
+    "etaComplete": "Complete!",
+    "rankingNeedConfig": "Select an active album and your city to view the ranking.",
+    "rankingEmpty": "No active collectors in {city} yet."
+  },
   "match": {
     "tabSwipe": "Near you",
     "tabMine": "My matches",
