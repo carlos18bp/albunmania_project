@@ -56,7 +56,7 @@ jobs:
         run: python manage.py migrate --no-input
 
       - name: Run pytest with coverage
-        run: pytest -v --tb=short --junitxml=pytest-results.xml --cov=base_feature_app --cov-branch --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml
+        run: pytest -v --tb=short --junitxml=pytest-results.xml --cov=albunmania_app --cov-branch --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml
 
       - name: Backend coverage summary
         if: always()
