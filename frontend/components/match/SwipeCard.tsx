@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 
+import ReviewWidget from '@/components/reviews/ReviewWidget';
 import type { MatchCandidate } from '@/lib/stores/matchStore';
 
 type Props = {
@@ -30,9 +31,7 @@ export default function SwipeCard({ candidate, onLike, onPass }: Props) {
             {p.city || 'Cerca de ti'} · {distance_km.toFixed(1)} km
           </p>
         </div>
-        <span className="text-xs rounded-full bg-muted px-2 py-1" aria-label="rating">
-          ★ {Number(p.rating_avg).toFixed(1)} ({p.rating_count})
-        </span>
+        <ReviewWidget ratingAvg={p.rating_avg} ratingCount={p.rating_count} />
       </header>
 
       <section className="grid grid-cols-2 gap-4 text-sm">

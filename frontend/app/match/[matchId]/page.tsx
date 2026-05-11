@@ -3,19 +3,30 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import ReviewDrawer from '@/components/reviews/ReviewDrawer';
+import ReviewForm from '@/components/reviews/ReviewForm';
+import ReviewWidget from '@/components/reviews/ReviewWidget';
 import WhatsAppLinkButton from '@/components/whatsapp/WhatsAppLinkButton';
 import WhatsAppOptInToggle from '@/components/whatsapp/WhatsAppOptInToggle';
 import { api } from '@/lib/services/http';
+import { useAuthStore } from '@/lib/stores/authStore';
 import type { MatchSummary } from '@/lib/stores/matchStore';
+import { useReviewStore } from '@/lib/stores/reviewStore';
 
 export default function MatchDetailPage() {
   const params = useParams<{ matchId: string }>();
   const matchId = params?.matchId;
 
+  const me = useAuthStore((s) => s.user);
+  const summaryByUser = useReviewStore((s) => s.summaryByUser);
+  const fetchUserSummary = useReviewStore((s) => s.fetchUserSummary);
+
   const [match, setMatch] = useState<MatchSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bothOpted, setBothOpted] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   useEffect(() => {
     if (!matchId) return;
@@ -72,6 +83,55 @@ export default function MatchDetailPage() {
           <WhatsAppLinkButton tradeId={match.trade.id} enabled={bothOpted} />
         </section>
       )}
+
+      <section className="space-y-3" data-testid="match-reviews-section">
+        <header className="flex items-center justify-between">
+          <h2 className="font-medium">Reseñas del coleccionista</h2>
+          {summaryByUser[match.other_user_id] && (
+            <ReviewWidget
+              ratingAvg={summaryByUser[match.other_user_id].rating_avg}
+              ratingCount={summaryByUser[match.other_user_id].rating_count}
+              onClick={() => setDrawerOpen(true)}
+            />
+          )}
+          {!summaryByUser[match.other_user_id] && (
+            <button
+              type="button"
+              data-testid="load-summary"
+              onClick={() => void fetchUserSummary(match.other_user_id)}
+              className="text-sm underline"
+            >
+              Ver reputación
+            </button>
+          )}
+        </header>
+
+        {match.trade && me && match.status === 'confirmed' && !reviewSubmitted && (
+          <details className="rounded-lg border border-border p-4">
+            <summary className="cursor-pointer font-medium" data-testid="open-review-form">
+              Calificar al coleccionista
+            </summary>
+            <div className="mt-4">
+              <ReviewForm
+                tradeId={match.trade.id}
+                onSubmitted={() => setReviewSubmitted(true)}
+              />
+            </div>
+          </details>
+        )}
+
+        {reviewSubmitted && (
+          <p data-testid="review-submitted" className="text-sm text-emerald-600">
+            ¡Gracias por calificar!
+          </p>
+        )}
+      </section>
+
+      <ReviewDrawer
+        userId={match.other_user_id}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
     </main>
   );
 }
