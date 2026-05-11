@@ -5,7 +5,7 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-11
-**Foco:** Bloque B Sprint 3 — Epics 5 + 7 (Comerciantes + Banners CPM) completadas.
+**Foco:** Bloque B Sprint 4 — Epics 11 (Reseñas) + 8 (Panel Admin) completadas.
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado al cierre de la sesión
@@ -13,10 +13,11 @@
 - **Bloque A** (cleanup post-bootstrap): completo, **pusheado a `origin/master`**.
 - **Bloque B Sprint 1**: ✅ **completo** — Epics 1 / 2 / 6 / 10 cerradas.
 - **Bloque B Sprint 2**: ✅ Epics 3 + 4 + 12 cerradas.
-- **Bloque B Sprint 3**: ✅ Epics 5 + 7 cerradas en esta sesión.
-  - Epic 5 — Comerciantes (commits `a9cf6fc` backend · `630a7be` frontend).
-  - Epic 7 — Banners CPM (commits `13c2ca4` backend · `6dc5a87` frontend).
-  - Backend **293/293 verde** (+27). Frontend **193/193 verde** (+13).
+- **Bloque B Sprint 3**: ✅ Epics 5 + 7 cerradas.
+- **Bloque B Sprint 4**: ✅ Epics 11 + 8 cerradas en esta sesión.
+  - Epic 11 — Reseñas y Reputación (commits `382b24f` backend · `304b91b` frontend).
+  - Epic 8 — Panel Admin (users + moderación) (commits `303ab46` backend · `91d6711` frontend).
+  - Backend **319/319 verde** (+26). Frontend **209/209 verde** (+16).
 
 ## Epic 1 — Cierre
 
@@ -211,6 +212,41 @@
 5. **Mapa Leaflet con `dynamic(..., {ssr:false})`** — leaflet rompe en SSR (toca `window`). El wrapper `MerchantMap` import dinámico evita el error sin sumar dep.
 6. **AdCreative weight × Campaign weight** — la ponderación combina ambos. Permite al Web Manager priorizar una campaña entera o solo una creative específica dentro de ella.
 
+## Sprint 4 — Cierre
+
+### Backend (Epic 11 + Epic 8)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Models | `models/review.py` | `Review` (uniqueness por (trade, reviewer), check stars 1-5, `is_editable` 24h) + `ReviewReport`. |
+| Migración | `0007_reviews.py` | Aplicada. |
+| Services | `services/review_aggregates.py` | `recompute_for(user_id)` actualiza `Profile.{rating_avg,rating_count,positive_pct}` desde reviews visibles. |
+| Signals | `signals.py` | post_save / post_delete on Review → recompute. |
+| Endpoints reviews | `views/review.py` | 7 endpoints (create, edit, reply, list, summary, report, admin moderate). |
+| Endpoints admin users | `views/admin_users.py` | List paginada + role assignment + block toggle. |
+| Tests | 4 archivos | 26 tests, suite total **319/319 verde**. |
+
+### Frontend (Epic 11 + Epic 8)
+
+| Área | Archivo | Estado |
+|------|---------|--------|
+| Stores | `lib/stores/reviewStore.ts` | createReview, edit, reply, fetchUserReviews, fetchUserSummary, reportReview. |
+| Stores | `lib/stores/adminStore.ts` | fetchUsers, assignRole, setActive, fetchReviewReports, toggleReviewVisibility. |
+| Reviews UI | `components/reviews/{StarRating,ReviewWidget,ReviewCard,ReviewForm,ReviewSummary,ReviewDrawer}.tsx` | 6 componentes con tests. |
+| Match integration | `components/match/SwipeCard.tsx` (preview ★) + `app/match/[matchId]/page.tsx` (drawer + form CTA) | |
+| Admin pages | `app/admin/{page,users,moderation}/page.tsx` | Role-gated, redirige a /dashboard si no es admin/web_manager. |
+| Tests | 5 archivos | 16 tests, suite total **209/209 verde**. |
+
+### Decisiones técnicas (esta sesión)
+
+1. **Edit window 24h enforzada en view, no en DB** — `Review.is_editable` es property que compara `created_at + 24h` con `now()`. Más simple que un trigger; el endpoint `PATCH /reviews/{id}/` la consulta antes de aceptar cambios. Cron diario para "cerrar formalmente" se difiere — la lógica en lectura ya basta.
+2. **Aggregates cacheados en Profile via signal** — la alternativa (computar en cada lectura) generaba N+1 al renderizar feeds de Match con preview de reputación. El signal idempotente recomputa desde reviews visibles → modificar `is_visible` actualiza inmediatamente los agregados, sin job nocturno.
+3. **Hidden ≠ deleted** — `is_visible=False` esconde la reseña del público y la excluye de agregados, pero el row sigue en BD con audit trail (`ReviewReport` referencia). Critical para defensas legales y para revertir decisiones de moderación.
+4. **Reply una sola vez** — el endpoint `POST /reviews/{id}/reply/` rechaza con 409 si `review.reply` ya existe. La propuesta del cliente especifica una sola respuesta pública para evitar argumentos públicos.
+5. **`assign_role` espera enum, no string** — bug encontrado en test: la view pasaba string raw, el método del modelo hace `role.value`. Fix: convertir string → enum vía `valid_roles[role]` lookup. Lección documentada.
+6. **Admin gating client-side + server-side** — las páginas `/admin/*` redirigen client-side si `user.role` no es admin/web_manager (UX), pero el endpoint hace el check real (`_is_admin_or_wm`). Defense in depth — un atacante que bypassa el JS aún recibe 403.
+7. **`details/summary` HTML para CTA "Calificar"** — más simple que un modal, accesible nativamente, no rompe scroll. Aparece collapsed por default y el usuario lo expande cuando quiere calificar.
+
 ## Pendientes / TODOs heredados (siguen activos)
 
 - ProjectApp debe regenerar **Google OAuth Client ID + Secret** en GCP (ERROR-001 en `error-documentation.md`). Tests pasan con mocks; el flujo real requiere credenciales válidas.
@@ -224,11 +260,10 @@ Ninguno para arrancar Sprint 2 (Match) o BATCH paralelo de Epics 2/6/10.
 
 ## Próximos pasos sugeridos para la siguiente sesión
 
-**Sprint 4 — Trust loop + admin**:
+**Quedan 3 épicas para cerrar Release 01**:
 
-- Epic 11 — Reseñas y Reputación post-trade (rating 1-5 + tags + respuesta + agregados cacheados en Profile). Reusa `Trade` (Epic 3) y `Profile.rating_*` (Epic 1).
-- Epic 8 — Panel Admin (gestión + cola moderación + manual stub). Depende de Epics 2/5/6/7 (todas cerradas).
+- Epic 9 — Push real con VAPID + pywebpush + Service Worker handler. Requiere generar VAPID keys una sola vez con `vapid --gen` y configurarlas en `.env`.
+- Epic 13 — Analítica + KPIs Dashboard (cromos más buscados/ofertados, mapa de calor de actividad, fuentes de tráfico, dispositivos). Lectura agregada de impressions/clicks/inventory/match.
+- Epic 14 — Manual interactivo (wiki dentro del panel admin). Depende de tener todas las features cerradas para documentar.
 
-**Sprint 2 pendiente única — Epic 9** (Push real con VAPID + pywebpush + Service Worker).
-
-Recomendado: **Epic 11 primero** (cierra el trust loop antes de exponer admin). Epic 9 cuando el equipo genere VAPID keys.
+Recomendado: **Epic 13 primero** — sin VAPID keys aún disponibles del equipo, Epic 13 puede ejecutarse en paralelo. Epic 9 cuando llegue el secret. Epic 14 al final.

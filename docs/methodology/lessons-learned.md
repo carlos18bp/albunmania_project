@@ -294,3 +294,42 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 ### Reportes PDF/CSV de campañas diferidos a V2
 - El item del checklist "Reportes para anunciantes (PDF/CSV descargable)" requiere generación con Huey + storage temporal + descarga firmada. Los datos *ya están* en `AdImpression`/`AdClick`; el endpoint `/ads/admin/campaigns/{id}/stats/` los expone como JSON.
 - Decisión: V1 entrega los datos en JSON desde el panel admin. PDF/CSV se difiere a V2 cuando exista demanda real de un anunciante específico.
+
+---
+
+## 12. Decisiones cerradas en Epics 11 (Reseñas) + 8 (Panel Admin)
+
+### Edit window de 24h enforzada en view, no en BD ni cron
+- `Review.is_editable` es property simple: `now <= created_at + 24h`. La view `PATCH /reviews/{id}/` la consulta antes de aceptar cambios.
+- Razón: un trigger DB o cron diario añaden complejidad operacional sin beneficio. La lógica en lectura es suficiente — una review más vieja que 24h simplemente devuelve 403 al editar.
+
+### Aggregates cacheados en Profile vía signal post_save/post_delete
+- `Profile.{rating_avg,rating_count,positive_pct}` se recomputan cada vez que cambia un Review (incluso solo `is_visible`).
+- Razón: el feed de Match renderiza una preview de reputación por candidato — calcular agregados en cada render genera N+1 contra Review. Cachear en Profile + signal idempotente da reads O(1).
+- Hidden reviews se excluyen del recompute → moderar (toggle `is_visible=False`) actualiza inmediatamente sin job nocturno.
+
+### Hidden ≠ deleted (moderación reversible)
+- `is_visible=False` esconde la reseña del público; el row sigue en BD con `ReviewReport` referenciando.
+- Razón: defensas legales (no podemos perder evidencia) + permite revertir decisiones de moderación con un toggle.
+
+### Reply única (409 Conflict en intento duplicado)
+- `POST /reviews/{id}/reply/` rechaza con 409 si `review.reply` ya existe.
+- Razón: la propuesta del cliente especifica una sola respuesta pública por reseña — evita argumentos públicos prolongados que dañan el trust loop.
+
+### `assign_role` espera el enum `Role`, no string
+- Bug encontrado en test: la view de `admin_users` pasaba string raw → `'str' object has no attribute 'value'`.
+- Fix: `valid_roles = {choice.value: choice for choice in User.Role}` y `target.assign_role(valid_roles[role])`.
+- Lección: cuando un método del modelo asume un tipo enum, las views REST deben hacer la conversión explícita en el deserializer o en la view, no confiar en duck typing.
+
+### Admin gating defense-in-depth (client + server)
+- Páginas `/admin/*` redirigen client-side si `user.role` no está en `{web_manager, admin}` (UX inmediato).
+- Endpoints hacen el check real (`_is_admin_or_wm`) — un atacante que bypassa el JS aún recibe 403.
+- Razón: el client-side check es solo UX; nunca es la única barrera.
+
+### `<details>/<summary>` HTML para CTA "Calificar al coleccionista"
+- Más simple que un modal, accesible nativamente (Enter/Space para abrir/cerrar, soporta lectores de pantalla), no rompe scroll.
+- Aparece collapsed por default — el usuario lo expande cuando quiere calificar. No fuerza la calificación con un modal bloqueante (anti-patrón en la propuesta del cliente).
+
+### `cannot_block_self` enforced server-side
+- El endpoint `POST /admin/users/{id}/active/` rechaza con 400 si `target.id == request.user.id`.
+- Razón: prevenir lockout accidental del único Web Manager. Listo para extender a "no se puede bloquear el último admin restante" en V2.

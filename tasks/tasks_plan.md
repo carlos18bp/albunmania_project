@@ -53,8 +53,8 @@
 
 | Epic | Nombre | Estado | Dependencias |
 |------|--------|--------|--------------|
-| **11** | Reseñas y Reputación | ⚪ pending | Epic 4 (Trade cerrado) |
-| **8** | Panel Admin (gestión + cola moderación + manual stub) | ⚪ pending | Epics 2, 5, 6, 7 |
+| **11** | Reseñas y Reputación | ✅ done | Epic 4 (Trade cerrado) |
+| **8** | Panel Admin (gestión + cola moderación + manual stub) | ✅ done (sin manual) | Epics 2, 5, 6, 7 |
 
 ### Sprint 5 — Observabilidad y manual (BATCH paralelo)
 
