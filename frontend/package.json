@@ -4,8 +4,8 @@
   "description": "PWA de intercambio de cromos del Mundial 26 — Albunmanía (Cliente: ProjectApp)",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--no-deprecation next dev",
-    "build": "NODE_OPTIONS=--no-deprecation next build",
+    "dev": "NODE_OPTIONS=--no-deprecation next dev --webpack",
+    "build": "NODE_OPTIONS=--no-deprecation next build --webpack",
     "start": "NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint",
     "test": "NODE_OPTIONS=--no-deprecation jest",

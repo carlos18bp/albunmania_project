@@ -48,15 +48,35 @@ def main() -> int:
         return 1
 
     refresh = RefreshToken.for_user(user)
+    # The frontend stores JWTs in cookies (`access_token`, `refresh_token`)
+    # via `lib/services/tokens.ts` — NOT in localStorage. The helper has
+    # to mirror that to be picked up by the Authorization header
+    # interceptor in `lib/services/http.ts`.
+    from urllib.parse import urlparse
+    parsed = urlparse(origin)
+    domain = parsed.hostname or 'localhost'
     state = {
-        'cookies': [],
-        'origins': [{
-            'origin': origin,
-            'localStorage': [
-                {'name': 'access', 'value': str(refresh.access_token)},
-                {'name': 'refresh', 'value': str(refresh)},
-            ],
-        }],
+        'cookies': [
+            {
+                'name': 'access_token',
+                'value': str(refresh.access_token),
+                'domain': domain,
+                'path': '/',
+                'sameSite': 'Lax',
+                'httpOnly': False,
+                'secure': False,
+            },
+            {
+                'name': 'refresh_token',
+                'value': str(refresh),
+                'domain': domain,
+                'path': '/',
+                'sameSite': 'Lax',
+                'httpOnly': False,
+                'secure': False,
+            },
+        ],
+        'origins': [{'origin': origin, 'localStorage': []}],
     }
     json.dump(state, sys.stdout, indent=2)
     sys.stdout.write('\n')
