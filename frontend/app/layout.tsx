@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Providers from './providers';
@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   description:
     'Plataforma comunitaria PWA para intercambio de cromos del Mundial 26 en Colombia y Latinoamérica. Match dual swipe + QR presencial, cierre por WhatsApp.',
   manifest: '/manifest.webmanifest',
-  themeColor: '#0b0b10',
   appleWebApp: {
     capable: true,
     title: 'Albunmanía',
@@ -23,6 +22,12 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/icons/icon-512.png', sizes: '512x512' }],
   },
+};
+
+// Next.js 16 requires themeColor in the Viewport export, not in
+// `metadata` — see https://nextjs.org/docs/app/api-reference/functions/generate-viewport.
+export const viewport: Viewport = {
+  themeColor: '#0b0b10',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
