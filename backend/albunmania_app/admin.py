@@ -13,7 +13,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from .forms.user import UserChangeForm, UserCreationForm
-from .models import User, PasswordCode
+from .models import User
 from .utils.auth_utils import generate_auth_tokens
 
 logger = logging.getLogger(__name__)
@@ -100,16 +100,6 @@ class AlbunmaniaUserAdmin(UserAdmin):
         return HttpResponseRedirect(f'{settings.FRONTEND_URL}/admin-login?{query}')
 
 
-class PasswordCodeAdmin(admin.ModelAdmin):
-    list_display = ('user', 'code', 'created_at', 'used')
-    search_fields = ('user__email', 'code')
-    list_filter = ('used', 'created_at')
-    readonly_fields = ('created_at',)
-
-    def has_add_permission(self, request):
-        return False
-
-
 # ============================================================================
 # CUSTOM ADMIN SITE - ORGANIZED BY SECTIONS
 # ============================================================================
@@ -129,7 +119,7 @@ class AlbunmaniaAdminSite(admin.AdminSite):
                 'app_label': 'user_management',
                 'models': [
                     model for model in base_app_models
-                    if model['object_name'] in ['User', 'PasswordCode']
+                    if model['object_name'] in ['User']
                 ]
             },
         ]
@@ -145,4 +135,3 @@ class AlbunmaniaAdminSite(admin.AdminSite):
 admin_site = AlbunmaniaAdminSite(name='myadmin')
 
 admin_site.register(User, AlbunmaniaUserAdmin)
-admin_site.register(PasswordCode, PasswordCodeAdmin)

@@ -113,8 +113,9 @@ test.describe('Auth — guest browsing', () => {
   test('guest sees Manual / Entrar / Registrarse in the header', { tag: [...AUTH_GUEST_BROWSE] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
-    await expect(page.getByRole('link', { name: 'Manual' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Entrar' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Registrarse' })).toBeVisible();
+    const header = page.getByTestId('site-header');
+    await expect(header.getByRole('link', { name: 'Manual' })).toBeVisible();
+    await expect(header.getByRole('link', { name: 'Entrar' })).toBeVisible();
+    await expect(header.getByRole('link', { name: 'Registrarse' })).toBeVisible();
   });
 });

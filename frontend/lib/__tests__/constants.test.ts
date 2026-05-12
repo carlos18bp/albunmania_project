@@ -4,12 +4,12 @@ import { API_ENDPOINTS, COOKIE_KEYS, PAGINATION, ROUTES } from '../constants';
 
 describe('constants', () => {
   describe('API_ENDPOINTS', () => {
-    it('SIGN_IN endpoint matches DRF auth path', () => {
-      expect(API_ENDPOINTS.SIGN_IN).toBe('/auth/sign-in/');
+    it('GOOGLE_LOGIN endpoint matches the DRF auth path', () => {
+      expect(API_ENDPOINTS.GOOGLE_LOGIN).toBe('/google_login/');
     });
 
-    it('GOOGLE_LOGIN endpoint matches DRF auth path', () => {
-      expect(API_ENDPOINTS.GOOGLE_LOGIN).toBe('/auth/google-login/');
+    it('VALIDATE_TOKEN endpoint matches the DRF auth path', () => {
+      expect(API_ENDPOINTS.VALIDATE_TOKEN).toBe('/validate_token/');
     });
   });
 

@@ -10,10 +10,11 @@
 - **Bloque B — Implementación Release 01** (14 épicas): ✅ **las 14 épicas implementadas**. La **auditoría de completitud (2026-05-12)** reconcilió `docs/release/01-release-checklist.md` con el codebase real (53→133 ítems `[x]`, comentarios inline `<!-- ... -->` con trazabilidad): la mayoría del scope está hecho; quedan sub-items `<!-- V2 -->` (branding en notificaciones, reportes Sponsor/anunciantes, gestor de álbumes CSV, wiring next-intl). Los **8 GAPS** detectados ya están **todos cerrados**: "Bloque D" (P2 — centro de notificaciones + `Notification`, `Report` general + moderación de usuarios/trades, página `/profile`, T&C/privacidad/FAQ + componente FAQ) y "Bloque E" (P3 — presencia "en línea ahora"/Live Badge, mapa de coleccionistas, búsqueda predictiva con dropdown, GeoIP2 por IP). Ver §"GAPS de la auditoría de completitud" y los comentarios del checklist.
 - **Auditoría new-feature-checklist** (en curso, por fases):
   - ✅ Fase 1 (docs E2E): `USER_FLOW_MAP.md` + `flow-definitions.json` reescritos para las 14 épicas; los 46 tests de validación tagueados con `@flow:`; eliminados los 12 `page.waitForTimeout()`; `auth.spec.ts` + `smoke.spec.ts` actualizados a la realidad post-rewrite de `/sign-in`.
-  - ✅ Fase 2 (tests backend): `tests/services/test_email_service.py` (6) + `tests/services/test_push_notify.py` (10).
-  - ✅ Fase 3 (seeds): `create_fake_data` ahora seedea Review (×2, una con reply) + ReviewReport (×1) + MerchantSubscriptionPayment (×2) + AdImpression (×200) + AdClick (×10) + PushSubscription (1/colector). `TradeWhatsAppOptIn` se deja **sin seed a propósito** (los tests E2E session-03 necesitan que el trade #1 arranque con 0 opt-ins) y `create_fake_data` lo **limpia** del trade seedeado en cada corrida → re-seedear antes de la suite de validación reemplaza el `globalSetup` pendiente. `PasswordCode` se salta (legacy del template). El trade seedeado pasa a estado `completed`.
+  - ✅ Fase 2 (tests backend): `tests/services/test_push_notify.py` (10) (+ `test_email_service.py` (6) — luego eliminado en Bloque F junto con el `email_service.py` muerto del template).
+  - ✅ Fase 3 (seeds): `create_fake_data` ahora seedea Review (×2, una con reply) + ReviewReport (×1) + MerchantSubscriptionPayment (×2) + AdImpression (×200) + AdClick (×10) + PushSubscription (1/colector) + Notification + Report + presencia. `TradeWhatsAppOptIn` se deja **sin seed a propósito** (los tests E2E session-03 necesitan que el trade #1 arranque con 0 opt-ins) y `create_fake_data` lo **limpia** del trade seedeado en cada corrida → re-seedear antes de la suite de validación reemplaza el `globalSetup` pendiente. El trade seedeado pasa a estado `completed`.
   - ✅ Fase 4 (tests de componentes frontend): backfilleados los ~20 componentes sin test (manual/×3, KpiTile, GoogleSignInButton, ReviewCard, ReviewSummary, SponsorHeaderBand, MutualMatchModal, RankingList, WhatsAppLinkButton, CatalogFilters, StickerGrid, QRDisplay, QRScanner, MatchFeed, MerchantDashboardForm, MerchantMap, MerchantMapInner, StepAlbumSelect, StepGeolocation, StepPermissions). Borrado `components/layout/Footer.tsx` (dead code con string del template). **Cobertura de componentes: ~90% statements/branches/lines, 79% functions** (umbral del estándar: ≥60%). Suite frontend completa: **321/321 verde** (era 221).
 - **Bloque C — Validación E2E + deploy prep**: ✅ completado.
+- **Bloque D / E / F**: D (4 GAPS P2) ✅, E (4 GAPS P3) ✅, F (limpieza + hardening) en curso — ver §"GAPS de la auditoría" y §"Bloque F".
 
 ## Bloque B — Estado por épica (todas ✅)
 
@@ -43,21 +44,21 @@
 - **Settings prod**: toggles `SECURE_*` cuando `DEBUG=false`, `SECURE_PROXY_SSL_HEADER`, HSTS opt-in (`DJANGO_SECURE_HSTS_SECONDS`).
 - **Seeds dev**: `python manage.py create_fake_data --users 10` (Album Mundial 26 + 50 stickers, 4 especiales; inventarios cruzados deterministas; Sponsor Coca-Cola; AdCampaign Bavaria; MerchantProfile Papelería El Sol; Match mutual user↔user2). `scripts/dev-issue-jwt.py` para auth shortcut (JWT en cookies).
 
-## Conteos verificados (`find` ejecutado 2026-05-12)
+## Conteos verificados (`find` ejecutado tras Bloque F)
 
 | Recurso | Conteo |
 |---------|-------:|
-| Backend models | 18 |
-| Backend services | 13 |
-| Backend views (módulos) | 17 |
-| Backend URL modules | 17 (60 `path()` totales) |
-| Backend migrations | 8 (`0001_initial` → `0008_push_subscription`) |
-| Backend test files | 51 (+ `test_email_service.py`, `test_push_notify.py`) |
-| Frontend components (.tsx, sin tests) | 42 (`Footer.tsx` borrado por dead code; **cada subdir cubierto**) |
-| Frontend app pages (`page.tsx`) | 20 |
-| Frontend Zustand stores (sin tests) | 16 |
-| Frontend unit test files | 69 (+ ~20 nuevos de componentes en la auditoría) |
-| E2E spec files | 7 (5 validation + auth + smoke) |
+| Backend models | 19 |
+| Backend services | 14 |
+| Backend views (módulos) | 21 |
+| Backend URL modules | 21 (~66 `path()` totales) |
+| Backend migrations | 12 (`0001_initial` → `0012_delete_passwordcode`) |
+| Backend test files | 56 |
+| Frontend components (.tsx, sin tests) | 54 |
+| Frontend app pages (`page.tsx`) | 24 |
+| Frontend Zustand stores (sin tests) | 21 |
+| Frontend unit test files | 81 |
+| E2E spec files | 15 (5 validation + auth + public/smoke + public/legal + profile + notifications + moderation + presence + collectors + catalog/predictive-search + geo) |
 
 ## Testing status
 
@@ -87,6 +88,14 @@
 - ✅ E2 (commit `7e68d30`): Mapa de Coleccionistas — `GET /api/collectors/map/?lat=&lng=&radius_km=&album_id=` (IsAuthenticated; sólo lat_approx/lng_approx, excluye al solicitante) + `/mapa` (Leaflet `CollectorMap`/`CollectorMapInner`, mismo patrón que el mapa de comerciantes) + lista con Live Badges + "Usar mi ubicación" (browser geo → 50 km) / "Ver todos" + enlace "Mapa" en el Header. (También `GET /api/collectors/search/?q=` — usado por E3.)
 - ✅ E3 (commit `f2be293`): búsqueda predictiva con dropdown — `SearchAutocomplete` en `/catalog/[slug]` (debounced; sugerencias de cromos `GET /api/albums/<slug>/search/?q=` + coleccionistas `GET /api/collectors/search/?q=` con previsualización; elegir cromo → filtra la grilla a su número, elegir coleccionista → `/profile/[id]`). De paso se arregló `albumStore.searchStickers` (path equivocado `albums/<slug>/stickers/search/` → `albums/<slug>/search/`; antes 404aba — no tenía consumidor de UI).
 - ✅ E4 (commit `695ac91`): GeoIP2 por IP — `services/geoip.py` (lazy `GeoLite2-City` reader desde `settings.GEOIP_PATH` / `DJANGO_GEOIP_PATH`; `client_ip` con cadena X-Forwarded-For, `locate_ip` salta IPs privadas/loopback) + `GET /api/geo/ip-locate/`; `StepGeolocation` lo llama al montar y ofrece "usar ubicación aproximada por IP" antes del prompt preciso (`onboardingStore.setGeoFromIp`). La `.mmdb` la provisiona ops (no está en el repo — licencia + tamaño; documentado en `deploy/staging/RUNBOOK.md` + `backend.env.example`); si falta, `available()=False` y degrada limpio.
+
+### Bloque F — limpieza + hardening post-Bloque E (en curso)
+Plan: `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`.
+- ✅ F1 (commit `f117add`): deuda tsc cerrada — stubs de `next/image` tipados (`BannerSlot`, `SponsorSplash`) + cast en `http.test.ts`; `tsc --noEmit` limpio y `npm run build -- --webpack` verde.
+- ✅ F2 (commit pendiente): podadas las rutas vestigiales del template y el auth email/password muerto. **Frontend**: borradas `app/backoffice/` y `app/forgot-password/` (+ tests); quitados `ROUTES.BACKOFFICE/FORGOT_PASSWORD` + 6 entradas de `API_ENDPOINTS`; quitada la clave i18n `forgotPassword`; `authStore` perdió `signIn`/`signUp`/`sendPasswordResetCode`/`resetPassword`; fix de un test de auth E2E ambiguo (`Manual` link → scoped a `site-header`). **Backend**: `views/auth.py` reducido a `google_login` + `validate_token`; eliminados `views/user_crud.py`, `serializers/user_{create_update,detail,list}.py`, `services/email_service.py`, `urls/user.py`, `models/password_code.py` (+ migración `0012_delete_passwordcode`); `auth_utils.py` reducido a `generate_auth_tokens`; `admin.py` y `services/__init__.py`/`models/__init__.py` limpiados; tests muertos eliminados. Conteos: views 22→21, urls 22→21, serializers 14→11, services 15→14, models 20→19, migrations 11→12, ~73→~66 paths. Suite: 367/367 backend · 371/371 frontend.
+- ⬜ F3: mover el push de match a una tarea Huey (`@db_task() deliver_match_push`).
+- ⬜ F4: filtros "disponibilidad" + "radio de proximidad" en `/catalog/[slug]`.
+- ⬜ F5: subir cobertura backend (2 tandas siguiendo el skill `backend-test-coverage`).
 
 ### V2 (no bloqueantes, ya conocidos)
 - "Fuentes de Tráfico" (analytics) — instrumentación UTM + tabla `TrafficSource`.

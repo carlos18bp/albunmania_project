@@ -35,7 +35,6 @@
     "googleAccountAgeError": "Sua conta Google é muito nova (mínimo {min} dias). Tente de novo quando sua conta tiver mais idade.",
     "captchaPrompt": "Verifique que você não é um robô.",
     "captchaError": "Não foi possível verificar o captcha. Tente de novo.",
-    "forgotPassword": "Esqueci minha senha",
     "invalidCredentials": "Credenciais inválidas. Tente novamente."
   },
   "merchants": {

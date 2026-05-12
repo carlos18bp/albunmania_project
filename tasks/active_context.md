@@ -6,7 +6,15 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-12
-**Foco:** "Bloque E" — cierre de los **4 GAPS P3** de la auditoría de completitud del Release 01 (los 4 GAPS P2 se cerraron en "Bloque D"). **Los 8 GAPS están ahora cerrados.** Las 4 fases hechas + commiteadas + pusheadas:
+**Foco:** "Bloque F" — limpieza + hardening post-Bloque E (los 8 GAPS de la auditoría ya estaban cerrados; Bloques D+E). Plan: `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`. 5 fases:
+- ✅ **F1** (`f117add`): deuda tsc cerrada — stubs de `next/image` tipados (`BannerSlot`, `SponsorSplash`) + cast en `http.test.ts`; `tsc --noEmit` limpio, `npm run build -- --webpack` verde.
+- ✅ **F2** (commit pendiente): podadas las rutas vestigiales del template + el auth email/password muerto. **Frontend**: borradas `app/backoffice/` + `app/forgot-password/` (+ tests); quitados `ROUTES.BACKOFFICE/FORGOT_PASSWORD` + 6 de `API_ENDPOINTS` + la clave i18n `forgotPassword`; `authStore` perdió `signIn`/`signUp`/`sendPasswordResetCode`/`resetPassword`; fix de un test de auth E2E ambiguo (`Manual` link → scoped a `site-header`). **Backend**: `views/auth.py` ahora solo `google_login` + `validate_token`; eliminados `views/user_crud.py`, `serializers/user_{create_update,detail,list}.py`, `services/email_service.py`, `urls/user.py`, `models/password_code.py` (+ migración `0012_delete_passwordcode`); `auth_utils.py` → solo `generate_auth_tokens`; `admin.py`/`services/__init__.py`/`models/__init__.py` limpiados; tests muertos eliminados. Conteos: views 22→21, urls 22→21, serializers 14→11, services 15→14, models 20→19, migrations 11→12, ~73→~66 paths.
+- ⬜ **F3**: mover el push de match a una tarea Huey (`@db_task() deliver_match_push`).
+- ⬜ **F4**: filtros "disponibilidad" + "radio de proximidad" en `/catalog/[slug]`.
+- ⬜ **F5**: subir cobertura backend (2 tandas, skill `backend-test-coverage`).
+
+---
+### "Bloque E" (anterior — cierre de los 4 GAPS P3, ✅ commiteado y pusheado)
 - **E1** (`2488b14`): presencia "en línea ahora" / Live Badge. `Profile.last_seen` (+ migración `0011`) bumpeado throttled (1 write/60s/usuario, vía cache) por `PresencePinger` (heartbeat `POST /api/presence/ping/` cada 120s + on focus) y `validate_token`; `is_online` = last_seen dentro de 5 min (`services/presence.py`), expuesto en `public-profile`, swipe cards y city ranking; `LiveBadge` (punto verde, no renderiza nada si offline) en `ProfileHeader`/`SwipeCard`/`RankingList` y en los pines del `/mapa`; `ActiveCollectorsBanner` en el dashboard ("N coleccionistas en línea ahora [en {ciudad}]") vía `GET /api/presence/active-count/?city=`. `create_fake_data` seedea a los 2 colectores canónicos online.
 - **E2** (`7e68d30`): Mapa de Coleccionistas. `GET /api/collectors/map/?lat=&lng=&radius_km=&album_id=` (IsAuthenticated; sólo `lat_approx`/`lng_approx`, excluye al solicitante) + `/mapa` (Leaflet `CollectorMap`/`CollectorMapInner`, calco del mapa de comerciantes) + lista con Live Badges + "Usar mi ubicación" (browser geo → 50 km) / "Ver todos" + enlace "Mapa" en el Header. También `GET /api/collectors/search/?q=` (≤5, usado por E3).
 - **E3** (`f2be293`): búsqueda predictiva con dropdown. `SearchAutocomplete` en `/catalog/[slug]` (debounced; sugerencias de cromos `GET /api/albums/<slug>/search/?q=` con miniatura/número/equipo + coleccionistas `GET /api/collectors/search/?q=`; elegir cromo → filtra la grilla a su número, elegir coleccionista → `/profile/[id]`). De paso: arreglado `albumStore.searchStickers` (path equivocado `albums/<slug>/stickers/search/` → `albums/<slug>/search/` — 404aba; no tenía consumidor de UI antes).
@@ -29,8 +37,8 @@ Flujos E2E nuevos en `flow-definitions.json` (v2.8.0) / `USER_FLOW_MAP.md` (v2.8
 
 ## Tests
 
-- Backend: **406/406 verde** (`pytest --no-cov`; +`test_presence_endpoints.py` 7, +`test_collectors_endpoints.py` 9, +`test_geo_endpoint.py` 4 en Bloque E). 59 archivos `test_*.py`.
-- Frontend unit: **392/392 verde** (`npm test`, 83 suites; + LiveBadge, ActiveCollectorsBanner, presenceStore, CollectorMapInner, collectorMapStore, SearchAutocomplete + StepGeolocation/CatalogFilters/albumStore actualizados).
+- Backend: **367/367 verde** (`pytest --no-cov`; tras Bloque F: −~39 tests del auth email/password + email_service + user CRUD serializer + PasswordCode model, eliminados). 56 archivos `test_*.py`.
+- Frontend unit: **371/371 verde** (`npm test`, 81 suites; tras Bloque F: −backoffice/forgot-password page tests + 6 authStore tests).
 - E2E: **15 specs, ~72 tests** — `validation/session-01..05` (39) + `auth/` (11) + `public/` (smoke 1 + legal 4) + `profile/` (3) + `notifications/` (4) + `moderation/` (2) + `presence/` (3) + `collectors/` (2) + `catalog/predictive-search` (2) + `geo/` (1). Todos `@flow:` tagueados, sin `waitForTimeout`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1`.
 - ✅ `tsc --noEmit` limpio y `npm run build -- --webpack` verde (F1, Bloque F) — la deuda de los stubs `<img {...(props as never)} />` se barrió por completo (`SwipeCard`, `StickerCard`, `BannerSlot`, `SponsorSplash` + el cast de `http.test.ts`).
 
@@ -65,7 +73,7 @@ Ninguno técnico. Pendientes operacionales: deploy real al VPS + creds reales (V
 
 ## Próximos pasos sugeridos
 
-1. **(En curso — "Bloque F")** limpiar rutas vestigiales del template + mover el push de match a Huey + filtros disponibilidad/proximidad en el catálogo + subir cobertura backend. Ver `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`.
+1. **(En curso — "Bloque F")** F1 ✅ (build verde) + F2 ✅ (rutas/backend vestigiales podados); falta F3 (push de match → tarea Huey), F4 (filtros disponibilidad/proximidad en el catálogo), F5 (subir cobertura backend). Ver `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`.
 2. **Texto legal definitivo** de ProjectApp → reemplazar el scaffold de `frontend/lib/legal/content.ts`.
 3. **Deploy a staging**: ejecutar `deploy/staging/RUNBOOK.md` en el VPS (+ opcionalmente provisionar la `.mmdb` y setear `DJANGO_GEOIP_PATH`).
 4. **Items V2** (no bloqueantes): Fuentes de Tráfico (UTM + `TrafficSource`), Alertas de Rendimiento KPI (Huey nightly), Reportes PDF de Sponsor, wiring real de next-intl (hoy copy hardcoded en español), branding sutil en notificaciones oficiales, gestor admin de álbumes con CSV upload + gestor de creativas con UI, filtro "disponibilidad"/"radio de proximidad" en el catálogo, mover el push de match a Huey.

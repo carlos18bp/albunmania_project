@@ -60,30 +60,31 @@
 ```
 backend/
 ├── albunmania_app/                  # Django app principal (single-app)
-│   ├── models/         (20 archivos) # user, password_code, profile, merchant_profile,
+│   ├── models/         (19 archivos) # user, profile, merchant_profile,
 │   │                                 # album, sticker, user_sticker, sponsor,
 │   │                                 # match, like, trade, trade_whatsapp_optin,
 │   │                                 # merchant_subscription_payment,
 │   │                                 # ad_campaign, ad_creative, ad_impression (+ AdClick),
 │   │                                 # review (+ ReviewReport), push_subscription,
 │   │                                 # notification, report
-│   ├── views/          (22 módulos)  # auth, user, profile, captcha, album, inventory,
-│   │                                 # sponsor, match, trade, trade_whatsapp, stats,
-│   │                                 # merchant, ad, review, admin_users, analytics, push,
+│   ├── views/          (21 módulos)  # auth (google_login + validate_token), profile, captcha,
+│   │                                 # album, inventory, sponsor, match, trade, trade_whatsapp,
+│   │                                 # stats, merchant, ad, review, admin_users, analytics, push,
 │   │                                 # notification, report, presence, collectors, geo
-│   ├── serializers/    (14 archivos) # split por dominio (+ notification, profile/PublicProfile+AccountSettings, report, collectors)
-│   ├── urls/           (22 módulos)  # ver §4
-│   ├── services/       (15 archivos) # email_service, google_account_age, captcha_service,
+│   ├── serializers/    (11 archivos) # split por dominio (ad, album, collectors, inventory, match,
+│   │                                 # merchant, notification, profile, report, review, sponsor)
+│   ├── urls/           (21 módulos)  # ver §4
+│   ├── services/       (14 archivos) # google_account_age, captcha_service,
 │   │                                 # match_engine, qr_token, qr_cross, whatsapp_link,
 │   │                                 # stats_engine, merchant_subscription, ad_engine,
 │   │                                 # review_aggregates, analytics_engine, push_notify, presence, geoip
 │   ├── signals.py                    # post_save User → Profile/MerchantProfile;
 │   │                                 # post_save/post_delete Review → recompute aggregates;
 │   │                                 # post_save Match(status=mutual, created) → Notification a ambos + push
-│   ├── utils/auth_utils.py
+│   ├── utils/auth_utils.py           # generate_auth_tokens (JWT)
 │   ├── forms/, admin.py, apps.py
-│   ├── tests/          (59 test_*.py) # {models,serializers,views,services,utils,commands}/
-│   ├── migrations/     (11: 0001_initial → 0011_profile_last_seen)
+│   ├── tests/          (56 test_*.py) # {models,serializers,views,services,utils,commands}/
+│   ├── migrations/     (12: 0001_initial → 0012_delete_passwordcode)
 │   └── management/commands/          # create_users (4 cuentas canónicas + extras),
 │                                     # create_fake_data (Album+50 stickers+inventarios+
 │                                     #   Sponsor+AdCampaign+MerchantProfile+Match mutual+
@@ -103,10 +104,10 @@ backend/
 └── manage.py
 
 frontend/
-├── app/                  # Next.js App Router — 26 page.tsx
+├── app/                  # Next.js App Router — 24 page.tsx
 │   ├── page.tsx, layout.tsx (footer con enlaces legales + PresencePinger), providers.tsx
-│   ├── sign-in/, sign-up/, forgot-password/, admin-login/, onboarding/
-│   ├── dashboard/, backoffice/, manual/, notificaciones/, mapa/
+│   ├── sign-in/, sign-up/, admin-login/ (OAuth callback), onboarding/
+│   ├── dashboard/, manual/, notificaciones/, mapa/
 │   ├── terminos/, privacidad/, ayuda/
 │   ├── catalog/[slug]/
 │   ├── match/, match/qr/, match/[matchId]/
@@ -148,11 +149,10 @@ frontend/
 - `settings.py` activa cuando `DEBUG=false`: `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SESSION_COOKIE_HTTPONLY`, `SECURE_CONTENT_TYPE_NOSNIFF`, `SECURE_BROWSER_XSS_FILTER`, `X_FRAME_OPTIONS=DENY`, `SECURE_PROXY_SSL_HEADER` (confía en `X-Forwarded-Proto` de nginx), `CSRF_TRUSTED_ORIGINS` desde `DJANGO_CSRF_TRUSTED_ORIGINS`. HSTS opt-in vía `DJANGO_SECURE_HSTS_SECONDS` (default 0).
 - Vars que ProjectApp debe generar para prod (templates en `deploy/staging/env-templates/`): `DJANGO_SECRET_KEY`, `GOOGLE_OAUTH_CLIENT_ID/SECRET` (nuevo, el del template no sirve), `DJANGO_HCAPTCHA_SITEKEY/SECRET` (reales), `VAPID_PUBLIC_KEY/PRIVATE_KEY` (`vapid --gen`, rotar las de dev), `DATABASE_URL` (MySQL), `REDIS_URL`, SMTP. Opcional: `DJANGO_GEOIP_PATH` → ruta a un `GeoLite2-City.mmdb` (MaxMind; no se versiona); si no se pone, la geolocalización por IP queda desactivada y degrada limpio.
 
-## 4. API surface (~73 `path()` en 22 módulos)
+## 4. API surface (~66 `path()` en 21 módulos)
 
 | Módulo | Paths | Notas |
 |--------|------:|-------|
-| auth.py | 7 | google_login (hCaptcha + 30-day rule), validate_token (bumpea last_seen), sign_in/up, password reset |
 | review.py | 8 | trade_review_create, review_edit, review_reply, review_report, user_reviews_list, user_rating_summary, admin_review_reports, admin_review_visibility |
 | match.py | 7 | feed (incluye is_online en las cards), like, mine, detail, qr/me, qr/scan, qr/confirm |
 | ad.py | 5 | serve (público, 204 si nada), click (302 redirect), admin campaigns CRUD, admin stats |
@@ -165,11 +165,11 @@ frontend/
 | sponsor.py | 3 | active (público), admin collection, admin detail |
 | profile.py | 3 | me GET/PATCH (AccountSettings), me/onboarding PATCH, users/<id>/public-profile/ (público, sin email/teléfono, incluye is_online) |
 | report.py | 3 | reports/ POST (self + trade-participant guards), admin/reports/?status=&kind=, admin/reports/<id>/ PATCH |
-| captcha.py / google-captcha.py | 2 | site-key, verify |
+| auth.py | 2 | google_login (hCaptcha + 30-day rule), validate_token (bumpea last_seen). Es el único auth — no hay email/password. |
+| captcha.py / google-captcha.py | 2 | site-key, verify (residuo reCAPTCHA del template; el captcha productivo es hCaptcha dentro de google_login) |
 | stats.py | 2 | me, ranking (incluye is_online por colector) |
 | analytics.py | 2 | overview (composite, 7 bloques), export.csv |
 | trade_whatsapp.py | 2 | optin POST, link GET (403 si no hay opt-in mutuo) |
-| user.py | 2 | list, detail |
 | presence.py | 2 | ping POST (heartbeat, throttled), active-count GET (?city=, público) |
 | collectors.py | 2 | map GET (?lat=&lng=&radius_km=&album_id=; sólo lat_approx/lng_approx, excluye al solicitante), search GET (?q=, ≤5) |
 | trade.py | 1 | share/<token>/ (público, ?kind=available|wanted) |
@@ -219,8 +219,8 @@ Todos bajo `/api/` (root urls.py). Frontend usa `NEXT_PUBLIC_API_BASE_URL=/api` 
 
 ## 8. Testing
 
-- **Backend**: pytest + pytest-django. `tests/{models,serializers,views,services,utils,commands}/` — 59 archivos `test_*.py`. **406/406 verde**. Fixture autouse `_bypass_hcaptcha` en `conftest.py`. Coverage objetivo ≥80% por módulo, 100% en críticos (auth, match, ads).
-- **Frontend unit**: Jest, colocación (`__tests__/` junto a stores y components). **392/392 verde** (83 suites).
+- **Backend**: pytest + pytest-django. `tests/{models,serializers,views,services,utils,commands}/` — 56 archivos `test_*.py`. **367/367 verde**. Fixture autouse `_bypass_hcaptcha` en `conftest.py`. Coverage objetivo ≥80% por módulo, 100% en críticos (auth, match, ads).
+- **Frontend unit**: Jest, colocación (`__tests__/` junto a stores y components). **371/371 verde** (81 suites).
 - **E2E**: Playwright — 15 specs, ~72 tests: `validation/session-01..05.spec.ts` (5 sesiones) + `auth/auth.spec.ts` + `public/smoke.spec.ts` + `public/legal.spec.ts` (T&C/privacidad/ayuda) + `profile/profile.spec.ts` + `notifications/notifications.spec.ts` + `moderation/moderation.spec.ts` + `presence/presence.spec.ts` + `collectors/collectors.spec.ts` + `catalog/predictive-search.spec.ts` + `geo/geo.spec.ts`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1 npx playwright test e2e/validation/`. Re-seedear (`create_fake_data`) antes de la suite de validación deja `TradeWhatsAppOptIn` limpio (el comando lo resetea para el trade seedeado).
 - **Reglas duras** (`CLAUDE.md`): nunca correr suite completa en ciclos manuales, max 20 tests/batch, 3 comandos/ciclo; cada test una conducta observable; mock solo en boundaries.
 

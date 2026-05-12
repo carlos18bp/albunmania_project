@@ -56,75 +56,6 @@ describe('authStore', () => {
     expect(state.isAuthenticated).toBe(true);
   });
 
-  it('signs in successfully', async () => {
-    mockGetAccessToken.mockReturnValue('access');
-    mockGetRefreshToken.mockReturnValue('refresh');
-    mockApi.post.mockResolvedValueOnce({
-      data: {
-        access: 'access',
-        refresh: 'refresh',
-        user: {
-          id: 1,
-          email: 'user@example.com',
-          first_name: 'Test',
-          last_name: 'User',
-          role: 'customer',
-          is_staff: false,
-        },
-      },
-    });
-
-    await act(async () => {
-      await useAuthStore.getState().signIn({ email: 'user@example.com', password: 'password' });
-    });
-
-    expect(mockSetTokens).toHaveBeenCalledWith({ access: 'access', refresh: 'refresh' });
-    expect(useAuthStore.getState().isAuthenticated).toBe(true);
-    expect(useAuthStore.getState().user?.email).toBe('user@example.com');
-  });
-
-  it('throws when sign in response is missing tokens', async () => {
-    mockApi.post.mockResolvedValueOnce({ data: { access: null, refresh: null } });
-
-    await expect(useAuthStore.getState().signIn({ email: 'user@example.com', password: 'password' })).rejects.toThrow(
-      'Invalid token response'
-    );
-  });
-
-  it('signs up successfully', async () => {
-    mockGetAccessToken.mockReturnValue('access');
-    mockGetRefreshToken.mockReturnValue('refresh');
-    mockApi.post.mockResolvedValueOnce({
-      data: {
-        access: 'access',
-        refresh: 'refresh',
-        user: {
-          id: 2,
-          email: 'new@example.com',
-          first_name: 'New',
-          last_name: 'User',
-          role: 'customer',
-          is_staff: false,
-        },
-      },
-    });
-
-    await act(async () => {
-      await useAuthStore.getState().signUp({ email: 'new@example.com', password: 'password' });
-    });
-
-    expect(mockSetTokens).toHaveBeenCalledWith({ access: 'access', refresh: 'refresh' });
-    expect(useAuthStore.getState().isAuthenticated).toBe(true);
-  });
-
-  it('throws when sign up response is missing tokens', async () => {
-    mockApi.post.mockResolvedValueOnce({ data: { access: null, refresh: null } });
-
-    await expect(
-      useAuthStore.getState().signUp({ email: 'new@example.com', password: 'password' })
-    ).rejects.toThrow('Invalid token response');
-  });
-
   it('logs in with google credentials', async () => {
     mockGetAccessToken.mockReturnValue('access');
     mockGetRefreshToken.mockReturnValue('refresh');
@@ -189,32 +120,6 @@ describe('authStore', () => {
     expect(mockClearTokens).toHaveBeenCalledTimes(1);
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(useAuthStore.getState().accessToken).toBeNull();
-  });
-
-  it('sends a password reset code', async () => {
-    mockApi.post.mockResolvedValueOnce({ data: {} });
-
-    await act(async () => {
-      await useAuthStore.getState().sendPasswordResetCode('user@example.com');
-    });
-
-    expect(mockApi.post).toHaveBeenCalledWith('send_passcode/', { email: 'user@example.com' });
-  });
-
-  it('resets password', async () => {
-    mockApi.post.mockResolvedValueOnce({ data: {} });
-
-    await act(async () => {
-      await useAuthStore
-        .getState()
-        .resetPassword({ email: 'user@example.com', code: '123456', new_password: 'password123' });
-    });
-
-    expect(mockApi.post).toHaveBeenCalledWith('verify_passcode_and_reset_password/', {
-      email: 'user@example.com',
-      code: '123456',
-      new_password: 'password123',
-    });
   });
 
   it('restores the current user from validate_token', async () => {

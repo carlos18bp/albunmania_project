@@ -42,8 +42,6 @@ type AuthState = {
   user: User | null;
   profile: Profile | null;
   isAuthenticated: boolean;
-  signIn: (args: { email: string; password: string; captcha_token?: string }) => Promise<void>;
-  signUp: (args: { email: string; password: string; first_name?: string; last_name?: string; captcha_token?: string }) => Promise<void>;
   googleLogin: (args: {
     credential?: string;
     access_token?: string;
@@ -57,8 +55,6 @@ type AuthState = {
   syncFromCookies: () => void;
   restoreUser: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  sendPasswordResetCode: (email: string) => Promise<void>;
-  resetPassword: (args: { email: string; code: string; new_password: string }) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -77,45 +73,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   
-  signIn: async ({ email, password, captcha_token }) => {
-    const response = await api.post('sign_in/', { email, password, captcha_token });
-    const access = response.data?.access;
-    const refresh = response.data?.refresh;
-    const user = response.data?.user;
-    
-    if (!access || !refresh) {
-      throw new Error('Invalid token response');
-    }
-    
-    setTokens({ access, refresh });
-    if (user) localStorage.setItem('user_data', JSON.stringify(user));
-    set({ user, isAuthenticated: true });
-    get().syncFromCookies();
-  },
-
-  signUp: async ({ email, password, first_name, last_name, captcha_token }) => {
-    const response = await api.post('sign_up/', { 
-      email, 
-      password, 
-      first_name, 
-      last_name,
-      captcha_token,
-    });
-    
-    const access = response.data?.access;
-    const refresh = response.data?.refresh;
-    const user = response.data?.user;
-    
-    if (!access || !refresh) {
-      throw new Error('Invalid token response');
-    }
-    
-    setTokens({ access, refresh });
-    if (user) localStorage.setItem('user_data', JSON.stringify(user));
-    set({ user, isAuthenticated: true });
-    get().syncFromCookies();
-  },
-
   googleLogin: async ({ credential, access_token, captcha_token, email, given_name, family_name, picture }) => {
     let response;
     try {
@@ -193,17 +150,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('user_data');
       set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
     }
-  },
-  
-  sendPasswordResetCode: async (email: string) => {
-    await api.post('send_passcode/', { email });
-  },
-  
-  resetPassword: async ({ email, code, new_password }) => {
-    await api.post('verify_passcode_and_reset_password/', { 
-      email, 
-      code, 
-      new_password 
-    });
   },
 }));

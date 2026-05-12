@@ -2,9 +2,7 @@ export const ROUTES = {
   HOME: '/',
   SIGN_IN: '/sign-in',
   SIGN_UP: '/sign-up',
-  FORGOT_PASSWORD: '/forgot-password',
   DASHBOARD: '/dashboard',
-  BACKOFFICE: '/backoffice',
   MANUAL: '/manual',
   TERMS: '/terminos',
   PRIVACY: '/privacidad',
@@ -16,14 +14,8 @@ export const ROUTES = {
 } as const;
 
 export const API_ENDPOINTS = {
-  SIGN_IN: '/auth/sign-in/',
-  SIGN_UP: '/auth/sign-up/',
-  GOOGLE_LOGIN: '/auth/google-login/',
-  SEND_PASSCODE: '/auth/send-passcode/',
-  RESET_PASSWORD: '/auth/verify-passcode-and-reset-password/',
-  UPDATE_PASSWORD: '/auth/update-password/',
-  VALIDATE_TOKEN: '/auth/validate-token/',
-  USERS: '/users/',
+  GOOGLE_LOGIN: '/google_login/',
+  VALIDATE_TOKEN: '/validate_token/',
 } as const;
 
 export const COOKIE_KEYS = {
