@@ -1,7 +1,7 @@
 # Architecture — Albunmanía
 
-> Snapshot 2026-05-12. Refleja Release 01 al 100% (14 épicas) + validación E2E + paquete `deploy/staging/`.
-> Counts: 18 models, 13 services, 17 view modules, 17 url modules (60 `path()`), 8 migrations.
+> Snapshot 2026-05-12. Refleja Release 01 (14 épicas) + "Bloque D" (cierre de los 4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios) + validación E2E + paquete `deploy/staging/`.
+> Counts: 20 models, 13 services, 19 view modules, 19 url modules (~68 `path()`), 10 migrations. Tests: 386 backend / 365 frontend unit / ~64 E2E.
 
 ## 1. System overview
 
@@ -19,11 +19,11 @@ flowchart TD
     end
 
     subgraph Backend["Django 6 + DRF (Gunicorn unix socket)"]
-        API[REST API /api/ · 60 paths · FBV @api_view]
+        API[REST API /api/ · ~68 paths · FBV @api_view]
         AUTH[JWT cookies + Google OAuth + hCaptcha + regla 30 días]
         ADMIN[Django Admin]
         SVC[Service layer · 13 servicios]
-        SIG[Signals · Review aggregates · Match push]
+        SIG[Signals · Review aggregates · Match→Notification+Push]
     end
 
     subgraph Async["Huey worker (albunmania-staging-huey)"]
@@ -155,7 +155,7 @@ sequenceDiagram
     Note over API,DB: webpush 404/410 → DELETE subscription (auto-cleanup)
 ```
 
-## 3. ER Diagram — Modelos del Release 01 (18)
+## 3. ER Diagram — Modelos (20)
 
 ```mermaid
 erDiagram
@@ -169,6 +169,10 @@ erDiagram
     User ||--o{ Match : "user_b"
     User ||--o{ Review : "reviewer"
     User ||--o{ Review : "reviewee"
+    User ||--o{ Notification : "recipient"
+    User ||--o{ Notification : "actor"
+    User ||--o{ Report : "reporter"
+    User ||--o{ Report : "target (if kind=user)"
 
     Album ||--o{ Sticker : contains
     Sticker ||--o{ UserSticker : "tracked by (count 0/1/2+)"
@@ -176,8 +180,10 @@ erDiagram
 
     Like }o--|| Match : "feeds"
     Match ||--o| Trade : confirms
+    Match ||--o{ Notification : "match_mutual"
     Trade ||--o| TradeWhatsAppOptIn : "per-trade opt-in (1 row, 2 flags)"
     Trade ||--o{ Review : "yields up to 2"
+    Trade ||--o{ Report : "target (if kind=trade)"
 
     MerchantProfile ||--o{ MerchantSubscriptionPayment : "monthly billing"
 
@@ -186,16 +192,21 @@ erDiagram
     User ||--o{ AdImpression : "viewed by"
 
     Review ||--o{ ReviewReport : "may be reported"
+    Review ||--o{ Notification : "review_received / review_reply"
 ```
 
-Archivos en `backend/albunmania_app/models/` (18): `user`, `profile`, `merchant_profile`, `password_code` (legacy del template, no se usa), `album`, `sticker`, `user_sticker`, `sponsor`, `like`, `match`, `trade`, `trade_whatsapp_optin`, `merchant_subscription_payment`, `ad_campaign`, `ad_creative`, `ad_impression` (incluye `AdClick`), `review` (incluye `ReviewReport`), `push_subscription`.
+Archivos en `backend/albunmania_app/models/` (20): `user`, `profile`, `merchant_profile`, `password_code` (legacy del template, no se usa), `album`, `sticker`, `user_sticker`, `sponsor`, `like`, `match`, `trade`, `trade_whatsapp_optin`, `merchant_subscription_payment`, `ad_campaign`, `ad_creative`, `ad_impression` (incluye `AdClick`), `review` (incluye `ReviewReport`), `push_subscription`, `notification`, `report`.
 
-Migraciones (8): `0001_initial` → `0002_role_extend_profile_merchant` → `0003_catalog_inventory_sponsor` → `0004_match_like_trade` → `0005_trade_whatsapp_optin` → `0006_merchant_payment_and_ads` → `0007_reviews` → `0008_push_subscription`.
+Migraciones (10): `0001_initial` → `0002_role_extend_profile_merchant` → `0003_catalog_inventory_sponsor` → `0004_match_like_trade` → `0005_trade_whatsapp_optin` → `0006_merchant_payment_and_ads` → `0007_reviews` → `0008_push_subscription` → `0009_notification` → `0010_report`.
+
+> `notification` y `report` se añadieron en el "Bloque D" (cierre de los 4 GAPS P2 de la auditoría de completitud del 2026-05-12); ver `tasks/tasks_plan.md`.
 
 **Constraints / invariantes críticos:**
-- `Profile.rating_avg / rating_count / positive_pct` — agregados cacheados; recalculados por signal `post_save`/`post_delete` sobre `Review` (sólo cuenta `is_visible=True`).
+- `Profile.rating_avg / rating_count / positive_pct` — agregados cacheados; recalculados por signal `post_save`/`post_delete` sobre `Review` (sólo cuenta `is_visible=True`). El endpoint público `users/<id>/public-profile/` expone estos + `% álbum` + `# trades completados`, nunca email/teléfono.
 - `Review` UNIQUE `(trade_id, reviewer_id)`; ventana de edición 24h post-creación; `is_visible=False` = hidden (no borrado) → excluido de agregados pero auditable.
-- `ReviewReport` — cola de moderación; el admin marca `is_visible=False` + razón.
+- `ReviewReport` — cola de moderación de *reseñas*; el admin marca `is_visible=False` + razón.
+- `Notification` — `kind` enum `match_mutual | review_received | review_reply`; FK opcionales `actor`/`match`/`review` (`SET_NULL`); `read_at` nullable (`is_read` property); índices `(user, read_at)` y `(user, -created_at)`. Creada por el signal `post_save Match(mutual, created)` (a ambos participantes, junto al Web Push) y por las views `trade_review_create` / `review_reply`. `notification_list` filtra siempre por `user=request.user`.
+- `Report` — moderación *general*; `target_kind` enum `user | trade`, `reason` enum `no_show | harassment | fake_profile | inappropriate | other`, `status` enum `pending | dismissed | actioned` (+ `resolved_by`/`resolved_at`/`resolution_notes`); `CheckConstraint` `report_target_matches_kind` garantiza exactamente uno de `target_user`/`target_trade` según `target_kind`; `ordering = ['status', '-created_at']` + índice `(status, -created_at)`. `report_create` valida no-self (usuario) y participación-en-trade (trade); resolver es admin-only — las sanciones se aplican aparte en `/admin/users`.
 - Sólo 1 `Sponsor` con `active_from <= now() <= active_until`.
 - `UserSticker` UNIQUE `(user_id, sticker_id)` + índice compuesto; `count` 0/1/2+.
 - `Match` UNIQUE par `(user_a, user_b)` normalizado; `status` enum `PENDING | MUTUAL`; `channel` enum `digital_swipe | qr_presencial` (Django 6: `CheckConstraint(condition=...)`, no `check=`).
@@ -209,8 +220,8 @@ Migraciones (8): `0001_initial` → `0002_role_extend_profile_merchant` → `000
 ```mermaid
 flowchart LR
     subgraph Presentation["Presentation Layer"]
-        VIEWS[Views · 17 módulos · FBV @api_view]
-        URLS[URLs · 17 módulos · 60 path()]
+        VIEWS[Views · 19 módulos · FBV @api_view]
+        URLS[URLs · 19 módulos · ~68 path()]
     end
     subgraph DTO["DTO Layer"]
         SER[Serializers · list / detail / create_update]
@@ -221,7 +232,7 @@ flowchart LR
     end
     subgraph Persistence["Persistence Layer"]
         MOD[Models · 18]
-        SIG[Signals · review aggregates · match push]
+        SIG[Signals · review aggregates · match→notification+push]
     end
 
     URLS --> VIEWS
