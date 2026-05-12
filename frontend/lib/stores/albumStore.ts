@@ -100,7 +100,7 @@ export const useAlbumStore = create<AlbumState>((set) => ({
 
   searchStickers: async (slug, query) => {
     if (query.trim().length < 2) return [];
-    const res = await api.get(`albums/${slug}/stickers/search/`, { params: { q: query } });
+    const res = await api.get(`albums/${slug}/search/`, { params: { q: query } });
     return res.data?.results ?? res.data ?? [];
   },
 

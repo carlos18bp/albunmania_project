@@ -16,6 +16,13 @@ export type CollectorMapEntry = {
   is_online: boolean;
 };
 
+export type CollectorSearchResult = {
+  user_id: number;
+  display_name: string;
+  city: string;
+  avatar_url: string;
+};
+
 type FetchArgs = { lat?: number; lng?: number; radiusKm?: number; albumId?: number | null };
 
 type CollectorMapState = {
@@ -24,6 +31,7 @@ type CollectorMapState = {
   error: string | null;
 
   fetchCollectors: (args?: FetchArgs) => Promise<CollectorMapEntry[]>;
+  searchCollectors: (query: string) => Promise<CollectorSearchResult[]>;
   clear: () => void;
 };
 
@@ -49,6 +57,17 @@ export const useCollectorMapStore = create<CollectorMapState>((set) => ({
     } catch (err) {
       set({ loading: false, error: 'fetch_collectors_failed' });
       throw err;
+    }
+  },
+
+  searchCollectors: async (query) => {
+    const q = query.trim();
+    if (q.length < 2) return [];
+    try {
+      const res = await api.get('collectors/search/', { params: { q } });
+      return (res.data?.results ?? []) as CollectorSearchResult[];
+    } catch {
+      return [];
     }
   },
 

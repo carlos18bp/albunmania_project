@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 
+import SearchAutocomplete from './SearchAutocomplete';
+
 type Props = {
+  slug: string;
   initialQuery?: string;
   initialTeam?: string;
   initialSpecial?: boolean;
@@ -10,6 +13,7 @@ type Props = {
 };
 
 export default function CatalogFilters({
+  slug,
   initialQuery = '',
   initialTeam = '',
   initialSpecial,
@@ -32,15 +36,7 @@ export default function CatalogFilters({
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center">
-      <input
-        type="search"
-        placeholder="Buscar por nombre o número…"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        aria-label="Buscar cromos"
-        data-testid="catalog-search"
-        className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-      />
+      <SearchAutocomplete slug={slug} value={q} onValueChange={setQ} />
       <input
         type="text"
         placeholder="Equipo"

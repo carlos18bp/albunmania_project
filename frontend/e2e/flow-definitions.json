@@ -1,5 +1,5 @@
 {
-  "version": "2.6.0",
+  "version": "2.7.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -392,6 +392,14 @@
       "roles": ["collector", "merchant", "web-manager", "admin"],
       "priority": "P3",
       "description": "/mapa shows collectors with an approximate location on a Leaflet map (GET /api/collectors/map/?lat=&lng=&radius_km=&album_id=) plus a list with Live Badges and links to /profile/[id]. 'Usar mi ubicación' requests browser geo and refetches within a 50 km radius; 'Ver todos' refetches unscoped. The requester is excluded; only approximate lat/lng are exposed.",
+      "expectedSpecs": 1
+    },
+    "catalog-predictive-search": {
+      "name": "Predictive catalogue search (autocomplete dropdown)",
+      "module": "catalog",
+      "roles": ["collector"],
+      "priority": "P3",
+      "description": "On /catalog/[slug] the search bar (SearchAutocomplete) shows a debounced dropdown with sticker suggestions (GET /api/albums/<slug>/stickers/search/?q=) and collector suggestions (GET /api/collectors/search/?q=) with a visual preview. Picking a sticker sets the query to its number (the grid filters to it); picking a collector navigates to /profile/[id]. The plain grid-filter behaviour (catalog-grid-filters) is unchanged.",
       "expectedSpecs": 1
     }
   }

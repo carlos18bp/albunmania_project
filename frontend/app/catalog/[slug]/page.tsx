@@ -53,7 +53,7 @@ export default function CatalogPage() {
       </header>
 
       <section className="mb-6">
-        <CatalogFilters onChange={handleFiltersChange} />
+        <CatalogFilters slug={slug} onChange={handleFiltersChange} />
       </section>
 
       <section>

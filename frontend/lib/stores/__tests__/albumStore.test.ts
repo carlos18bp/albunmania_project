@@ -56,6 +56,13 @@ describe('albumStore', () => {
     expect(mockApi.get).not.toHaveBeenCalled();
   });
 
+  it('queries the album search endpoint and returns its results', async () => {
+    mockApi.get.mockResolvedValue({ data: { results: [{ id: 1, number: '10', name: 'Messi' }] } });
+    const result = await useAlbumStore.getState().searchStickers('mundial-26', 'mes');
+    expect(mockApi.get).toHaveBeenCalledWith('albums/mundial-26/search/', { params: { q: 'mes' } });
+    expect(result).toHaveLength(1);
+  });
+
   it('records an error message when fetchAlbums fails', async () => {
     mockApi.get.mockRejectedValue(new Error('boom'));
 
