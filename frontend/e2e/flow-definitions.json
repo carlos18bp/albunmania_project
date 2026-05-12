@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -328,6 +328,30 @@
       "roles": ["guest"],
       "priority": "P2",
       "description": "/manual renders collapsible section buttons (9 sections x 14 processes) + client-side search over keywords/title/summary; ProcessCard bilingual",
+      "expectedSpecs": 1
+    },
+    "legal-terms": {
+      "name": "Terms & Conditions page",
+      "module": "legal",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "/terminos renders the T&C document (sections from lib/legal/content.ts) + the draft-notice banner; linked from the footer",
+      "expectedSpecs": 1
+    },
+    "legal-privacy": {
+      "name": "Privacy Policy page",
+      "module": "legal",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "/privacidad renders the privacy policy (Ley 1581/2012 scope) + the draft-notice banner; linked from the footer",
+      "expectedSpecs": 1
+    },
+    "help-faq": {
+      "name": "Help center / FAQ",
+      "module": "help",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "/ayuda renders the FAQ accordion (lib/faq/content.ts) with an audience filter (general/coleccionista/comerciante/anunciante); linked from the footer",
       "expectedSpecs": 1
     }
   }

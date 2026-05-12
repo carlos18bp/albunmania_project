@@ -9,7 +9,7 @@ ESTADO DE COMPLETITUD (auditoría 2026-05-12) — leyenda de los comentarios inl
   [ ] + <!-- fuera de Release 01 -->= módulo opcional con costo extra (➕/💰) o visión v2 — intencionalmente fuera de alcance.
   <!-- desviación: ... -->          = implementado pero difiere del nombre/forma descrito en la propuesta (funciona igual).
 Pendientes operacionales para "aceptado": deploy real al VPP por ProjectApp + creds reales (Google OAuth, hCaptcha, VAPID, DJANGO_SECRET_KEY, MySQL pwd). Ver deploy/staging/RUNBOOK.md.
-GAPS detectados: ver §"Vistas" (Notificaciones, Perfil, Mapa de Coleccionistas, T&C/Privacidad/FAQ), §"Componentes" (Live Badge, FAQ), §"Funcionalidades" (Geolocalización por IP, Reportes y Moderación general), §"Modelos de datos" (Notification, Report general).
+GAPS detectados (auditoría 2026-05-12): los P2 se están cerrando en "Bloque D" — D1 ✅ (T&C/Privacidad/FAQ pages + componente FAQ + footer); pendientes D2 (página /profile), D3 (centro de notificaciones + modelo Notification), D4 (modelo Report general + moderación de usuarios/trades). GAPS P3 (siguen `<!-- NO IMPLEMENTADO -->`/`<!-- V2 -->`): "en línea ahora"/Live Badge/presencia, Mapa de Coleccionistas, Geolocalización por IP (GeoIP2), dropdown de búsqueda predictiva.
 -->
 
 ---
@@ -71,11 +71,14 @@ Cada vista es una pantalla o sección de Albunmanía. Su propósito es guiar al 
 
 - [ ] **Notificaciones** — Centro de notificaciones con matches nuevos, mensajes y alertas de actividad. Sincronizado con notificaciones push de la PWA. <!-- NO IMPLEMENTADO: no hay modelo Notification ni vista "centro de notificaciones". Sí está el push Web (PushSubscription + push_notify + opt-in en /dashboard), pero no el listado in-app de notificaciones. -->
 
-- [ ] **Términos y Condiciones** — Documento legal que explica el modelo de monetización por anuncios, política de datos, edad mínima y aclaración de NO afiliación oficial con FIFA o Panini. <!-- NO IMPLEMENTADO como página: el footer de app/layout.tsx incluye la línea "No afiliado oficialmente con FIFA o Panini" pero no hay página /terminos con el documento legal completo. -->
+- [x] **Términos y Condiciones** — Documento legal que explica el modelo de monetización por anuncios, política de datos, edad mínima y aclaración de NO afiliación oficial con FIFA o Panini. <!-- página /terminos (app/terminos/page.tsx + LegalPage + lib/legal/content.ts TERMS_SECTIONS) + enlace en el footer. NOTA: el texto es un borrador de trabajo (banner "legal-draft-notice") — la versión definitiva la debe revisar/redactar el equipo legal del cliente (edad mínima exacta, jurisdicción, limitación de responsabilidad, contacto). -->
 
-- [ ] **Política de Privacidad** — Detalle del tratamiento de datos personales conforme a la Ley 1581 de 2012, incluyendo geolocalización, datos de Google y compartición de WhatsApp. <!-- NO IMPLEMENTADO como página: no hay ruta /privacidad. -->
 
-- [ ] **Centro de Ayuda / FAQ** — Preguntas frecuentes sobre cómo intercambiar, cómo funciona la verificación, qué hacer ante un 'no-show' y cómo reportar contenido inapropiado. <!-- NO IMPLEMENTADO como página: no hay ruta /ayuda ni componente FAQ. El Manual interactivo (/manual) cubre parte del contenido pero está orientado al equipo de ProjectApp, no al coleccionista. -->
+- [x] **Política de Privacidad** — Detalle del tratamiento de datos personales conforme a la Ley 1581 de 2012, incluyendo geolocalización, datos de Google y compartición de WhatsApp. <!-- página /privacidad (app/privacidad/page.tsx + LegalPage + lib/legal/content.ts PRIVACY_SECTIONS) + enlace en el footer. NOTA: borrador de trabajo — la versión definitiva (alineación Ley 1581/2012 + Decreto 1377/2013, razón social/NIT del responsable, plazos de retención, canal para ejercer derechos) la debe revisar el equipo legal del cliente. -->
+
+
+- [x] **Centro de Ayuda / FAQ** — Preguntas frecuentes sobre cómo intercambiar, cómo funciona la verificación, qué hacer ante un 'no-show' y cómo reportar contenido inapropiado. <!-- página /ayuda (app/ayuda/page.tsx + FAQAccordion + lib/faq/content.ts — 18 preguntas con filtro por audiencia) + enlace en el footer. -->
+
 
 - [x] **Match QR Presencial** — En cambiatones físicos (Unicentro, El Tesoro, calle 19), los coleccionistas escanean el QR del otro y la app cruza listas en segundos para identificar intercambios posibles. Funciona offline. <!-- /match/qr — pestaña "Escanear" (@zxing/browser, QRScanner) + scan/confirm; compute_offline_cross corre en cliente sobre inventario cacheado en IndexedDB. -->
 
@@ -103,7 +106,8 @@ Componentes visuales y funcionales reutilizados en toda la plataforma para mante
 
 - [x] **Widget de Reseñas** — Componente compacto que muestra el rating promedio, número de reseñas y badges de confianza del usuario. Reutilizable en cabecera de perfil, cards de Match y bloques laterales de la vista de Intercambio. <!-- components/reviews/ReviewWidget.tsx + StarRating.tsx. -->
 
-- [ ] **Preguntas Frecuentes (FAQ)** — Acordeón con respuestas rápidas a dudas comunes de coleccionistas, comerciantes y anunciantes. <!-- NO IMPLEMENTADO: no hay componente FAQ ni vista /ayuda. -->
+- [x] **Preguntas Frecuentes (FAQ)** — Acordeón con respuestas rápidas a dudas comunes de coleccionistas, comerciantes y anunciantes. <!-- components/faq/FAQAccordion.tsx — acordeón <button>/aria-expanded con filtro por audiencia (Todos/General/Coleccionista/Comerciante/Anunciante); contenido en lib/faq/content.ts. Renderizado en /ayuda. -->
+
 
 - [ ] **Indicador 'En Línea Ahora' (Live Badge)** — Punto verde visible en perfiles, matches y leaderboards que indica si el otro coleccionista está activo en este momento. Genera urgencia y acelera el cierre del intercambio. <!-- NO IMPLEMENTADO: no hay sistema de presencia (last_seen/is_online, WebSocket/SSE) ni componente Live Badge. -->
 
@@ -121,7 +125,7 @@ Componentes visuales y funcionales reutilizados en toda la plataforma para mante
 
 - [x] **Drawer de Reseñas** — Side-sheet lateral no invasivo que se abre al hacer clic en el rating de una contraparte (en Match o en Detalle de Intercambio). Lista paginada con filtro por estrellas. Nunca aparece como modal bloqueante ni preabierto. <!-- components/reviews/ReviewDrawer.tsx — GET /api/users/<id>/reviews/?stars= ; selector con EMPTY_REVIEWS cacheado (evita el loop de Zustand). -->
 
-- [x] **Pie de página (Footer)** <!-- mínimo: footer inline en app/layout.tsx con "© 2026 Albunmanía · No afiliado oficialmente con FIFA o Panini." — SIN enlaces a T&C/privacidad/ayuda/redes (esas páginas no existen) ni componente Footer reutilizable. --> — Enlaces a términos, privacidad, ayuda, redes sociales y aclaración de NO afiliación con FIFA o Panini.
+- [x] **Pie de página (Footer)** <!-- footer inline en app/layout.tsx — enlaces a /terminos, /privacidad, /ayuda, /manual + la línea "© 2026 Albunmanía · No afiliado oficialmente con FIFA o Panini." (sin enlaces a redes sociales — pendiente cuando existan las cuentas). --> — Enlaces a términos, privacidad, ayuda, redes sociales y aclaración de NO afiliación con FIFA o Panini.
 
 ### Funcionalidades Específicas
 

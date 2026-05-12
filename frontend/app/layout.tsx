@@ -40,8 +40,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SponsorHeaderBand />
           {children}
           <footer className="border-t border-border mt-16">
-            <div className="max-w-6xl mx-auto px-6 py-10 text-sm text-muted-foreground">
-              &copy; 2026 Albunmanía · No afiliado oficialmente con FIFA o Panini.
+            <div className="max-w-6xl mx-auto px-6 py-10 text-sm text-muted-foreground space-y-3">
+              <nav aria-label="Enlaces del pie de página" className="flex flex-wrap gap-x-4 gap-y-2">
+                <a href="/terminos" className="hover:text-foreground hover:underline">Términos y Condiciones</a>
+                <a href="/privacidad" className="hover:text-foreground hover:underline">Política de Privacidad</a>
+                <a href="/ayuda" className="hover:text-foreground hover:underline">Centro de Ayuda</a>
+                <a href="/manual" className="hover:text-foreground hover:underline">Manual</a>
+              </nav>
+              <p>&copy; 2026 Albunmanía · No afiliado oficialmente con FIFA o Panini.</p>
             </div>
           </footer>
         </Providers>

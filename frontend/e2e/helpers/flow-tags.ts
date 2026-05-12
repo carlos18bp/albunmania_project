@@ -78,3 +78,8 @@ export const ADMIN_ANALYTICS_OVERVIEW = ['@flow:admin-analytics-overview', '@mod
 
 // ── Manual ──
 export const MANUAL_SEARCH_BROWSE = ['@flow:manual-search-browse', '@module:manual', '@priority:P2'];
+
+// ── Legal / Help ──
+export const LEGAL_TERMS = ['@flow:legal-terms', '@module:legal', '@priority:P2'];
+export const LEGAL_PRIVACY = ['@flow:legal-privacy', '@module:legal', '@priority:P2'];
+export const HELP_FAQ = ['@flow:help-faq', '@module:help', '@priority:P2'];

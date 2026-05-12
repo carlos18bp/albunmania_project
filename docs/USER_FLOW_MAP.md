@@ -4,7 +4,7 @@
 
 Use this document to understand each flow's steps, branching conditions, role restrictions, and API contracts before writing or reviewing E2E tests. It is paired with `frontend/e2e/flow-definitions.json` (machine-readable registry) and `frontend/e2e/helpers/flow-tags.ts` (`@flow:` tag constants).
 
-**Version:** 2.1.0
+**Version:** 2.2.0
 **Last Updated:** 2026-05-12
 **Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual).
 
@@ -57,6 +57,9 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `admin-moderation-queue` | Admin moderation queue | admin | P2 | web-manager / admin | `/admin/moderation` |
 | `admin-analytics-overview` | Admin analytics + KPIs + CSV export | admin | P1 | web-manager / admin | `/admin/analytics` |
 | `manual-search-browse` | Interactive manual: sections + search | manual | P2 | guest | `/manual` |
+| `legal-terms` | Terms & Conditions page | legal | P2 | guest | `/terminos` |
+| `legal-privacy` | Privacy Policy page | legal | P2 | guest | `/privacidad` |
+| `help-faq` | Help center / FAQ | help | P2 | guest | `/ayuda` |
 
 ---
 
@@ -1051,6 +1054,69 @@ Use this document to understand each flow's steps, branching conditions, role re
 |-----------|----------|
 | Search with no matches | Empty results state |
 | Section collapsed/expanded | Toggles its processes' visibility |
+
+---
+
+## Legal / Help Module
+
+### legal-terms
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | guest |
+| **Frontend route** | `/terminos` |
+| **API endpoints** | None (content static in `frontend/lib/legal/content.ts`) |
+
+**Preconditions:** None.
+
+**Steps:**
+1. User navigates to `/terminos` (linked from the footer); heading **Términos y Condiciones** (`data-testid="terms-page"`).
+2. A draft-notice banner (`legal-draft-notice`) renders at the top — the text is a working draft pending the client's legal review.
+3. The document renders as `### heading` sections + paragraphs from `TERMS_SECTIONS` (qué es Albunmanía, cuenta/elegibilidad/edad, cómo funcionan los intercambios, conducta, monetización/publicidad, propiedad intelectual, limitación de responsabilidad, cambios/terminación, ley aplicable/contacto).
+
+**Branching conditions:** None — static page.
+
+---
+
+### legal-privacy
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | guest |
+| **Frontend route** | `/privacidad` |
+| **API endpoints** | None (content static in `frontend/lib/legal/content.ts`) |
+
+**Preconditions:** None.
+
+**Steps:**
+1. User navigates to `/privacidad` (linked from the footer); heading **Política de Privacidad** (`data-testid="privacy-page"`).
+2. Draft-notice banner at the top.
+3. Sections from `PRIVACY_SECTIONS` (responsable del tratamiento, qué datos, para qué, con quién se comparten, conservación, derechos del titular Ley 1581/2012, seguridad, menores/cambios).
+
+**Branching conditions:** None — static page.
+
+---
+
+### help-faq
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | guest |
+| **Frontend route** | `/ayuda` |
+| **API endpoints** | None (content static in `frontend/lib/faq/content.ts`) |
+
+**Preconditions:** None.
+
+**Steps:**
+1. User navigates to `/ayuda` (linked from the footer); heading **Centro de Ayuda** (`data-testid="help-page"`).
+2. `FAQAccordion` renders the audience filter chips (Todos / General / Coleccionista / Comerciante / Anunciante) and the list of questions as collapsible `<button>` headers (`faq-question-<id>` / `faq-answer-<id>`).
+3. Clicking a question toggles its answer; clicking an audience chip filters the list (general items show under "General"; others only under their own audience).
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Audience filter with no items | `faq-empty` state |
+| Open question + click another | Only one answer open at a time |
 
 ---
 

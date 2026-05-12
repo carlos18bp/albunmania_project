@@ -6,6 +6,9 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   BACKOFFICE: '/backoffice',
   MANUAL: '/manual',
+  TERMS: '/terminos',
+  PRIVACY: '/privacidad',
+  HELP: '/ayuda',
 } as const;
 
 export const API_ENDPOINTS = {
