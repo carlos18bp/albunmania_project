@@ -68,6 +68,12 @@ export default function Header() {
                 Match
               </Link>
               <Link
+                className="px-2 py-1 rounded hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                href={ROUTES.COLLECTORS_MAP}
+              >
+                Mapa
+              </Link>
+              <Link
                 href="/notificaciones"
                 data-testid="header-notifications"
                 aria-label={unreadCount > 0 ? `Notificaciones (${unreadCount} sin leer)` : 'Notificaciones'}

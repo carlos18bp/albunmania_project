@@ -95,3 +95,6 @@ export const REPORT_USER_OR_TRADE = ['@flow:report-user-or-trade', '@module:mode
 
 // ── Presence ──
 export const PRESENCE_LIVE_BADGE = ['@flow:presence-live-badge', '@module:presence', '@priority:P3'];
+
+// ── Collectors ──
+export const COLLECTORS_MAP = ['@flow:collectors-map', '@module:collectors', '@priority:P3'];

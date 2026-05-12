@@ -1,5 +1,5 @@
 {
-  "version": "2.5.0",
+  "version": "2.6.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -384,6 +384,14 @@
       "roles": ["collector", "merchant", "web-manager", "admin", "guest"],
       "priority": "P3",
       "description": "While signed in, PresencePinger heartbeats POST /api/presence/ping/ every 120s (and on tab focus), which bumps Profile.last_seen (throttled). A collector is 'online' if last_seen is within 5 min; the green LiveBadge then shows on /profile/[id], swipe/match cards and the city ranking. The dashboard shows GET /api/presence/active-count/?city= ('N coleccionistas en línea ahora'). validate-token also bumps last_seen.",
+      "expectedSpecs": 1
+    },
+    "collectors-map": {
+      "name": "Mapa de Coleccionistas",
+      "module": "collectors",
+      "roles": ["collector", "merchant", "web-manager", "admin"],
+      "priority": "P3",
+      "description": "/mapa shows collectors with an approximate location on a Leaflet map (GET /api/collectors/map/?lat=&lng=&radius_km=&album_id=) plus a list with Live Badges and links to /profile/[id]. 'Usar mi ubicación' requests browser geo and refetches within a 50 km radius; 'Ver todos' refetches unscoped. The requester is excluded; only approximate lat/lng are exposed.",
       "expectedSpecs": 1
     }
   }
