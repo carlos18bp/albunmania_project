@@ -51,24 +51,27 @@ test.describe('Session 1 — Auth & Onboarding', () => {
   });
 
   test.describe('Sign-in page', () => {
-    test('renders hCaptcha widget and Google sign-in button', async ({ page }) => {
+    test('renders Albunmanía heading + hCaptcha + Google fallback', async ({ page }) => {
       await page.goto('/sign-in');
-
-      // The page must render with the Albunmanía-specific copy, not
-      // the template's email/password form.
       await expect(page).toHaveURL(/.*sign-in/);
 
-      // hCaptcha mounts client-side as hidden iframes — they show only
-      // after user interaction. Assert attachment, not visibility.
+      // Page now renders the Albunmanía Spanish copy — no email/password
+      // template residue.
+      await expect(page.getByRole('heading', { name: 'Entrar a Albunmanía' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Crear cuenta' })).toBeVisible();
+      // No legacy form fields anymore.
+      await expect(page.getByPlaceholder('Email')).toHaveCount(0);
+      await expect(page.getByPlaceholder('Password')).toHaveCount(0);
+
+      // hCaptcha iframes mount once the sitekey arrives from /api/captcha/site-key/.
       await page.waitForTimeout(2500);
       const captchaIframes = page.locator('iframe[src*="hcaptcha"]');
       expect(await captchaIframes.count()).toBeGreaterThan(0);
 
-      // Note: with NEXT_PUBLIC_GOOGLE_CLIENT_ID unset the Google button
-      // renders the "Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID" fallback.
-      // That message MUST be on the page in dev so the operator knows
-      // OAuth is not actually wired.
-      await expect(page.getByText(/Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID/i)).toBeVisible();
+      // With NEXT_PUBLIC_GOOGLE_CLIENT_ID unset, the page surfaces the
+      // explicit "config pendiente" message (data-testid is more stable
+      // than the human-readable string).
+      await expect(page.getByTestId('missing-google-client-id')).toBeVisible();
     });
   });
 

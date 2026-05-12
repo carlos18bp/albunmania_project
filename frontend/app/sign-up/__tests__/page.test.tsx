@@ -1,5 +1,7 @@
+/// <reference types="jest" />
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import SignUpPage from '../page';
 import { useAuthStore } from '../../../lib/stores/authStore';
@@ -21,7 +23,7 @@ jest.mock('@react-oauth/google', () => ({
         onSuccess?.({ credential: mockGoogleCredential ?? undefined });
       }}
     >
-      Google Login
+      Google Sign-up
     </button>
   ),
 }));
@@ -35,25 +37,18 @@ jest.mock('../../../lib/services/http', () => ({
   api: { get: jest.fn().mockRejectedValue(new Error('no key')), post: jest.fn() },
 }));
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-}));
-
-jest.mock('jwt-decode', () => ({
-  jwtDecode: jest.fn(),
-}));
-
-jest.mock('../../../lib/stores/authStore', () => ({
-  useAuthStore: jest.fn(),
-}));
+jest.mock('next/navigation', () => ({ useRouter: jest.fn() }));
+jest.mock('jwt-decode', () => ({ jwtDecode: jest.fn() }));
+jest.mock('../../../lib/stores/authStore', () => ({ useAuthStore: jest.fn() }));
 
 const mockUseAuthStore = useAuthStore as unknown as jest.Mock;
 const mockUseRouter = useRouter as unknown as jest.Mock;
 const mockJwtDecode = jwtDecode as unknown as jest.Mock;
+let user: ReturnType<typeof userEvent.setup>;
 
 const setAuthStoreState = (state: any) => {
   mockUseAuthStore.mockImplementation((selector?: (store: any) => unknown) =>
-    selector ? selector(state) : state
+    selector ? selector(state) : state,
   );
 };
 
@@ -65,6 +60,7 @@ describe('SignUpPage', () => {
     mockGoogleCredential = 'token';
     mockGoogleError = false;
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = 'test-client';
+    user = userEvent.setup();
   });
 
   afterEach(() => {
@@ -75,149 +71,29 @@ describe('SignUpPage', () => {
     }
   });
 
+  it('renders heading + already-have-account CTA', () => {
+    setAuthStoreState({ googleLogin: jest.fn() });
+    mockUseRouter.mockReturnValue({ replace: jest.fn() });
+
+    render(<SignUpPage />);
+
+    expect(screen.getByRole('heading', { name: 'Crear cuenta' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/sign-in');
+  });
+
   it('renders missing Google Client ID message when env var not set', () => {
     delete process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    setAuthStoreState({ signUp: jest.fn(), googleLogin: jest.fn() });
+    setAuthStoreState({ googleLogin: jest.fn() });
     mockUseRouter.mockReturnValue({ replace: jest.fn() });
 
     render(<SignUpPage />);
 
-    expect(screen.getByText('Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID')).toBeInTheDocument();
+    expect(screen.getByTestId('missing-google-client-id')).toBeInTheDocument();
   });
 
-  it('shows error when passwords do not match', async () => {
-    const signUp = jest.fn();
-    setAuthStoreState({ signUp, googleLogin: jest.fn() });
-    mockUseRouter.mockReturnValue({ replace: jest.fn() });
-
-    render(<SignUpPage />);
-
-    fireEvent.change(screen.getByPlaceholderText('First Name'), { target: { value: 'Test' } });
-    fireEvent.change(screen.getByPlaceholderText('Last Name'), { target: { value: 'User' } });
-    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'password456' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
-
-    expect(await screen.findByText('Passwords do not match')).toBeInTheDocument();
-    expect(signUp).not.toHaveBeenCalled();
-  });
-
-  it('shows error when password is too short', async () => {
-    const signUp = jest.fn();
-    setAuthStoreState({ signUp, googleLogin: jest.fn() });
-    mockUseRouter.mockReturnValue({ replace: jest.fn() });
-
-    render(<SignUpPage />);
-
-    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'short' } });
-    fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'short' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
-
-    expect(await screen.findByText('Password must be at least 8 characters')).toBeInTheDocument();
-    expect(signUp).not.toHaveBeenCalled();
-  });
-
-  it('signs up successfully and redirects', async () => {
-    const signUp = jest.fn().mockResolvedValue(undefined);
-    setAuthStoreState({ signUp, googleLogin: jest.fn() });
-    const replace = jest.fn();
-    mockUseRouter.mockReturnValue({ replace });
-
-    render(<SignUpPage />);
-
-    fireEvent.change(screen.getByPlaceholderText('First Name'), { target: { value: 'Test' } });
-    fireEvent.change(screen.getByPlaceholderText('Last Name'), { target: { value: 'User' } });
-    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
-
-    await waitFor(() => {
-      expect(signUp).toHaveBeenCalledWith({
-        email: 'user@example.com',
-        password: 'password123',
-        first_name: 'Test',
-        last_name: 'User',
-        captcha_token: undefined,
-      });
-    });
-
-    expect(replace).toHaveBeenCalledWith('/dashboard');
-  });
-
-  it('shows error when Google registration fails with response error', async () => {
-    const googleLogin = jest
-      .fn()
-      .mockRejectedValue({ response: { data: { error: 'Google auth error' } } });
-    setAuthStoreState({ signUp: jest.fn(), googleLogin });
-    mockUseRouter.mockReturnValue({ replace: jest.fn() });
-    mockJwtDecode.mockReturnValue({
-      email: 'google@example.com',
-      given_name: 'Google',
-      family_name: 'User',
-      picture: 'pic.png',
-    });
-
-    render(<SignUpPage />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Google Login' }));
-
-    expect(await screen.findByText('Google auth error')).toBeInTheDocument();
-  });
-
-  it('shows default error when Google registration throws without response', async () => {
-    const googleLogin = jest.fn().mockRejectedValue(new Error('boom'));
-    setAuthStoreState({ signUp: jest.fn(), googleLogin });
-    mockUseRouter.mockReturnValue({ replace: jest.fn() });
-    mockJwtDecode.mockReturnValue({
-      email: 'google@example.com',
-      given_name: 'Google',
-      family_name: 'User',
-      picture: 'pic.png',
-    });
-
-    render(<SignUpPage />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Google Login' }));
-
-    expect(await screen.findByText('Google registration failed')).toBeInTheDocument();
-  });
-
-  it('shows an error when sign up fails', async () => {
-    const signUp = jest.fn().mockRejectedValue({ response: { data: { error: 'Registration failed' } } });
-    setAuthStoreState({ signUp, googleLogin: jest.fn() });
-    mockUseRouter.mockReturnValue({ replace: jest.fn() });
-
-    render(<SignUpPage />);
-
-    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
-
-    expect(await screen.findByText('Registration failed')).toBeInTheDocument();
-  });
-
-  it('shows default error when sign up error payload is missing', async () => {
-    const signUp = jest.fn().mockRejectedValue({ response: { data: null } });
-    setAuthStoreState({ signUp, googleLogin: jest.fn() });
-    mockUseRouter.mockReturnValue({ replace: jest.fn() });
-
-    render(<SignUpPage />);
-
-    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
-
-    expect(await screen.findByText('Registration failed')).toBeInTheDocument();
-  });
-
-  it('handles Google registration success', async () => {
+  it('signs up with Google and redirects to /onboarding', async () => {
     const googleLogin = jest.fn().mockResolvedValue(undefined);
-    setAuthStoreState({ signUp: jest.fn(), googleLogin });
+    setAuthStoreState({ googleLogin });
     const replace = jest.fn();
     mockUseRouter.mockReturnValue({ replace });
     mockJwtDecode.mockReturnValue({
@@ -228,8 +104,7 @@ describe('SignUpPage', () => {
     });
 
     render(<SignUpPage />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Google Login' }));
+    await user.click(screen.getByRole('button', { name: 'Google Sign-up' }));
 
     await waitFor(() => {
       expect(googleLogin).toHaveBeenCalledWith({
@@ -238,38 +113,61 @@ describe('SignUpPage', () => {
         given_name: 'Google',
         family_name: 'User',
         picture: 'pic.png',
+        captcha_token: undefined,
       });
     });
-    expect(replace).toHaveBeenCalledWith('/dashboard');
+    expect(replace).toHaveBeenCalledWith('/onboarding');
   });
 
-  it('shows an error when Google credential is missing', async () => {
+  it('shows error when Google credential is missing', async () => {
     mockGoogleCredential = null;
-    setAuthStoreState({ signUp: jest.fn(), googleLogin: jest.fn() });
+    setAuthStoreState({ googleLogin: jest.fn() });
     mockUseRouter.mockReturnValue({ replace: jest.fn() });
 
     render(<SignUpPage />);
+    await user.click(screen.getByRole('button', { name: 'Google Sign-up' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Google Login' }));
-
-    expect(await screen.findByText('Google registration failed')).toBeInTheDocument();
+    expect(await screen.findByTestId('signup-error')).toHaveTextContent(/cuenta de Google/i);
   });
 
-  it('handles Google login error callback', async () => {
+  it('surfaces account-too-young error from the store', async () => {
+    const googleLogin = jest.fn().mockRejectedValue({ code: 'account_too_young' });
+    setAuthStoreState({ googleLogin });
+    mockUseRouter.mockReturnValue({ replace: jest.fn() });
+    mockJwtDecode.mockReturnValue({ email: 'g@x.com' });
+
+    render(<SignUpPage />);
+    await user.click(screen.getByRole('button', { name: 'Google Sign-up' }));
+
+    expect(await screen.findByTestId('signup-error')).toHaveTextContent(/30 d.+as/i);
+  });
+
+  it('shows the fallback error when the store rejects without a code', async () => {
+    const googleLogin = jest.fn().mockRejectedValue(new Error('boom'));
+    setAuthStoreState({ googleLogin });
+    mockUseRouter.mockReturnValue({ replace: jest.fn() });
+    mockJwtDecode.mockReturnValue({ email: 'g@x.com' });
+
+    render(<SignUpPage />);
+    await user.click(screen.getByRole('button', { name: 'Google Sign-up' }));
+
+    expect(await screen.findByTestId('signup-error')).toHaveTextContent(/No pudimos crear/i);
+  });
+
+  it('shows the Google-failed error when the OAuth widget calls onError', async () => {
     mockGoogleError = true;
-    setAuthStoreState({ signUp: jest.fn(), googleLogin: jest.fn() });
+    setAuthStoreState({ googleLogin: jest.fn() });
     mockUseRouter.mockReturnValue({ replace: jest.fn() });
 
     render(<SignUpPage />);
+    await user.click(screen.getByRole('button', { name: 'Google Sign-up' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Google Login' }));
-
-    expect(await screen.findByText('Google registration failed')).toBeInTheDocument();
+    expect(await screen.findByTestId('signup-error')).toHaveTextContent(/cuenta de Google/i);
   });
 
-  it('continues when jwt decode fails', async () => {
+  it('keeps going when jwtDecode throws (uses undefined email/name)', async () => {
     const googleLogin = jest.fn().mockResolvedValue(undefined);
-    setAuthStoreState({ signUp: jest.fn(), googleLogin });
+    setAuthStoreState({ googleLogin });
     const replace = jest.fn();
     mockUseRouter.mockReturnValue({ replace });
     mockJwtDecode.mockImplementation(() => {
@@ -277,8 +175,7 @@ describe('SignUpPage', () => {
     });
 
     render(<SignUpPage />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Google Login' }));
+    await user.click(screen.getByRole('button', { name: 'Google Sign-up' }));
 
     await waitFor(() => {
       expect(googleLogin).toHaveBeenCalledWith({
@@ -287,8 +184,9 @@ describe('SignUpPage', () => {
         given_name: undefined,
         family_name: undefined,
         picture: undefined,
+        captcha_token: undefined,
       });
     });
-    expect(replace).toHaveBeenCalledWith('/dashboard');
+    expect(replace).toHaveBeenCalledWith('/onboarding');
   });
 });

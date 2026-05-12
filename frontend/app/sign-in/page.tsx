@@ -1,14 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { FormEvent, useState, useEffect } from 'react';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import HCaptchaWidget from '@/components/auth/HCaptchaWidget';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import { useAuthStore } from '@/lib/stores/authStore';
+import HCaptchaWidget from '@/components/auth/HCaptchaWidget';
 import { api } from '@/lib/services/http';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 type GoogleUser = {
   email: string;
@@ -17,62 +17,61 @@ type GoogleUser = {
   picture?: string;
 };
 
+const COPY = {
+  title: 'Entrar a Albunmanía',
+  subtitle: 'Inicia sesión con tu cuenta de Google. Solo aceptamos cuentas con más de 30 días de antigüedad.',
+  captchaPrompt: 'Verifica que no eres un robot.',
+  signingIn: 'Entrando…',
+  noAccount: '¿No tienes cuenta?',
+  signUp: 'Crear cuenta',
+  missingClient: 'Configuración pendiente: NEXT_PUBLIC_GOOGLE_CLIENT_ID no está definido.',
+  errors: {
+    googleFailed: 'No pudimos validar tu cuenta de Google. Intenta de nuevo.',
+    captchaRequired: 'Completa el captcha para continuar.',
+    accountTooYoung: 'Tu cuenta de Google es demasiado nueva (mínimo 30 días). Vuelve a intentarlo más adelante.',
+    fallback: 'No pudimos entrar. Intenta de nuevo.',
+  },
+} as const;
+
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn, googleLogin } = useAuthStore();
+  const googleLogin = useAuthStore((s) => s.googleLogin);
 
   const hasGoogleClientId = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [siteKey, setSiteKey] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    // Read sitekey from the new endpoint (with fallback to the legacy alias).
-    api.get('captcha/site-key/')
+    setMounted(true);
+    api
+      .get('captcha/site-key/')
       .then((res) => setSiteKey(res.data.site_key || ''))
       .catch(() => {
-        api.get('google-captcha/site-key/')
+        api
+          .get('google-captcha/site-key/')
           .then((res) => setSiteKey(res.data.site_key || ''))
-          .catch(() => {});
+          .catch(() => undefined);
       });
   }, []);
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setError('');
 
     if (siteKey && !captchaToken) {
-      setError('Please complete the captcha');
+      setError(COPY.errors.captchaRequired);
+      return;
+    }
+    if (!credentialResponse.credential) {
+      setError(COPY.errors.googleFailed);
       return;
     }
 
     setLoading(true);
-
     try {
-      await signIn({ email, password, captcha_token: captchaToken ?? undefined });
-      router.replace('/dashboard');
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } } };
-      setError(axiosErr.response?.data?.error || 'Invalid credentials');
-      setCaptchaToken(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    try {
-      setLoading(true);
-      setError('');
-
-      if (!credentialResponse.credential) {
-        setError('Google login failed');
-        return;
-      }
-
       let decoded: GoogleUser | null = null;
       try {
         decoded = jwtDecode<GoogleUser>(credentialResponse.credential);
@@ -86,107 +85,86 @@ export default function SignInPage() {
         given_name: decoded?.given_name,
         family_name: decoded?.family_name,
         picture: decoded?.picture,
+        captcha_token: captchaToken ?? undefined,
       });
-      
       router.replace('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Google login failed');
+    } catch (err: unknown) {
+      const errObj = err as { code?: string; detail?: string };
+      if (errObj?.code === 'account_too_young') {
+        setError(COPY.errors.accountTooYoung);
+      } else if (errObj?.code === 'captcha_failed') {
+        setError(errObj.detail || COPY.errors.captchaRequired);
+      } else {
+        setError(errObj?.detail || COPY.errors.fallback);
+      }
+      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleError = () => {
-    setError('Google login failed');
+    setError(COPY.errors.googleFailed);
   };
 
   return (
     <main className="min-h-[calc(100vh-72px)] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Welcome back. Sign in to continue.</p>
+      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">{COPY.title}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{COPY.subtitle}</p>
+        </header>
 
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <div>
-            <input 
-              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Email" 
-              type="email"
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              autoComplete="email"
-              required
-            />
-          </div>
-          
-          <div>
-            <input 
-              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              type="password" 
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <HCaptchaWidget
-              sitekey={siteKey || undefined}
-              onVerify={(token) => setCaptchaToken(token)}
-              onExpire={() => setCaptchaToken(null)}
-            />
-          </div>
-
-          <button
-            className="bg-primary text-primary-foreground rounded-full px-5 py-3 w-full disabled:opacity-50 hover:bg-primary/90"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-
-          {error ? <p className="text-destructive text-sm">{error}</p> : null}
-        </form>
-
-        <div className="mt-4 text-center">
-          <Link href="/forgot-password" className="text-sm text-foreground hover:underline">
-            Forgot password?
-          </Link>
-        </div>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-
-          {hasGoogleClientId ? (
-            <div className="mt-6 flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                size="large"
-                text="signin_with"
-                shape="rectangular"
+        {siteKey && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">{COPY.captchaPrompt}</p>
+            <div className="flex justify-center">
+              <HCaptchaWidget
+                sitekey={siteKey}
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
               />
             </div>
-          ) : (
-            <p className="mt-6 text-sm text-destructive text-center">Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID</p>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="mt-6 text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
+        {mounted && hasGoogleClientId ? (
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              size="large"
+              text="signin_with"
+              shape="rectangular"
+            />
+          </div>
+        ) : mounted ? (
+          <p
+            data-testid="missing-google-client-id"
+            className="text-sm text-destructive text-center"
+          >
+            {COPY.missingClient}
+          </p>
+        ) : null}
+
+        {loading && (
+          <p data-testid="signin-loading" className="text-sm text-muted-foreground text-center">
+            {COPY.signingIn}
+          </p>
+        )}
+
+        {error && (
+          <p data-testid="signin-error" role="alert" className="text-sm text-destructive text-center">
+            {error}
+          </p>
+        )}
+
+        <p className="text-center text-sm">
+          <span className="text-muted-foreground">{COPY.noAccount} </span>
           <Link href="/sign-up" className="text-foreground hover:underline">
-            Sign up
+            {COPY.signUp}
           </Link>
-        </div>
+        </p>
       </div>
     </main>
   );
