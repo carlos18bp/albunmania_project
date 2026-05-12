@@ -45,7 +45,8 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `ads-frequency-cap` | Banner frequency cap (1 / 5 swipes) | ads | P2 | collector | `/match` |
 | `review-post-trade-create` | Post-trade review (stars + tags + comment) | reviews | P1 | collector | `/match/[matchId]` |
 | `review-reply` | Reviewee public reply | reviews | P2 | collector | profile / trade detail |
-| `review-profile-summary` | Review tab + rating summary on profile | reviews | P2 | guest | `/profile/[id]` (or profile surface) |
+| `profile-view` | Collector profile page | profile | P2 | guest | `/profile/[id]` |
+| `review-profile-summary` | Review tab + rating summary on profile | reviews | P2 | guest | `/profile/[id]` |
 | `review-drawer` | Review drawer on Match / trade detail | reviews | P2 | collector | `/match`, `/match/[matchId]` |
 | `review-moderation` | Admin review-report moderation queue | reviews | P2 | web-manager / admin | `/admin/moderation` |
 | `stats-dashboard-tiles` | Dashboard stat tiles (streak + ETA) | stats | P1 | collector | `/dashboard` |
@@ -729,6 +730,34 @@ Use this document to understand each flow's steps, branching conditions, role re
 
 ---
 
+## Profile Module
+
+### profile-view
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | guest (public profile); collector for the self-edit form |
+| **Frontend route** | `/profile/[id]` — `/profile/me` resolves to the logged-in user |
+| **API endpoints** | `GET /api/users/<id>/public-profile/`, `GET /api/users/<id>/rating-summary/`, `GET /api/users/<id>/reviews/?stars=`; for `/profile/me`: `GET`/`PATCH /api/profile/me/` |
+
+**Preconditions:** None for a public profile. `/profile/me` requires being logged in (else redirect to `/sign-in`).
+
+**Steps:**
+1. User opens `/profile/<id>` (e.g. from the Header "Mi perfil" link → `/profile/me`).
+2. `ProfileHeader` renders: avatar (or initials fallback), display name, city, bio, metrics (`% del álbum`, `Intercambios`, `Reseñas`) and the `ReviewSummary` block — from `GET /api/users/<id>/public-profile/` (no email/phone exposed).
+3. The "Reseñas" section lists `ReviewCard`s with star-filter chips (see `review-profile-summary`).
+4. If the profile is the logged-in user's own (`/profile/me` or `/profile/<myId>`), an "Editar mi cuenta" form renders (city, bio corta, push opt-in, WhatsApp opt-in + número) → `PATCH /api/profile/me/`. The name is not editable (comes from Google).
+5. If it's another user's profile and you're logged in, a "pronto podrás reportarlo" note shows (the report button lands in the Report module — Bloque D4).
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| `/profile/me` and not logged in | Redirect to `/sign-in` |
+| Unknown user id | `GET /public-profile/` → 404; the page shows "Cargando perfil…" (no profile data) |
+| Saving with an invalid WhatsApp number | `PATCH` 400; `account-error` message |
+
+---
+
 ## Reviews Module
 
 ### review-post-trade-create
@@ -784,19 +813,19 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P2 · **Roles** | guest |
-| **Frontend route** | a user's profile surface |
+| **Frontend route** | `/profile/[id]` (the "Reseñas" section) |
 | **API endpoints** | `GET /api/users/<id>/rating-summary/`, `GET /api/users/<id>/reviews/?stars=` |
 
-**Preconditions:** The user has at least one visible review.
+**Preconditions:** The user has at least one visible review (otherwise the empty state shows).
 
 **Steps:**
-1. The profile's **Reseñas** tab renders `RatingSummary` (avg, 1–5 distribution bars, total count, top tags) from the cached `Profile` aggregates.
-2. Below it, a paginated `ReviewCard` list with a star filter (`?stars=`).
+1. On `/profile/[id]`, the **Reseñas** section renders `ReviewSummary` (avg, 1–5 distribution bars, total count, top tags) from the cached `Profile` aggregates.
+2. Below it, the `ReviewCard` list with star-filter chips (`profile-reviews-filter-<n>` → `?stars=`).
 
 **Branching conditions:**
 | Condition | Behavior |
 |-----------|----------|
-| No visible reviews | Empty state |
+| No visible reviews | `profile-reviews-empty` state |
 | Hidden reviews | Excluded from the summary and the list (still counted in the DB for audit) |
 
 ---

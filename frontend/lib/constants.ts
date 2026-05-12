@@ -9,6 +9,8 @@ export const ROUTES = {
   TERMS: '/terminos',
   PRIVACY: '/privacidad',
   HELP: '/ayuda',
+  PROFILE: '/profile',
+  PROFILE_ME: '/profile/me',
 } as const;
 
 export const API_ENDPOINTS = {

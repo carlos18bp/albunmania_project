@@ -83,3 +83,6 @@ export const MANUAL_SEARCH_BROWSE = ['@flow:manual-search-browse', '@module:manu
 export const LEGAL_TERMS = ['@flow:legal-terms', '@module:legal', '@priority:P2'];
 export const LEGAL_PRIVACY = ['@flow:legal-privacy', '@module:legal', '@priority:P2'];
 export const HELP_FAQ = ['@flow:help-faq', '@module:help', '@priority:P2'];
+
+// ── Profile ──
+export const PROFILE_VIEW = ['@flow:profile-view', '@module:profile', '@priority:P2'];

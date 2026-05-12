@@ -4,6 +4,49 @@ from rest_framework import serializers
 from albunmania_app.models import Profile
 
 
+class PublicProfileSerializer(serializers.Serializer):
+    """Public-facing collector profile (GET /users/<id>/public-profile/).
+
+    Deliberately does NOT include email or phone — contact data is shared
+    per-trade via the WhatsApp opt-in, not on a public profile.
+    """
+
+    user_id = serializers.IntegerField()
+    display_name = serializers.CharField()
+    city = serializers.CharField(allow_blank=True)
+    avatar_url = serializers.CharField(allow_blank=True)
+    bio_short = serializers.CharField(allow_blank=True)
+    rating_avg = serializers.DecimalField(max_digits=3, decimal_places=2)
+    rating_count = serializers.IntegerField()
+    positive_pct = serializers.DecimalField(max_digits=5, decimal_places=2)
+    album_completion_pct = serializers.DecimalField(max_digits=5, decimal_places=2)
+    trades_completed_count = serializers.IntegerField()
+
+
+class AccountSettingsSerializer(serializers.ModelSerializer):
+    """Whitelist of Profile fields editable from "Editar mi cuenta"
+    (PATCH /profile/me/). Name comes from Google and is not editable here.
+    """
+
+    whatsapp_e164 = serializers.RegexField(
+        regex=r'^\+?\d{8,15}$',
+        required=False, allow_blank=True,
+    )
+
+    class Meta:
+        model = Profile
+        fields = ['city', 'bio_short', 'push_optin', 'whatsapp_optin', 'whatsapp_e164']
+
+    def validate(self, attrs):
+        opting_in = attrs.get('whatsapp_optin', getattr(self.instance, 'whatsapp_optin', False))
+        number = attrs.get('whatsapp_e164', getattr(self.instance, 'whatsapp_e164', ''))
+        if opting_in and not number:
+            raise serializers.ValidationError({
+                'whatsapp_e164': 'A phone number in E.164 format is required when WhatsApp opt-in is true.',
+            })
+        return attrs
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     """Public read serializer used by GET /profile/me/."""
 

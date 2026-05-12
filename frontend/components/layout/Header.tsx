@@ -62,6 +62,12 @@ export default function Header() {
               </Link>
               <Link
                 className="px-2 py-1 rounded hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                href="/profile/me"
+              >
+                Mi perfil
+              </Link>
+              <Link
+                className="px-2 py-1 rounded hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 href="/dashboard"
               >
                 Cuenta

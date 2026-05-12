@@ -239,7 +239,7 @@
       "module": "reviews",
       "roles": ["guest"],
       "priority": "P2",
-      "description": "Profile Reseñas tab renders RatingSummary (avg, 1-5 bars, count, top tags) + paginated review list with star filter",
+      "description": "/profile/[id] Reseñas section renders ReviewSummary (avg, 1-5 bars, count, top tags) + the review list with a star filter (GET /api/users/<id>/rating-summary/ + .../reviews/?stars=)",
       "expectedSpecs": 1
     },
     "review-drawer": {
@@ -352,6 +352,14 @@
       "roles": ["guest"],
       "priority": "P2",
       "description": "/ayuda renders the FAQ accordion (lib/faq/content.ts) with an audience filter (general/coleccionista/comerciante/anunciante); linked from the footer",
+      "expectedSpecs": 1
+    },
+    "profile-view": {
+      "name": "Collector profile page",
+      "module": "profile",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "/profile/[id] renders the public profile (name/city/avatar/bio + reputation + % album + completed trades via GET /api/users/<id>/public-profile/) and the Reseñas section; /profile/me also shows the 'Editar mi cuenta' form (PATCH /api/profile/me/); linked from the Header avatar",
       "expectedSpecs": 1
     }
   }
