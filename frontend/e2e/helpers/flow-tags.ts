@@ -30,6 +30,7 @@ export const CATALOG_GRID_FILTERS = ['@flow:catalog-grid-filters', '@module:cata
 export const CATALOG_INVENTORY_TAP = ['@flow:catalog-inventory-tap', '@module:catalog', '@priority:P1'];
 export const CATALOG_SPECIAL_EDITION = ['@flow:catalog-special-edition', '@module:catalog', '@priority:P2'];
 export const CATALOG_PREDICTIVE_SEARCH = ['@flow:catalog-predictive-search', '@module:catalog', '@priority:P3'];
+export const CATALOG_AVAILABILITY_PROXIMITY = ['@flow:catalog-availability-proximity', '@module:catalog', '@priority:P3'];
 
 // ── Match ──
 export const MATCH_SWIPE_FEED = ['@flow:match-swipe-feed', '@module:match', '@priority:P1'];

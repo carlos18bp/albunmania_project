@@ -1,5 +1,5 @@
 {
-  "version": "2.8.0",
+  "version": "2.9.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -79,7 +79,7 @@
       "module": "catalog",
       "roles": ["collector"],
       "priority": "P1",
-      "description": "Catalog grid renders one card per sticker; team/number/player filters and server-side search narrow results",
+      "description": "Catalog grid renders one card per sticker; team/number/player/special filters and server-side search narrow results. The availability + proximity-radius filters have their own flow (catalog-availability-proximity).",
       "expectedSpecs": 1
     },
     "catalog-inventory-tap": {
@@ -400,6 +400,14 @@
       "roles": ["collector"],
       "priority": "P3",
       "description": "On /catalog/[slug] the search bar (SearchAutocomplete) shows a debounced dropdown with sticker suggestions (GET /api/albums/<slug>/search/?q=) and collector suggestions (GET /api/collectors/search/?q=) with a visual preview. Picking a sticker sets the query to its number (the grid filters to it); picking a collector navigates to /profile/[id]. The plain grid-filter behaviour (catalog-grid-filters) is unchanged.",
+      "expectedSpecs": 1
+    },
+    "catalog-availability-proximity": {
+      "name": "Catalogue availability + proximity-radius filters",
+      "module": "catalog",
+      "roles": ["collector"],
+      "priority": "P3",
+      "description": "On /catalog/[slug]: an availability <select> (todos / los que tengo / me faltan / repetidos) → GET /api/albums/<slug>/stickers/?availability=mine|missing|repeated (based on the requester's UserSticker; anonymous → 400). A 'Disponibles cerca' checkbox (+ radius select 10/25/50/100 km) → ?nearby=true&radius_km=... (and lat/lng from the user's Profile, or explicit lat/lng) → keeps only stickers some collector within the radius has to trade (UserSticker.count >= 2; the requester is excluded; 400 if no geo). When the user has no saved location the checkbox is disabled with a hint. Combines with the other filters.",
       "expectedSpecs": 1
     },
     "geo-ip-locate": {

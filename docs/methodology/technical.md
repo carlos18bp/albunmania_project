@@ -156,7 +156,7 @@ frontend/
 | review.py | 8 | trade_review_create, review_edit, review_reply, review_report, user_reviews_list, user_rating_summary, admin_review_reports, admin_review_visibility |
 | match.py | 7 | feed (incluye is_online en las cards), like, mine, detail, qr/me, qr/scan, qr/confirm |
 | ad.py | 5 | serve (público, 204 si nada), click (302 redirect), admin campaigns CRUD, admin stats |
-| album.py | 4 | list, detail, sticker_list (filtros: team, special truthy, special_tier, number, q), sticker_search (`albums/<slug>/search/`, top-10) |
+| album.py | 4 | list, detail, sticker_list (filtros: team, special, special_tier, number, q, availability=mine\|missing\|repeated [auth], nearby=true&lat&lng&radius_km [auth+geo, vía bbox+haversine sobre Profile]), sticker_search (`albums/<slug>/search/`, top-10) |
 | merchant.py | 4 | public_list (city/geo bbox), dashboard GET/PATCH, admin promote, admin payment |
 | notification.py | 4 | list (?unread=&page=&page_size=), unread-count, <id>/read (POST), read-all (POST) |
 | admin_users.py | 3 | list (search+role+page), assign_role, set_active |
@@ -219,9 +219,9 @@ Todos bajo `/api/` (root urls.py). Frontend usa `NEXT_PUBLIC_API_BASE_URL=/api` 
 
 ## 8. Testing
 
-- **Backend**: pytest + pytest-django. `tests/{models,serializers,views,services,utils,commands}/` — 56 archivos `test_*.py`. **367/367 verde**. Fixture autouse `_bypass_hcaptcha` en `conftest.py`. Coverage objetivo ≥80% por módulo, 100% en críticos (auth, match, ads).
-- **Frontend unit**: Jest, colocación (`__tests__/` junto a stores y components). **371/371 verde** (81 suites).
-- **E2E**: Playwright — 15 specs, ~72 tests: `validation/session-01..05.spec.ts` (5 sesiones) + `auth/auth.spec.ts` + `public/smoke.spec.ts` + `public/legal.spec.ts` (T&C/privacidad/ayuda) + `profile/profile.spec.ts` + `notifications/notifications.spec.ts` + `moderation/moderation.spec.ts` + `presence/presence.spec.ts` + `collectors/collectors.spec.ts` + `catalog/predictive-search.spec.ts` + `geo/geo.spec.ts`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1 npx playwright test e2e/validation/`. Re-seedear (`create_fake_data`) antes de la suite de validación deja `TradeWhatsAppOptIn` limpio (el comando lo resetea para el trade seedeado).
+- **Backend**: pytest + pytest-django. `tests/{models,serializers,views,services,utils,commands}/` + `tests/test_tasks.py` — 58 archivos `test_*.py`. **381/381 verde**. Fixture autouse `_bypass_hcaptcha` en `conftest.py`. Coverage objetivo ≥80% por módulo, 100% en críticos (auth, match, ads).
+- **Frontend unit**: Jest, colocación (`__tests__/` junto a stores y components). **375/375 verde** (81 suites).
+- **E2E**: Playwright — 16 specs, ~74 tests: `validation/session-01..05.spec.ts` (5 sesiones) + `auth/auth.spec.ts` + `public/smoke.spec.ts` + `public/legal.spec.ts` + `profile/profile.spec.ts` + `notifications/notifications.spec.ts` + `moderation/moderation.spec.ts` + `presence/presence.spec.ts` + `collectors/collectors.spec.ts` + `catalog/predictive-search.spec.ts` + `catalog/availability-proximity.spec.ts` + `geo/geo.spec.ts`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1 npx playwright test e2e/validation/`. Re-seedear (`create_fake_data`) antes de la suite de validación deja `TradeWhatsAppOptIn` limpio (el comando lo resetea para el trade seedeado).
 - **Reglas duras** (`CLAUDE.md`): nunca correr suite completa en ciclos manuales, max 20 tests/batch, 3 comandos/ciclo; cada test una conducta observable; mock solo en boundaries.
 
 ## 9. Deployment (staging)

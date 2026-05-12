@@ -50,6 +50,18 @@ describe('albumStore', () => {
     });
   });
 
+  it('forwards the availability + proximity filters', async () => {
+    mockApi.get.mockResolvedValue({ data: { results: [] } });
+
+    await useAlbumStore.getState().fetchStickers('mundial-26', {
+      availability: 'missing', nearby: true, lat: 4.65, lng: -74.07, radius_km: 25,
+    });
+
+    expect(mockApi.get).toHaveBeenCalledWith('albums/mundial-26/stickers/', {
+      params: { availability: 'missing', nearby: true, lat: 4.65, lng: -74.07, radius_km: 25 },
+    });
+  });
+
   it('skips the search call when the query is shorter than 2 characters', async () => {
     const result = await useAlbumStore.getState().searchStickers('mundial-26', 'a');
     expect(result).toEqual([]);

@@ -34,6 +34,13 @@ type StickerFilters = {
   special_tier?: string;
   q?: string;
   page?: number;
+  /** Filter by the requester's inventory state (requires auth). */
+  availability?: 'mine' | 'missing' | 'repeated';
+  /** Keep only stickers a collector within `radius_km` has available to trade (requires auth + geo). */
+  nearby?: boolean;
+  lat?: number;
+  lng?: number;
+  radius_km?: number;
 };
 
 type AlbumState = {

@@ -4,7 +4,7 @@
 
 Use this document to understand each flow's steps, branching conditions, role restrictions, and API contracts before writing or reviewing E2E tests. It is paired with `frontend/e2e/flow-definitions.json` (machine-readable registry) and `frontend/e2e/helpers/flow-tags.ts` (`@flow:` tag constants).
 
-**Version:** 2.8.0
+**Version:** 2.9.0
 **Last Updated:** 2026-05-12
 **Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual) + "Bloque D" (4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios + cola admin) + "Bloque E" (4 GAPS P3: presencia "en línea ahora"/Live Badge, Mapa de Coleccionistas, búsqueda predictiva con dropdown, GeoIP2 por IP).
 
@@ -29,6 +29,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `catalog-inventory-tap` | Inventory 0/1/2+ tap + sync | catalog | P1 | collector | `/catalog/[slug]` |
 | `catalog-special-edition` | Special-edition badge + filter | catalog | P2 | collector | `/catalog/[slug]` |
 | `catalog-predictive-search` | Predictive search dropdown (stickers + collectors) | catalog | P3 | collector | `/catalog/[slug]` |
+| `catalog-availability-proximity` | Availability + proximity-radius filters | catalog | P3 | collector | `/catalog/[slug]` |
 | `match-swipe-feed` | Match swipe feed renders | match | P1 | collector | `/match` |
 | `match-like-mutual` | Like → mutual match | match | P1 | collector | `/match` |
 | `match-list-mine` | My matches list | match | P2 | collector | `/match` |
@@ -320,6 +321,33 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `?q=Argentina` | Grid narrows to the 5 stickers of that team (seed cycles 10 teams over 50) |
 | API loading | Skeleton grid |
 | No stickers / album not found | Empty state |
+
+> The `availability` and `nearby` (proximity-radius) filters added to this bar have their own flow — see `catalog-availability-proximity`.
+
+---
+
+### catalog-availability-proximity
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P3 · **Roles** | collector (both filters require authentication) |
+| **Frontend route** | `/catalog/[slug]` |
+| **API endpoints** | `GET /api/albums/<slug>/stickers/?availability=mine|missing|repeated`, `?nearby=true&radius_km=&lat=&lng=` |
+
+**Preconditions:** Authenticated. The `nearby` filter additionally needs a location — `lat`/`lng` params, or the requester's `Profile.lat_approx`/`lng_approx` (the page calls `refreshProfile()` on mount; the checkbox is disabled with a hint until a location is known).
+
+**Steps:**
+1. The `catalog-filter-availability` `<select>` (Todos / Los que tengo / Me faltan / Repetidos) → `?availability=mine|missing|repeated`, narrowing to the requester's `UserSticker` state (`count >= 1` = owned/`mine`, not owned = `missing`, `count >= 2` = `repeated`). Anonymous → `400 auth_required_for_filter` (the page shows `catalog-error`).
+2. The `catalog-filter-nearby` checkbox (+ `catalog-filter-radius` select 10/25/50/100 km) → `?nearby=true&radius_km=…` (and `lat`/`lng` from the user's Profile, or explicit) → keeps only stickers some collector within the radius has available to trade (`UserSticker.count >= 2`, `sticker.album == this album`); the requester is excluded. Coarse bbox prefilter on `Profile.lat_approx/lng_approx` + exact haversine (same shape as `match_engine.find_candidates`).
+3. Both combine with each other and with team/number/q/special (debounced ~250ms).
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Anonymous + `availability` or `nearby` | `400 auth_required_for_filter` |
+| `nearby=true` without `lat/lng` and requester has no Profile location | `400 geo_required_for_proximity` |
+| No nearby offerer for any sticker | Empty grid |
+| User has no saved location | `catalog-filter-nearby` disabled + `catalog-nearby-hint` shown |
 
 ---
 

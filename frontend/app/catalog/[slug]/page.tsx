@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-import CatalogFilters from '@/components/catalog/CatalogFilters';
+import CatalogFilters, { type CatalogFilterValue } from '@/components/catalog/CatalogFilters';
 import StickerGrid from '@/components/catalog/StickerGrid';
 import { useAlbumStore } from '@/lib/stores/albumStore';
+import { useAuthStore } from '@/lib/stores/authStore';
 import { useInventoryStore } from '@/lib/stores/inventoryStore';
 
 export default function CatalogPage() {
@@ -15,11 +16,25 @@ export default function CatalogPage() {
   const currentAlbum = useAlbumStore((s) => s.currentAlbum);
   const stickers = useAlbumStore((s) => s.stickers);
   const isLoading = useAlbumStore((s) => s.isLoading);
+  const error = useAlbumStore((s) => s.error);
   const fetchAlbum = useAlbumStore((s) => s.fetchAlbum);
   const fetchStickers = useAlbumStore((s) => s.fetchStickers);
   const fetchInventory = useInventoryStore((s) => s.fetch);
+  const profile = useAuthStore((s) => s.profile);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
 
-  const [filters, setFilters] = useState<{ q?: string; team?: string; special?: 'true' | 'false' }>({});
+  useEffect(() => {
+    if (isAuthenticated && !profile) void refreshProfile().catch(() => undefined);
+  }, [isAuthenticated, profile, refreshProfile]);
+
+  const userLocation = useMemo(() => {
+    const lat = profile?.lat_approx != null ? Number(profile.lat_approx) : null;
+    const lng = profile?.lng_approx != null ? Number(profile.lng_approx) : null;
+    return lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng) ? { lat, lng } : null;
+  }, [profile?.lat_approx, profile?.lng_approx]);
+
+  const [filters, setFilters] = useState<CatalogFilterValue>({});
 
   useEffect(() => {
     if (!slug) return;
@@ -29,13 +44,10 @@ export default function CatalogPage() {
 
   useEffect(() => {
     if (!slug) return;
-    void fetchStickers(slug, filters);
+    void fetchStickers(slug, filters).catch(() => undefined);
   }, [slug, filters, fetchStickers]);
 
-  const handleFiltersChange = useCallback(
-    (next: { q?: string; team?: string; special?: 'true' | 'false' }) => setFilters(next),
-    [],
-  );
+  const handleFiltersChange = useCallback((next: CatalogFilterValue) => setFilters(next), []);
 
   if (!slug) return null;
 
@@ -53,7 +65,12 @@ export default function CatalogPage() {
       </header>
 
       <section className="mb-6">
-        <CatalogFilters slug={slug} onChange={handleFiltersChange} />
+        <CatalogFilters slug={slug} userLocation={userLocation} onChange={handleFiltersChange} />
+        {error === 'fetch_stickers_failed' && (
+          <p data-testid="catalog-error" className="mt-2 text-sm text-red-600">
+            No pudimos aplicar esos filtros. Los filtros «disponibilidad» y «disponibles cerca» requieren iniciar sesión.
+          </p>
+        )}
       </section>
 
       <section>
