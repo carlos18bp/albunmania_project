@@ -32,7 +32,7 @@ Flujos E2E nuevos en `flow-definitions.json` (v2.8.0) / `USER_FLOW_MAP.md` (v2.8
 - Backend: **406/406 verde** (`pytest --no-cov`; +`test_presence_endpoints.py` 7, +`test_collectors_endpoints.py` 9, +`test_geo_endpoint.py` 4 en Bloque E). 59 archivos `test_*.py`.
 - Frontend unit: **392/392 verde** (`npm test`, 83 suites; + LiveBadge, ActiveCollectorsBanner, presenceStore, CollectorMapInner, collectorMapStore, SearchAutocomplete + StepGeolocation/CatalogFilters/albumStore actualizados).
 - E2E: **15 specs, ~72 tests** — `validation/session-01..05` (39) + `auth/` (11) + `public/` (smoke 1 + legal 4) + `profile/` (3) + `notifications/` (4) + `moderation/` (2) + `presence/` (3) + `collectors/` (2) + `catalog/predictive-search` (2) + `geo/` (1). Todos `@flow:` tagueados, sin `waitForTimeout`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1`.
-- ✅ La deuda tsc preexistente (`<img {...(props as never)} />` en stubs de `next/image`) ya se barrió: arreglados `SwipeCard.test.tsx` y `StickerCard.test.tsx` durante Bloque E; quedan `BannerSlot.test.tsx`, `SponsorSplash.test.tsx` y `lib/services/__tests__/http.test.ts` (`tsc --noEmit` aún falla en esos 3 → `npm run build` también; barrerlos en un pase aparte).
+- ✅ `tsc --noEmit` limpio y `npm run build -- --webpack` verde (F1, Bloque F) — la deuda de los stubs `<img {...(props as never)} />` se barrió por completo (`SwipeCard`, `StickerCard`, `BannerSlot`, `SponsorSplash` + el cast de `http.test.ts`).
 
 ## Últimos commits relevantes (mayo 2026)
 
@@ -65,7 +65,7 @@ Ninguno técnico. Pendientes operacionales: deploy real al VPS + creds reales (V
 
 ## Próximos pasos sugeridos
 
-1. **Limpiar la deuda tsc restante** (`BannerSlot.test.tsx`, `SponsorSplash.test.tsx`, `lib/services/__tests__/http.test.ts` — el stub de `next/image` con `as never`) para que `npm run build` quede limpio.
+1. **(En curso — "Bloque F")** limpiar rutas vestigiales del template + mover el push de match a Huey + filtros disponibilidad/proximidad en el catálogo + subir cobertura backend. Ver `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`.
 2. **Texto legal definitivo** de ProjectApp → reemplazar el scaffold de `frontend/lib/legal/content.ts`.
 3. **Deploy a staging**: ejecutar `deploy/staging/RUNBOOK.md` en el VPS (+ opcionalmente provisionar la `.mmdb` y setear `DJANGO_GEOIP_PATH`).
 4. **Items V2** (no bloqueantes): Fuentes de Tráfico (UTM + `TrafficSource`), Alertas de Rendimiento KPI (Huey nightly), Reportes PDF de Sponsor, wiring real de next-intl (hoy copy hardcoded en español), branding sutil en notificaciones oficiales, gestor admin de álbumes con CSV upload + gestor de creativas con UI, filtro "disponibilidad"/"radio de proximidad" en el catálogo, mover el push de match a Huey.
