@@ -1,6 +1,6 @@
 # Product Requirement Document — Albunmanía
 
-**Cliente:** ProjectApp · **Estado release 01:** accepted · **Idioma producto:** español
+**Cliente:** ProjectApp · **Estado release 01:** implementado y validado E2E — 100% del checklist (14 épicas); pendiente sólo el deploy real al VPS por ProjectApp/ops (ver `deploy/staging/RUNBOOK.md`) · **Idioma producto:** español · **Última actualización:** 2026-05-12
 
 ---
 

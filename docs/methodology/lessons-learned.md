@@ -369,3 +369,40 @@ source backend/venv/bin/activate && pytest backend/albunmania_app/tests/views/te
 ### CSV usa "Albunman" en vez de "Albunmanía" para tests case-insensitive
 - Bug encontrado en test: `b'albunmania' in res.content.lower()` falla porque `í` (UTF-8 0xC3 0xAD) no se lowercase a 'i'.
 - Fix: usar el prefijo `albunman` que matchea ambas escrituras. Lección: los tests de contenido bytes deben evitar caracteres ASCII-extended cuando el lowercase no preserva la equivalencia — o usar `.decode('utf-8').lower()` antes del match.
+
+---
+
+## 14. Validación E2E con Playwright (mayo 2026)
+
+Se cerró el Release 01 con **5 sesiones iterativas de validación E2E** (`frontend/e2e/validation/session-01..05.spec.ts`, 46/46 verde). Lecciones transversales:
+
+### Unit tests verdes no garantizan integración — el E2E caza otra clase de bugs
+- Con 337/337 backend + 221/221 frontend en verde, la validación E2E iterativa todavía cazó **8 P0** (filter mismatch frontend/backend, infinite render loop, seed gaps, config gaps de dev, hydration mismatch). Ver `error-documentation.md` ERROR-006..016.
+- Patrón que funcionó: validar **por sesiones temáticas** (auth → catálogo → match → merchants/ads/reviews → analytics/manual), arreglando los P0 inflight, no acumulando deuda entre sesiones.
+- Los `data-testid` consistentes (`missing-google-client-id`, `header-auth-placeholder`, etc.) hicieron los specs robustos; los selectores por rol (`getByRole('button', ...)`) atraparon el caso "esto es un `<button>`, no un link" (sidebar del manual).
+
+### Zustand v5 + React 19: un selector que devuelve un fallback de objeto/array rompe `useSyncExternalStore`
+- `useStore((s) => s.byUser[id] ?? [])` crea una **nueva referencia** de `[]` en cada llamada → `useSyncExternalStore` cree que el snapshot cambió → "Maximum update depth exceeded" + "getSnapshot should be cached".
+- Fix: cachear el fallback fuera del componente — `const EMPTY_REVIEWS: readonly Review[] = Object.freeze([]);` y `?? EMPTY_REVIEWS`.
+- Regla: **nunca** devolver `x ?? {}` / `x ?? []` / `{...x}` desde un selector Zustand. Devolver la misma referencia o usar `useShallow`.
+
+### SSR / hydration: estado derivado de cookies en `initialState` difiere server vs client
+- `authStore` arrancaba con `isAuthenticated: Boolean(getAccessToken())`. En el server no hay cookie del browser → `false`; en el client sí → `true`. React detecta el mismatch y warning + re-render.
+- Fix: patrón `mounted` (igual que `ThemeToggle`) — render de un placeholder (`data-testid="header-auth-placeholder"`) hasta `useEffect(() => setMounted(true), [])`, luego el slot real.
+- Aplica a cualquier UI cuyo estado inicial dependa de algo que sólo existe en el browser (cookies, `localStorage`, `window`, `matchMedia`).
+
+### next-pwa: `sw.js` es un build artifact; la lógica custom va en un archivo aparte importado vía `importScripts`
+- `npm run build` regenera `public/sw.js` (Workbox) — cualquier handler escrito a mano ahí se pierde.
+- Fix: handlers `push` / `notificationclick` en `public/sw-push.js` (tracked), `next.config.ts` los inyecta con `importScripts: ['/sw-push.js']`. `sw.js` / `workbox-*.js` / `fallback-*.js` en `.gitignore`.
+- Además: `npm run dev` y `npm run build` requieren `--webpack` (next-pwa no soporta Turbopack, default en Next.js 16). Y `middleware.ts` + `proxy.ts` no pueden coexistir (Next.js 16 deprecó `middleware.ts` → todo a `proxy.ts`).
+
+### Receta para validar local sin las creds reales del cliente
+- **hCaptcha**: test keys oficiales — sitekey `10000000-ffff-ffff-ffff-000000000001`, secret `0x0000...0000`. En tests, fixture autouse `_bypass_hcaptcha` que pone `settings.HCAPTCHA_SECRET = ''` (con secret vacío `captcha_service.verify_hcaptcha` se salta). **Ojo:** meter un `DJANGO_HCAPTCHA_SECRET` en `.env` activa la verificación real → si los tests no la mockean, fallan (le pasó a 9 tests preexistentes).
+- **VAPID**: par de dev generado con `vapid --gen` (committeado sólo en `.env` gitignored — **rotar para prod**, ERROR-013).
+- **Auth shortcut**: `scripts/dev-issue-jwt.py` emite un storage-state de Playwright con los JWT en **cookies** (`access_token` / `refresh_token`) — `lib/tokens.ts` lee de cookies, no de localStorage.
+- **Seeds deterministas**: `python manage.py create_fake_data --users 10` → 4 cuentas canónicas (user/user2 coleccionistas con geo Bogotá + `whatsapp_e164` + opt-in, merchant, admin), Album Mundial 26 + 50 stickers (4 especiales), inventarios cruzados deterministas (rng seed 42), Sponsor Coca-Cola, AdCampaign Bavaria, MerchantProfile Papelería El Sol, Match mutual user↔user2, Trade.
+- **Servidores**: Next.js :3000 (`npm run dev` con `--webpack`) + Django :8000 (`manage.py runserver`); Playwright con `PW_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test e2e/validation/`.
+
+### Deuda de tooling identificada (no bloqueante)
+- `.claude/skills/playwright-validation/` está untracked — decidir si se trackea (las otras skills sí están en git).
+- Falta un `globalSetup` de Playwright que limpie `TradeWhatsAppOptIn` antes de la suite de validación (hoy se limpia manual entre runs, porque el opt-in es per-trade y persiste).
