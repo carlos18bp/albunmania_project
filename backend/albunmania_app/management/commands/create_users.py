@@ -73,8 +73,13 @@ class Command(BaseCommand):
             users_created.append(user)
             self.stdout.write(self.style.SUCCESS(f'  · {email} (collector)'))
 
-        # Populate Profile geo + city for the canonical collectors so the
-        # Match feed has predictable candidates.
+        # Populate Profile geo + city + WhatsApp number for the canonical
+        # collectors so the Match feed has predictable candidates and the
+        # WhatsApp deep link tests can resolve a peer phone.
+        canonical_phones = {
+            'user@example.com': '+573001112222',
+            'user2@example.com': '+573002223333',
+        }
         for user in users_created:
             if user.role != User.Role.COLLECTOR.value:
                 continue
@@ -88,7 +93,10 @@ class Command(BaseCommand):
                 ), 6)))
                 profile.city = 'Bogotá'
                 profile.browser_geo_optin = True
-                profile.save()
+            if user.email in canonical_phones and not profile.whatsapp_e164:
+                profile.whatsapp_e164 = canonical_phones[user.email]
+                profile.whatsapp_optin = True
+            profile.save()
 
         self.stdout.write(self.style.SUCCESS(
             f'\nTotal users: {User.objects.count()}'
