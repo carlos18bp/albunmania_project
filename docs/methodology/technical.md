@@ -67,23 +67,23 @@ backend/
 │   │                                 # ad_campaign, ad_creative, ad_impression (+ AdClick),
 │   │                                 # review (+ ReviewReport), push_subscription,
 │   │                                 # notification, report
-│   ├── views/          (19 módulos)  # auth, user, profile, captcha, album, inventory,
+│   ├── views/          (22 módulos)  # auth, user, profile, captcha, album, inventory,
 │   │                                 # sponsor, match, trade, trade_whatsapp, stats,
 │   │                                 # merchant, ad, review, admin_users, analytics, push,
-│   │                                 # notification, report
-│   ├── serializers/    (13 archivos) # split por dominio (+ notification, profile/PublicProfile+AccountSettings, report)
-│   ├── urls/           (19 módulos)  # ver §4
-│   ├── services/       (13 archivos) # email_service, google_account_age, captcha_service,
+│   │                                 # notification, report, presence, collectors, geo
+│   ├── serializers/    (14 archivos) # split por dominio (+ notification, profile/PublicProfile+AccountSettings, report, collectors)
+│   ├── urls/           (22 módulos)  # ver §4
+│   ├── services/       (15 archivos) # email_service, google_account_age, captcha_service,
 │   │                                 # match_engine, qr_token, qr_cross, whatsapp_link,
 │   │                                 # stats_engine, merchant_subscription, ad_engine,
-│   │                                 # review_aggregates, analytics_engine, push_notify
+│   │                                 # review_aggregates, analytics_engine, push_notify, presence, geoip
 │   ├── signals.py                    # post_save User → Profile/MerchantProfile;
 │   │                                 # post_save/post_delete Review → recompute aggregates;
 │   │                                 # post_save Match(status=mutual, created) → Notification a ambos + push
 │   ├── utils/auth_utils.py
 │   ├── forms/, admin.py, apps.py
-│   ├── tests/          (56 test_*.py) # {models,serializers,views,services,utils,commands}/
-│   ├── migrations/     (10: 0001_initial → 0010_report)
+│   ├── tests/          (59 test_*.py) # {models,serializers,views,services,utils,commands}/
+│   ├── migrations/     (11: 0001_initial → 0011_profile_last_seen)
 │   └── management/commands/          # create_users (4 cuentas canónicas + extras),
 │                                     # create_fake_data (Album+50 stickers+inventarios+
 │                                     #   Sponsor+AdCampaign+MerchantProfile+Match mutual+
@@ -103,10 +103,10 @@ backend/
 └── manage.py
 
 frontend/
-├── app/                  # Next.js App Router — 25 page.tsx
-│   ├── page.tsx, layout.tsx (footer con enlaces legales), providers.tsx
+├── app/                  # Next.js App Router — 26 page.tsx
+│   ├── page.tsx, layout.tsx (footer con enlaces legales + PresencePinger), providers.tsx
 │   ├── sign-in/, sign-up/, forgot-password/, admin-login/, onboarding/
-│   ├── dashboard/, backoffice/, manual/, notificaciones/
+│   ├── dashboard/, backoffice/, manual/, notificaciones/, mapa/
 │   ├── terminos/, privacidad/, ayuda/
 │   ├── catalog/[slug]/
 │   ├── match/, match/qr/, match/[matchId]/
@@ -114,18 +114,18 @@ frontend/
 │   ├── profile/[id]/
 │   ├── share/[token]/
 │   └── admin/, admin/users/, admin/moderation/, admin/analytics/
-├── components/           # 48 .tsx — auth/, onboarding/, sponsor/, catalog/, match/,
+├── components/           # 54 .tsx — auth/, onboarding/, sponsor/, catalog/ (+SearchAutocomplete), match/,
 │                         # whatsapp/, stats/, merchant/, ads/, reviews/, push/, manual/,
-│                         # layout/, legal/, faq/, profile/, notifications/, moderation/
+│                         # layout/, legal/, faq/, profile/, notifications/, moderation/, presence/, collectors/
 ├── lib/
-│   ├── stores/           # 19 Zustand: auth, locale, onboarding, sponsor, album, inventory,
+│   ├── stores/           # 21 Zustand: auth, locale, onboarding, sponsor, album, inventory,
 │   │                     # match, qr, tradeWhatsApp, stats, merchant, ad, review, admin,
-│   │                     # analytics, push, profile, notification, report  (+ __tests__/)
+│   │                     # analytics, push, profile, notification, report, presence, collectorMap  (+ __tests__/)
 │   ├── services/         # http.ts (axios + cookie interceptor), tokens.ts (cookies)
 │   ├── hooks/useRequireAuth.ts
 │   ├── i18n/config.ts, manual/content.ts, legal/content.ts, faq/content.ts, utils.ts (cn helper)
-├── e2e/                  # 8 specs: auth/auth.spec.ts, public/smoke.spec.ts,
-│                         # moderation/moderation.spec.ts,
+├── e2e/                  # 15 specs: auth/, public/ (smoke + legal), moderation/, presence/,
+│                         # collectors/, catalog/ (predictive-search), geo/, profile/, notifications/,
 │                         # validation/session-01..05.spec.ts  (+ helpers/fixtures/reporters)
 ├── messages/{es,en,pt}.json
 ├── public/               # manifest.webmanifest, icons/, sw-push.js (tracked);
@@ -146,31 +146,34 @@ frontend/
 
 ### Producción / staging
 - `settings.py` activa cuando `DEBUG=false`: `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SESSION_COOKIE_HTTPONLY`, `SECURE_CONTENT_TYPE_NOSNIFF`, `SECURE_BROWSER_XSS_FILTER`, `X_FRAME_OPTIONS=DENY`, `SECURE_PROXY_SSL_HEADER` (confía en `X-Forwarded-Proto` de nginx), `CSRF_TRUSTED_ORIGINS` desde `DJANGO_CSRF_TRUSTED_ORIGINS`. HSTS opt-in vía `DJANGO_SECURE_HSTS_SECONDS` (default 0).
-- Vars que ProjectApp debe generar para prod (templates en `deploy/staging/env-templates/`): `DJANGO_SECRET_KEY`, `GOOGLE_OAUTH_CLIENT_ID/SECRET` (nuevo, el del template no sirve), `DJANGO_HCAPTCHA_SITEKEY/SECRET` (reales), `VAPID_PUBLIC_KEY/PRIVATE_KEY` (`vapid --gen`, rotar las de dev), `DATABASE_URL` (MySQL), `REDIS_URL`, SMTP.
+- Vars que ProjectApp debe generar para prod (templates en `deploy/staging/env-templates/`): `DJANGO_SECRET_KEY`, `GOOGLE_OAUTH_CLIENT_ID/SECRET` (nuevo, el del template no sirve), `DJANGO_HCAPTCHA_SITEKEY/SECRET` (reales), `VAPID_PUBLIC_KEY/PRIVATE_KEY` (`vapid --gen`, rotar las de dev), `DATABASE_URL` (MySQL), `REDIS_URL`, SMTP. Opcional: `DJANGO_GEOIP_PATH` → ruta a un `GeoLite2-City.mmdb` (MaxMind; no se versiona); si no se pone, la geolocalización por IP queda desactivada y degrada limpio.
 
-## 4. API surface (~68 `path()` en 19 módulos)
+## 4. API surface (~73 `path()` en 22 módulos)
 
 | Módulo | Paths | Notas |
 |--------|------:|-------|
-| auth.py | 7 | google_login (hCaptcha + 30-day rule), validate_token, sign_in/up, password reset |
+| auth.py | 7 | google_login (hCaptcha + 30-day rule), validate_token (bumpea last_seen), sign_in/up, password reset |
 | review.py | 8 | trade_review_create, review_edit, review_reply, review_report, user_reviews_list, user_rating_summary, admin_review_reports, admin_review_visibility |
-| match.py | 7 | feed, like, mine, detail, qr/me, qr/scan, qr/confirm |
+| match.py | 7 | feed (incluye is_online en las cards), like, mine, detail, qr/me, qr/scan, qr/confirm |
 | ad.py | 5 | serve (público, 204 si nada), click (302 redirect), admin campaigns CRUD, admin stats |
-| album.py | 4 | list, detail, sticker_list (filtros: team, special truthy, special_tier, number, q), sticker_search |
+| album.py | 4 | list, detail, sticker_list (filtros: team, special truthy, special_tier, number, q), sticker_search (`albums/<slug>/search/`, top-10) |
 | merchant.py | 4 | public_list (city/geo bbox), dashboard GET/PATCH, admin promote, admin payment |
 | notification.py | 4 | list (?unread=&page=&page_size=), unread-count, <id>/read (POST), read-all (POST) |
 | admin_users.py | 3 | list (search+role+page), assign_role, set_active |
 | inventory.py | 3 | list, bulk_sync (max 500, atomic), tap (select_for_update) |
 | push.py | 3 | public-key, subscribe, unsubscribe |
 | sponsor.py | 3 | active (público), admin collection, admin detail |
-| profile.py | 3 | me GET/PATCH (AccountSettings), me/onboarding PATCH, users/<id>/public-profile/ (público, sin email/teléfono) |
+| profile.py | 3 | me GET/PATCH (AccountSettings), me/onboarding PATCH, users/<id>/public-profile/ (público, sin email/teléfono, incluye is_online) |
 | report.py | 3 | reports/ POST (self + trade-participant guards), admin/reports/?status=&kind=, admin/reports/<id>/ PATCH |
 | captcha.py / google-captcha.py | 2 | site-key, verify |
-| stats.py | 2 | me, ranking |
+| stats.py | 2 | me, ranking (incluye is_online por colector) |
 | analytics.py | 2 | overview (composite, 7 bloques), export.csv |
 | trade_whatsapp.py | 2 | optin POST, link GET (403 si no hay opt-in mutuo) |
 | user.py | 2 | list, detail |
+| presence.py | 2 | ping POST (heartbeat, throttled), active-count GET (?city=, público) |
+| collectors.py | 2 | map GET (?lat=&lng=&radius_km=&album_id=; sólo lat_approx/lng_approx, excluye al solicitante), search GET (?q=, ≤5) |
 | trade.py | 1 | share/<token>/ (público, ?kind=available|wanted) |
+| geo.py | 1 | ip-locate GET (público; GeoIP2 — {available, located, lat, lng, city, country}) |
 
 Todos bajo `/api/` (root urls.py). Frontend usa `NEXT_PUBLIC_API_BASE_URL=/api` con rewrite de Next.js → `${NEXT_PUBLIC_BACKEND_ORIGIN}/api/:path*/`.
 
@@ -208,14 +211,17 @@ Todos bajo `/api/` (root urls.py). Frontend usa `NEXT_PUBLIC_API_BASE_URL=/api` 
   - Perfil público (`users/<id>/public-profile/`, `AllowAny`): solo nombre/ciudad/avatar/rating/% álbum/# trades completados — **nunca** email ni teléfono (eso es opt-in per-trade).
   - Reportes de moderación (`Report`): `report_create` valida no-self (usuario) y participación-en-trade (trade) → `403`; listar/resolver solo admin/web-manager (`_is_admin`); las sanciones (suspender/banear) se aplican aparte en `/admin/users` (`is_active`), no se automatizan desde el reporte. `CheckConstraint` garantiza que `target_user`/`target_trade` concuerda con `target_kind`.
   - Notificaciones in-app: `notification_list` filtra siempre por `user=request.user` (un usuario no ve las de otro); `notification_mark_read` es idempotente.
+  - Presencia (`Profile.last_seen`): `presence.touch` solo escribe para usuarios autenticados y throttled vía cache (1 write/60s/usuario); `presence_ping` requiere auth; `is_online` deriva (≤5 min) — no se expone `last_seen` en bruto.
+  - Mapa de coleccionistas (`/api/collectors/map/`, `IsAuthenticated`): solo expone `lat_approx`/`lng_approx` (ya aproximados); excluye al solicitante; nunca una posición exacta del dispositivo.
+  - GeoIP2 (`/api/geo/ip-locate/`, `AllowAny`): lookup **local** contra la `.mmdb` (sin llamadas externas); salta IPs privadas/loopback; si la DB no está provisionada, `available()=False` y degrada limpio (no rompe el onboarding). La `.mmdb` no se versiona (licencia + tamaño) — la provisiona ops vía `DJANGO_GEOIP_PATH`.
   - Admin gating defense-in-depth: redirect client-side + check real en endpoint.
   - `cannot_block_self` en `admin/users/{id}/active/`.
 
 ## 8. Testing
 
-- **Backend**: pytest + pytest-django. `tests/{models,serializers,views,services,utils,commands}/` — 56 archivos `test_*.py`. **386/386 verde**. Fixture autouse `_bypass_hcaptcha` en `conftest.py`. Coverage objetivo ≥80% por módulo, 100% en críticos (auth, match, ads).
-- **Frontend unit**: Jest, colocación (`__tests__/` junto a stores y components). **365/365 verde**.
-- **E2E**: Playwright — 11 specs, ~64 tests: `validation/session-01..05.spec.ts` (5 sesiones) + `auth/auth.spec.ts` + `public/smoke.spec.ts` + `public/legal.spec.ts` (T&C/privacidad/ayuda) + `profile/profile.spec.ts` + `notifications/notifications.spec.ts` + `moderation/moderation.spec.ts`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 npx playwright test e2e/validation/`. Re-seedear (`create_fake_data`) antes de la suite de validación deja `TradeWhatsAppOptIn` limpio (el comando lo resetea para el trade seedeado).
+- **Backend**: pytest + pytest-django. `tests/{models,serializers,views,services,utils,commands}/` — 59 archivos `test_*.py`. **406/406 verde**. Fixture autouse `_bypass_hcaptcha` en `conftest.py`. Coverage objetivo ≥80% por módulo, 100% en críticos (auth, match, ads).
+- **Frontend unit**: Jest, colocación (`__tests__/` junto a stores y components). **392/392 verde** (83 suites).
+- **E2E**: Playwright — 15 specs, ~72 tests: `validation/session-01..05.spec.ts` (5 sesiones) + `auth/auth.spec.ts` + `public/smoke.spec.ts` + `public/legal.spec.ts` (T&C/privacidad/ayuda) + `profile/profile.spec.ts` + `notifications/notifications.spec.ts` + `moderation/moderation.spec.ts` + `presence/presence.spec.ts` + `collectors/collectors.spec.ts` + `catalog/predictive-search.spec.ts` + `geo/geo.spec.ts`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1 npx playwright test e2e/validation/`. Re-seedear (`create_fake_data`) antes de la suite de validación deja `TradeWhatsAppOptIn` limpio (el comando lo resetea para el trade seedeado).
 - **Reglas duras** (`CLAUDE.md`): nunca correr suite completa en ciclos manuales, max 20 tests/batch, 3 comandos/ciclo; cada test una conducta observable; mock solo en boundaries.
 
 ## 9. Deployment (staging)

@@ -1,7 +1,7 @@
 # Architecture — Albunmanía
 
-> Snapshot 2026-05-12. Refleja Release 01 (14 épicas) + "Bloque D" (cierre de los 4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios) + validación E2E + paquete `deploy/staging/`.
-> Counts: 20 models, 13 services, 19 view modules, 19 url modules (~68 `path()`), 10 migrations. Tests: 386 backend / 365 frontend unit / ~64 E2E.
+> Snapshot 2026-05-12. Refleja Release 01 (14 épicas) + "Bloque D" (4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios) + "Bloque E" (4 GAPS P3: presencia "en línea ahora"/Live Badge, Mapa de Coleccionistas, búsqueda predictiva con dropdown, GeoIP2 por IP) + validación E2E + paquete `deploy/staging/`. **Los 8 GAPS de la auditoría de completitud están cerrados.**
+> Counts: 20 models, 15 services, 22 view modules, 22 url modules (~73 `path()`), 11 migrations. Tests: 406 backend / 392 frontend unit / ~72 E2E.
 
 ## 1. System overview
 
@@ -19,10 +19,10 @@ flowchart TD
     end
 
     subgraph Backend["Django 6 + DRF (Gunicorn unix socket)"]
-        API[REST API /api/ · ~68 paths · FBV @api_view]
+        API[REST API /api/ · ~73 paths · FBV @api_view]
         AUTH[JWT cookies + Google OAuth + hCaptcha + regla 30 días]
         ADMIN[Django Admin]
-        SVC[Service layer · 13 servicios]
+        SVC[Service layer · 15 servicios]
         SIG[Signals · Review aggregates · Match→Notification+Push]
     end
 
@@ -197,12 +197,14 @@ erDiagram
 
 Archivos en `backend/albunmania_app/models/` (20): `user`, `profile`, `merchant_profile`, `password_code` (legacy del template, no se usa), `album`, `sticker`, `user_sticker`, `sponsor`, `like`, `match`, `trade`, `trade_whatsapp_optin`, `merchant_subscription_payment`, `ad_campaign`, `ad_creative`, `ad_impression` (incluye `AdClick`), `review` (incluye `ReviewReport`), `push_subscription`, `notification`, `report`.
 
-Migraciones (10): `0001_initial` → `0002_role_extend_profile_merchant` → `0003_catalog_inventory_sponsor` → `0004_match_like_trade` → `0005_trade_whatsapp_optin` → `0006_merchant_payment_and_ads` → `0007_reviews` → `0008_push_subscription` → `0009_notification` → `0010_report`.
+Migraciones (11): `0001_initial` → `0002_role_extend_profile_merchant` → `0003_catalog_inventory_sponsor` → `0004_match_like_trade` → `0005_trade_whatsapp_optin` → `0006_merchant_payment_and_ads` → `0007_reviews` → `0008_push_subscription` → `0009_notification` → `0010_report` → `0011_profile_last_seen`.
 
-> `notification` y `report` se añadieron en el "Bloque D" (cierre de los 4 GAPS P2 de la auditoría de completitud del 2026-05-12); ver `tasks/tasks_plan.md`.
+> `notification` y `report` se añadieron en el "Bloque D" (4 GAPS P2 de la auditoría 2026-05-12); `Profile.last_seen` en el "Bloque E" (presencia / Live Badge, 1 de los 4 GAPS P3 — los otros tres son endpoints sin modelo: `/presence/*`, `/collectors/*`, `/geo/ip-locate/`). Ver `tasks/tasks_plan.md`.
 
 **Constraints / invariantes críticos:**
-- `Profile.rating_avg / rating_count / positive_pct` — agregados cacheados; recalculados por signal `post_save`/`post_delete` sobre `Review` (sólo cuenta `is_visible=True`). El endpoint público `users/<id>/public-profile/` expone estos + `% álbum` + `# trades completados`, nunca email/teléfono.
+- `Profile.rating_avg / rating_count / positive_pct` — agregados cacheados; recalculados por signal `post_save`/`post_delete` sobre `Review` (sólo cuenta `is_visible=True`). El endpoint público `users/<id>/public-profile/` expone estos + `% álbum` + `# trades completados` + `is_online`, nunca email/teléfono.
+- `Profile.last_seen` (nullable, `db_index`) — presencia; bumpeado throttled (1 write/60s/usuario, vía cache) por `presence.touch` desde `presence_ping` y `validate_token`. `is_online` (property) = `last_seen` dentro de `presence.ONLINE_WINDOW` (5 min). `presence.active_collector_count(city=)` cuenta los `Profile` con `last_seen` en la ventana.
+- `Profile.lat_approx / lng_approx` — coords *aproximadas* (jitter); las usa el match por proximidad (`match_engine`), el mapa de coleccionistas (`/collectors/map/` — sólo expone éstas, nunca una posición exacta del dispositivo) y el heatmap de analítica. Se setean en el onboarding (browser geo o `setGeoFromIp` desde `/geo/ip-locate/`).
 - `Review` UNIQUE `(trade_id, reviewer_id)`; ventana de edición 24h post-creación; `is_visible=False` = hidden (no borrado) → excluido de agregados pero auditable.
 - `ReviewReport` — cola de moderación de *reseñas*; el admin marca `is_visible=False` + razón.
 - `Notification` — `kind` enum `match_mutual | review_received | review_reply`; FK opcionales `actor`/`match`/`review` (`SET_NULL`); `read_at` nullable (`is_read` property); índices `(user, read_at)` y `(user, -created_at)`. Creada por el signal `post_save Match(mutual, created)` (a ambos participantes, junto al Web Push) y por las views `trade_review_create` / `review_reply`. `notification_list` filtra siempre por `user=request.user`.
@@ -220,8 +222,8 @@ Migraciones (10): `0001_initial` → `0002_role_extend_profile_merchant` → `00
 ```mermaid
 flowchart LR
     subgraph Presentation["Presentation Layer"]
-        VIEWS[Views · 19 módulos · FBV @api_view]
-        URLS[URLs · 19 módulos · ~68 path()]
+        VIEWS[Views · 22 módulos · FBV @api_view]
+        URLS[URLs · 22 módulos · ~73 path()]
     end
     subgraph DTO["DTO Layer"]
         SER[Serializers · list / detail / create_update]

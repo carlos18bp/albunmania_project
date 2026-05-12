@@ -443,3 +443,18 @@ Evita mockear `@/lib/services/http` y manejar promesas no-resueltas; las accione
 
 ### El audit subió la cobertura de componentes de ~40% a ~90%
 - `npm test -- --coverage --collectCoverageFrom='components/**/*.{ts,tsx}'` → 89.6% statements/branches/lines, 79% functions. Los stores ya estaban 16/16. El umbral del estándar (≥60% componentes, ≥75% stores) está holgadamente cubierto.
+
+## 16. Bloque E — cierre de los GAPS P3 (presencia, mapa coleccionistas, búsqueda predictiva, GeoIP2)
+
+### Presencia "en línea ahora" sin WebSocket: `last_seen` + heartbeat + write throttled con `cache.add`
+- En vez de WebSocket/SSE para el Live Badge: `Profile.last_seen` (nullable, indexado); un `PresencePinger` montado en el layout hace `POST /api/presence/ping/` cada 120s + on `visibilitychange`; `validate_token` también lo bumpea. `is_online` = `last_seen` dentro de 5 min. **Truco para no escribir en cada request:** `presence.touch` usa `cache.add(f'presence:touch:{user_id}', 1, 60)` — `cache.add` devuelve `True` solo si la clave **no existía** → 1 write a DB por usuario por minuto como mucho. (Funciona con LocMemCache en tests y con Redis en prod.) En los tests de endpoints de presencia, limpiar el cache en una fixture autouse (`cache.clear()`).
+- El JWT en cookies no se ve desde un middleware Django (la auth JWT pasa en la view, no en `AuthenticationMiddleware`), así que un middleware `LastSeenMiddleware` no serviría — por eso el bump va dentro de las views (`validate_token`, `presence_ping`) y vía un ping explícito del cliente, no en middleware.
+
+### Recurso externo opcional (GeoIP2 `.mmdb`): cargar perezoso + flag `available()` + degradar limpio
+- La DB MaxMind no se versiona (licencia + ~60 MB). `services/geoip.py` abre el `geoip2.database.Reader` **una vez por proceso** (cache de módulo) desde `settings.GEOIP_PATH` (env `DJANGO_GEOIP_PATH`) **si el archivo existe**; si no, todo lookup devuelve `None` y `available()` es `False`. El endpoint `GET /api/geo/ip-locate/` responde `{available: false}` y el onboarding cae al prompt del navegador — nada se rompe. Documentar en `deploy/staging/RUNBOOK.md` + `backend.env.example` que ops provisiona el `.mmdb`. Mismo molde para cualquier asset grande/licenciado: lazy + `available()` + degradación, nunca un fallo duro al arrancar. (En tests: `patch('os.path.exists', return_value=True)` + `patch('geoip2.database.Reader', return_value=fake_reader)`.)
+
+### Reusar el patrón del mapa de comerciantes para el mapa de coleccionistas
+- `CollectorMap` (wrapper `dynamic(() => import('./CollectorMapInner'), { ssr: false })`) + `CollectorMapInner` (react-leaflet `MapContainer`/`TileLayer`/`Marker`/`Popup`) son un calco de `MerchantMap`/`MerchantMapInner` — y el test es un calco también: stub de los 4 primitivos de react-leaflet (`map-container`/`tile-layer`/`marker` con `data-position`/`popup`) para asertar qué props recibe el Inner, sin pintar un canvas real. Para el endpoint, el over-fetch + filtro haversine en Python ya estaba en `merchant_public_list` — `collectors_map` lo reusa (`haversine_km` de `match_engine`).
+
+### `albumStore.searchStickers` apuntaba a una URL inexistente
+- El helper hacía `GET albums/<slug>/stickers/search/` pero la ruta real es `albums/<slug>/search/` — 404 silencioso. Nadie lo notó porque **no tenía consumidor de UI** (el catálogo solo usaba el filtro de grilla server-side). Al construir `SearchAutocomplete` (E3) se descubrió y arregló. Lección: un endpoint/helper "ya existe pero sin usar" puede estar roto — verificarlo cuando finalmente se cablea a UI.

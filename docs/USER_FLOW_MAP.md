@@ -4,9 +4,9 @@
 
 Use this document to understand each flow's steps, branching conditions, role restrictions, and API contracts before writing or reviewing E2E tests. It is paired with `frontend/e2e/flow-definitions.json` (machine-readable registry) and `frontend/e2e/helpers/flow-tags.ts` (`@flow:` tag constants).
 
-**Version:** 2.4.0
+**Version:** 2.8.0
 **Last Updated:** 2026-05-12
-**Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual) + "Bloque D" (cierre de los 4 GAPS P2 de la auditoría 2026-05-12: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios + cola admin).
+**Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual) + "Bloque D" (4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios + cola admin) + "Bloque E" (4 GAPS P3: presencia "en línea ahora"/Live Badge, Mapa de Coleccionistas, búsqueda predictiva con dropdown, GeoIP2 por IP).
 
 > Roles: `guest` (sin login), `collector` (coleccionista, rol por defecto), `merchant` (comerciante), `web-manager` / `admin` (panel administrativo). JWT en cookies (`access_token` / `refresh_token`). Backend bajo `/api/` (sin prefijo `/v1/`).
 
@@ -28,6 +28,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `catalog-grid-filters` | Browse catalog + filters/search | catalog | P1 | collector | `/catalog/[slug]` |
 | `catalog-inventory-tap` | Inventory 0/1/2+ tap + sync | catalog | P1 | collector | `/catalog/[slug]` |
 | `catalog-special-edition` | Special-edition badge + filter | catalog | P2 | collector | `/catalog/[slug]` |
+| `catalog-predictive-search` | Predictive search dropdown (stickers + collectors) | catalog | P3 | collector | `/catalog/[slug]` |
 | `match-swipe-feed` | Match swipe feed renders | match | P1 | collector | `/match` |
 | `match-like-mutual` | Like → mutual match | match | P1 | collector | `/match` |
 | `match-list-mine` | My matches list | match | P2 | collector | `/match` |
@@ -59,6 +60,9 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `admin-moderation-queue` | Admin moderation queue (review reports + user/trade reports) | admin | P2 | web-manager / admin | `/admin/moderation` |
 | `admin-analytics-overview` | Admin analytics + KPIs + CSV export | admin | P1 | web-manager / admin | `/admin/analytics` |
 | `report-user-or-trade` | Report a user or a trade (e.g. no-show) | moderation | P2 | all (authed) | `/profile/[id]`, `/match/[matchId]` |
+| `presence-live-badge` | "En línea ahora" Live Badge + active-collectors count | presence | P3 | all (authed) | profiles / match / ranking / dashboard |
+| `collectors-map` | Mapa de Coleccionistas | collectors | P3 | all (authed) | `/mapa` |
+| `geo-ip-locate` | IP-based geolocation (GeoIP2) | geo | P3 | guest / collector | `GET /api/geo/ip-locate/` · `/onboarding` |
 | `manual-search-browse` | Interactive manual: sections + search | manual | P2 | guest | `/manual` |
 | `legal-terms` | Terms & Conditions page | legal | P2 | guest | `/terminos` |
 | `legal-privacy` | Privacy Policy page | legal | P2 | guest | `/privacidad` |
@@ -364,6 +368,31 @@ Use this document to understand each flow's steps, branching conditions, role re
 |-----------|----------|
 | No special stickers | Empty grid after filtering |
 | Filter unchecked | Full grid restored |
+
+---
+
+### catalog-predictive-search
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P3 · **Roles** | collector (sticker suggestions also work for guests; collector suggestions need auth) |
+| **Frontend route** | `/catalog/[slug]` |
+| **API endpoints** | `GET /api/albums/<slug>/search/?q=` (≤10 stickers), `GET /api/collectors/search/?q=` (≤5 collectors, IsAuthenticated) |
+
+**Preconditions:** None (album exists). The search bar is `SearchAutocomplete` (`catalog-search` input + `catalog-suggestions` dropdown).
+
+**Steps:**
+1. The user types ≥2 chars in `catalog-search`; after a ~200 ms debounce two requests fire — sticker search (name / team / number) and collector search (first/last name / email local-part / city).
+2. The dropdown (`catalog-suggestions`) shows a "Cromos" section (`suggestion-sticker-<id>` — thumbnail / `#number name` / team / ⭐ if special) and a "Coleccionistas" section (`suggestion-collector-<userId>` — avatar / display name / city).
+3. Picking a sticker → `onValueChange(sticker.number)` → the grid filters to that number; the dropdown closes. Picking a collector → `router.push('/profile/<userId>')`.
+4. Clicking outside / pressing Escape closes the dropdown. The plain grid-filter behaviour (`catalog-grid-filters`) is unchanged.
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Query < 2 chars | No request; no dropdown |
+| No matches | Dropdown not shown (`hasSuggestions` false) |
+| `GET /api/collectors/search/` 401 (guest) | Collector section empty; sticker suggestions still shown |
 
 ---
 
@@ -1118,6 +1147,84 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Trade report, reporter not a participant | `403` |
 | Unknown target / kind mismatch | `400` |
 | Not authenticated | `401` |
+
+---
+
+## Presence Module
+
+### presence-live-badge
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P3 · **Roles** | all (authed); the badge is visible to everyone, the count endpoint is `AllowAny` |
+| **Frontend route** | profiles (`/profile/[id]`), match cards (`/match`), city ranking (`/dashboard`), the `/mapa` pins, and the dashboard banner |
+| **API endpoints** | `POST /api/presence/ping/` (IsAuthenticated), `GET /api/presence/active-count/?city=` (AllowAny). `is_online` is also embedded in `GET /api/users/<id>/public-profile/`, `GET /api/match/feed/` and `GET /api/stats/ranking/`. `validate-token` also bumps `last_seen`. |
+
+**Preconditions:** None. `PresencePinger` (mounted once in the root layout) heartbeats while the user is signed in and the tab is visible.
+
+**Steps:**
+1. `PresencePinger` `POST`s `/api/presence/ping/` on mount, then every 120 s, and on `visibilitychange` → visible. The backend bumps `Profile.last_seen`, throttled to once per 60 s per user via the cache.
+2. A collector is **online** if `last_seen` is within the 5-minute window (`presence.is_online`). The green `LiveBadge` (`data-testid="live-badge"`) renders on `ProfileHeader`, `SwipeCard`, `RankingList` and the `/mapa` list/pins; it renders **nothing** when offline.
+3. The dashboard shows `ActiveCollectorsBanner` (`active-collectors-banner` / `active-collectors-count`) — "N coleccionistas en línea ahora [en {ciudad}]" via `GET /api/presence/active-count/?city=`, refreshed every 60 s.
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Not signed in | `PresencePinger` is a no-op; `/api/presence/ping/` → `401` (ignored by the store) |
+| Collector offline (`last_seen` null or stale) | `LiveBadge` renders nothing; not counted in active-count |
+| Ping within the 60 s throttle window | DB not touched (cache `add` short-circuits) |
+
+---
+
+## Collectors Module
+
+### collectors-map
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P3 · **Roles** | all (authed) |
+| **Frontend route** | `/mapa` (protected) |
+| **API endpoints** | `GET /api/collectors/map/?lat=&lng=&radius_km=&album_id=` (IsAuthenticated) · `GET /api/collectors/search/?q=` (IsAuthenticated — used by `catalog-predictive-search`) |
+
+**Preconditions:** Authenticated. Collectors must have `Profile.lat_approx/lng_approx` set (the onboarding wizard sets them; the seed jitters Bogotá coords for the canonical collectors).
+
+**Steps:**
+1. `/mapa` loads → `GET /api/collectors/map/` (unscoped) → list of `{user_id, display_name, city, avatar_url, lat_approx, lng_approx, rating_avg, rating_count, is_online}`, excluding the requester. Renders a Leaflet map (`collector-map` → `CollectorMap`/`CollectorMapInner`, same primitives as the merchant map) with a marker per collector (popup: name + `LiveBadge` + rating + "Ver perfil" → `/profile/[id]`), plus a list (`collectors-list`).
+2. `use-my-location` requests browser geolocation; on success the map recenters and `GET /api/collectors/map/?lat=&lng=&radius_km=50` refetches. `show-all-collectors` recenters on Bogotá and refetches unscoped.
+3. Only the *approximate* lat/lng stored on the Profile are exposed (already coarse-grained); never an exact device position.
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Not authenticated | `useRequireAuth` redirects to `/sign-in`; endpoint → `401` |
+| No collectors with a location in range | `collectors-empty` |
+| `album_id` given | Only collectors whose active album matches |
+
+---
+
+## Geo Module
+
+### geo-ip-locate
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P3 · **Roles** | guest / collector |
+| **Frontend surface** | onboarding step 2 (`StepGeolocation`) — the IP hint precedes the precise browser-geolocation prompt |
+| **API endpoints** | `GET /api/geo/ip-locate/` (AllowAny) → `{available, located, lat?, lng?, city?, country?, source: 'geoip'}` |
+
+**Preconditions:** None. A MaxMind **GeoLite2-City** `.mmdb` must be provisioned on the server and `settings.GEOIP_PATH` (`DJANGO_GEOIP_PATH`) pointed at it; otherwise `available` is `false`. The DB is **not** in the repo (licence + size) — see `deploy/staging/RUNBOOK.md`.
+
+**Steps:**
+1. `StepGeolocation` mounts and (if no location is set yet) calls `GET /api/geo/ip-locate/`.
+2. If `available && located`, it shows `ip-location-hint` ("parece que estás cerca de {city}…") with `use-ip-location` → `onboardingStore.setGeoFromIp({lat, lng, city})` (sets `lat_approx/lng_approx/city` but **not** `browser_geo_optin`).
+3. The precise `geo-request-button` (browser `navigator.geolocation`) stays the primary path and, on success, sets `browser_geo_optin = true` via `setGeo`.
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| `.mmdb` not provisioned | `{available: false}`; no IP hint; wizard falls back to the browser prompt only |
+| IP private / loopback / not in the DB | `{available: true, located: false}`; no IP hint |
+| A location is already set | The IP lookup is skipped |
 
 ---
 
