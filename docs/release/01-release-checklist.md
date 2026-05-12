@@ -433,7 +433,7 @@ Cierre de matches a través de WhatsApp deep links con consentimiento explícito
 
   - Configuración: URL wa.me con query string text= y plantilla generada server-side. Idioma según preferencia del usuario.
 
-- [ ] **Push notification de match nuevo** — Notificación push al usuario cuando aparece un match mutuo o un mensaje nuevo en un match abierto.
+- [x] **Push notification de match nuevo** — Notificación push al usuario cuando aparece un match mutuo o un mensaje nuevo en un match abierto.
 
   - Configuración: Web Push API con VAPID keys. Worker en Service Worker recibe payload y muestra notificación con deep link al match.
 
@@ -517,7 +517,7 @@ Capacidades de aplicación instalable, modo offline parcial y notificaciones pus
 
   - Configuración: Estrategia stale-while-revalidate para catálogo. Cola de mutaciones pendientes en IndexedDB.
 
-- [ ] **Notificaciones push de matches y mensajes** — Push API con opt-in explícito. Notificación al recibir match nuevo, respuesta a un match o cromo buscado disponible cerca.
+- [x] **Notificaciones push de matches y mensajes** — Push API con opt-in explícito. Notificación al recibir match nuevo, respuesta a un match o cromo buscado disponible cerca.
 
   - Configuración: VAPID keys en backend. Subscriptions almacenadas por user_id.
 
