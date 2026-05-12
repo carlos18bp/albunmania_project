@@ -1,0 +1,17 @@
+[Unit]
+Description=Albunmanía Staging — Huey task queue (push, reports, match cleanup)
+After=network.target redis.service
+Requires=redis.service
+
+[Service]
+Type=simple
+User=ryzepeck
+Group=ryzepeck
+WorkingDirectory=/home/ryzepeck/webapps/albunmania_staging/backend
+EnvironmentFile=/home/ryzepeck/webapps/albunmania_staging/backend/.env
+ExecStart=/home/ryzepeck/webapps/albunmania_staging/venv/bin/python manage.py run_huey
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

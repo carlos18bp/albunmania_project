@@ -1,0 +1,29 @@
+[Unit]
+Description=Albunmanía Staging — Gunicorn (Django + DRF)
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+Type=notify
+User=ryzepeck
+Group=ryzepeck
+WorkingDirectory=/home/ryzepeck/webapps/albunmania_staging/backend
+EnvironmentFile=/home/ryzepeck/webapps/albunmania_staging/backend/.env
+ExecStart=/home/ryzepeck/webapps/albunmania_staging/venv/bin/gunicorn \
+    --workers 3 \
+    --threads 2 \
+    --timeout 60 \
+    --bind unix:/run/albunmania_staging.sock \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    albunmania_project.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+RuntimeDirectory=albunmania_staging
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

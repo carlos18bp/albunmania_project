@@ -1,0 +1,19 @@
+# Append to /home/ryzepeck/webapps/ops/vps/projects.yml
+# (Indent according to the parent block in that file — typically 2 spaces.)
+
+albunmania_staging:
+  domain: albunmania.projectapp.co
+  is_staging: true
+  db_type: mysql
+  db_name: albunmania_staging
+  db_user: albunmania_staging
+  gunicorn_svc: albunmania_staging
+  huey_svc: albunmania-staging-huey
+  path: /home/ryzepeck/webapps/albunmania_staging
+  health_check: https://albunmania.projectapp.co/api/health/
+  notes: |
+    Mundial 26 sticker trading PWA (ProjectApp client).
+    Frontend: Next.js 16 webpack build, served at :3000 behind nginx.
+    Backend: Django 6 + DRF, gunicorn unix socket /run/albunmania_staging.sock.
+    Push: VAPID keys configured per .env; sw.js served at /sw.js scope=/.
+    Auth: Google OAuth + hCaptcha; cuentas Google <30 días bloqueadas.
