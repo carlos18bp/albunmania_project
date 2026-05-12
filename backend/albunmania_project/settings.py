@@ -404,3 +404,11 @@ N_PLUS_ONE_THRESHOLD = int(os.getenv('N_PLUS_ONE_THRESHOLD', '10'))
 # Frontend
 # ---------------------------------------------------------------------------
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
+
+# ---------------------------------------------------------------------------
+# IP geolocation (GeoIP2 / MaxMind)
+# Path to a GeoLite2-City.mmdb. The DB is NOT in the repo (licensing + size);
+# ops provision it on the server and set DJANGO_GEOIP_PATH. When unset/missing,
+# IP geolocation degrades gracefully (see albunmania_app/services/geoip.py).
+# ---------------------------------------------------------------------------
+GEOIP_PATH = os.getenv('DJANGO_GEOIP_PATH', '')

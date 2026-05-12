@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.8.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -399,7 +399,15 @@
       "module": "catalog",
       "roles": ["collector"],
       "priority": "P3",
-      "description": "On /catalog/[slug] the search bar (SearchAutocomplete) shows a debounced dropdown with sticker suggestions (GET /api/albums/<slug>/stickers/search/?q=) and collector suggestions (GET /api/collectors/search/?q=) with a visual preview. Picking a sticker sets the query to its number (the grid filters to it); picking a collector navigates to /profile/[id]. The plain grid-filter behaviour (catalog-grid-filters) is unchanged.",
+      "description": "On /catalog/[slug] the search bar (SearchAutocomplete) shows a debounced dropdown with sticker suggestions (GET /api/albums/<slug>/search/?q=) and collector suggestions (GET /api/collectors/search/?q=) with a visual preview. Picking a sticker sets the query to its number (the grid filters to it); picking a collector navigates to /profile/[id]. The plain grid-filter behaviour (catalog-grid-filters) is unchanged.",
+      "expectedSpecs": 1
+    },
+    "geo-ip-locate": {
+      "name": "IP-based geolocation (GeoIP2)",
+      "module": "geo",
+      "roles": ["guest", "collector"],
+      "priority": "P3",
+      "description": "GET /api/geo/ip-locate/ returns {available, located, lat, lng, city, country} from the visitor's IP via a MaxMind GeoLite2 DB. The onboarding step 2 (StepGeolocation) calls it on mount and, if it resolves, offers a one-tap 'usar ubicación aproximada por IP' before the precise browser-geolocation prompt. When the .mmdb isn't provisioned the endpoint returns {available:false} and the wizard falls back to the browser API only.",
       "expectedSpecs": 1
     }
   }

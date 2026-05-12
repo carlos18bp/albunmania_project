@@ -99,3 +99,6 @@ export const PRESENCE_LIVE_BADGE = ['@flow:presence-live-badge', '@module:presen
 
 // ── Collectors ──
 export const COLLECTORS_MAP = ['@flow:collectors-map', '@module:collectors', '@priority:P3'];
+
+// ── Geo ──
+export const GEO_IP_LOCATE = ['@flow:geo-ip-locate', '@module:geo', '@priority:P3'];

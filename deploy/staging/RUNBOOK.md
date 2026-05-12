@@ -25,6 +25,7 @@ Before touching the VPS, gather these secrets and have them ready:
 | `VAPID_PRIVATE_KEY` | output of same command | URL-safe b64 32-byte scalar |
 | `VAPID_CLAIMS_EMAIL` | operator decision (e.g. `admin@albunmania.co`) | mailto address |
 | `MYSQL_PASSWORD` | `openssl rand -base64 24` | for the staging DB user |
+| `DJANGO_GEOIP_PATH` | Optional. Download a free **GeoLite2-City** `.mmdb` from MaxMind (account required), place it on the server (e.g. `…/albunmania_staging/geoip/GeoLite2-City.mmdb`) and set this to its absolute path. Leave empty to disable IP geolocation — the app degrades gracefully (onboarding falls back to the browser geolocation prompt). | not a secret |
 
 ---
 

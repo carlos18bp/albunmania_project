@@ -13,7 +13,10 @@ jest.mock('next/navigation', () => {
 });
 
 jest.mock('../../../lib/services/http', () => ({
-  api: { patch: jest.fn().mockResolvedValue({ data: {} }) },
+  api: {
+    patch: jest.fn().mockResolvedValue({ data: {} }),
+    get: jest.fn().mockResolvedValue({ data: { available: false } }),
+  },
 }));
 
 jest.mock('../../../lib/stores/authStore', () => ({

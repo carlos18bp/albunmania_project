@@ -22,6 +22,8 @@ type OnboardingState = {
 
   setActiveAlbum: (id: number | null) => void;
   setGeo: (args: { lat: number; lng: number; city?: string }) => void;
+  /** Pre-fill the approximate location from an IP lookup (does NOT set browser_geo_optin). */
+  setGeoFromIp: (args: { lat: number; lng: number; city?: string }) => void;
   setBrowserGeoOptin: (value: boolean) => void;
   setPushOptin: (value: boolean) => void;
   setWhatsAppOptin: (value: boolean) => void;
@@ -57,6 +59,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   setActiveAlbum: (id) => set({ activeAlbumId: id }),
   setGeo: ({ lat, lng, city }) =>
     set({ latApprox: lat, lngApprox: lng, browserGeoOptin: true, city: city ?? get().city }),
+  setGeoFromIp: ({ lat, lng, city }) =>
+    set({ latApprox: lat, lngApprox: lng, city: city || get().city }),
   setBrowserGeoOptin: (value) => set({ browserGeoOptin: value }),
   setPushOptin: (value) => set({ pushOptin: value }),
   setWhatsAppOptin: (value) => set({ whatsappOptin: value }),
