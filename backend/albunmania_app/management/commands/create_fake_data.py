@@ -14,8 +14,10 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from albunmania_app.models import (
-    AdCampaign, AdCreative, Album, Like, Match, MerchantProfile,
-    Sponsor, Sticker, Trade, User, UserSticker,
+    AdCampaign, AdClick, AdCreative, AdImpression, Album, Like, Match,
+    MerchantProfile, MerchantSubscriptionPayment, PushSubscription, Review,
+    ReviewReport, Sponsor, Sticker, Trade, TradeWhatsAppOptIn, User,
+    UserSticker,
 )
 
 
@@ -53,8 +55,20 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('\n--- MerchantProfile (Papelería El Sol) ---'))
         self._seed_merchant()
 
-        self.stdout.write(self.style.SUCCESS('\n--- Mutual match between user + user2 ---'))
-        self._seed_match(stickers)
+        self.stdout.write(self.style.SUCCESS('\n--- Mutual match + completed trade (user + user2) ---'))
+        trade = self._seed_match(stickers)
+
+        self.stdout.write(self.style.SUCCESS('\n--- Reviews + report on the completed trade ---'))
+        self._seed_reviews(trade)
+
+        self.stdout.write(self.style.SUCCESS('\n--- Merchant subscription payments ---'))
+        self._seed_merchant_payments()
+
+        self.stdout.write(self.style.SUCCESS('\n--- Ad impressions + clicks (Bavaria campaign) ---'))
+        self._seed_ad_impressions()
+
+        self.stdout.write(self.style.SUCCESS('\n--- Push subscriptions (1 per collector, non-routable) ---'))
+        self._seed_push_subscriptions()
 
         self.stdout.write(self.style.SUCCESS('\n==== Fake Data Creation Complete ===='))
 
@@ -194,13 +208,13 @@ class Command(BaseCommand):
         merchant_user.profile.city = 'Bogotá'
         merchant_user.profile.save(update_fields=['city', 'updated_at'])
 
-    def _seed_match(self, stickers: list[Sticker]) -> None:
+    def _seed_match(self, stickers: list[Sticker]) -> Trade | None:
         try:
             user = User.objects.get(email='user@example.com')
             user2 = User.objects.get(email='user2@example.com')
         except User.DoesNotExist:
             self.stdout.write(self.style.WARNING('  · skipped: missing canonical collectors'))
-            return
+            return None
 
         a_id, b_id = (user.id, user2.id) if user.id < user2.id else (user2.id, user.id)
         match, _ = Match.objects.update_or_create(
@@ -227,13 +241,135 @@ class Command(BaseCommand):
             from_user=user2, to_user=user, sticker_offered=take, sticker_wanted=give,
             defaults={},
         )
-        Trade.objects.update_or_create(
+        trade, _ = Trade.objects.update_or_create(
             match=match,
             defaults={
                 'items': [
                     {'from_user': user.id, 'to_user': user2.id, 'sticker_id': give.id},
                     {'from_user': user2.id, 'to_user': user.id, 'sticker_id': take.id},
                 ],
-                'status': Trade.Status.OPEN,
+                'status': Trade.Status.COMPLETED,
             },
         )
+        # Reset the per-trade WhatsApp opt-ins to the clean initial state
+        # the Playwright session-03 tests expect (neither side opted in).
+        # Without this, opt-in rows left over from a previous validation
+        # run would make the wa.me link render before the tests opt in.
+        TradeWhatsAppOptIn.objects.filter(trade=trade).delete()
+        return trade
+
+    # --- new entities surfaced by the new-feature-checklist audit ---------
+
+    def _seed_reviews(self, trade: Trade | None) -> None:
+        """Two reviews on the completed trade (one with a public reply) +
+        one pending ReviewReport — populates Profile.rating_* aggregates
+        (via the post_save signal) and the admin moderation queue.
+
+        Note: TradeWhatsAppOptIn is deliberately NOT seeded — the
+        Playwright session-03 WhatsApp tests need trade #1 to start with
+        zero opt-in rows so they can exercise the "one side / both sides"
+        transitions themselves.
+        """
+        if trade is None:
+            self.stdout.write(self.style.WARNING('  · skipped: no trade'))
+            return
+        user = User.objects.get(email='user@example.com')
+        user2 = User.objects.get(email='user2@example.com')
+
+        r1, _ = Review.objects.update_or_create(
+            trade=trade, reviewer=user,
+            defaults={
+                'reviewee': user2, 'stars': 5,
+                'comment': 'Todo perfecto, llegó puntual y los cromos impecables.',
+                'tags': ['puntual', 'cromos_buen_estado', 'buena_comunicacion'],
+                'reply': '¡Gracias! Un placer intercambiar contigo.',
+                'replied_at': timezone.now(),
+            },
+        )
+        Review.objects.update_or_create(
+            trade=trade, reviewer=user2,
+            defaults={
+                'reviewee': user, 'stars': 4,
+                'comment': 'Buen intercambio, recomendado.',
+                'tags': ['amable', 'ubicacion_facil'],
+            },
+        )
+        # A reporter who is not a party to the trade flags one review.
+        reporter = (
+            User.objects.filter(role=User.Role.COLLECTOR.value)
+            .exclude(email__in=['user@example.com', 'user2@example.com'])
+            .first()
+            or user2
+        )
+        ReviewReport.objects.update_or_create(
+            review=r1, reporter=reporter,
+            defaults={
+                'reason': 'La respuesta pública parece spam.',
+                'status': ReviewReport.Status.PENDING,
+            },
+        )
+
+    def _seed_merchant_payments(self) -> None:
+        merchant = MerchantProfile.objects.filter(business_name='Papelería El Sol').first()
+        admin = User.objects.filter(role=User.Role.ADMIN.value).first()
+        if not merchant or not admin:
+            self.stdout.write(self.style.WARNING('  · skipped: no merchant/admin'))
+            return
+        # Idempotent: reset to exactly two payments (this month + last month).
+        MerchantSubscriptionPayment.objects.filter(merchant=merchant).delete()
+        now = timezone.now()
+        for months_ago in (1, 0):
+            year, month = now.year, now.month - months_ago
+            while month < 1:
+                month += 12
+                year -= 1
+            paid_at = datetime(year, month, 1, 12, 0, tzinfo=dt_timezone.utc)
+            MerchantSubscriptionPayment.objects.create(
+                merchant=merchant, paid_at=paid_at, registered_by=admin,
+                amount_cop=Decimal('200000'), period_months=1, method='nequi',
+                reference=f'NQ-{paid_at.strftime("%Y%m")}-001',
+            )
+
+    def _seed_ad_impressions(self) -> None:
+        creative = AdCreative.objects.filter(headline='Bavaria · Mundial 26').first()
+        if not creative:
+            self.stdout.write(self.style.WARNING('  · skipped: no Bavaria creative'))
+            return
+        collectors = list(User.objects.filter(role=User.Role.COLLECTOR.value))
+        if not collectors:
+            self.stdout.write(self.style.WARNING('  · skipped: no collectors'))
+            return
+        # Reset to a deterministic 200 impressions + ~5% clicks.
+        AdImpression.objects.filter(creative=creative).delete()
+        rng = random.Random(43)
+        cities = ['Bogotá', 'Medellín', 'Cali', 'Barranquilla']
+        slots = [AdImpression.Slot.HOME, AdImpression.Slot.FEED]
+        impressions = [
+            AdImpression(
+                creative=creative,
+                user=rng.choice(collectors),
+                slot=rng.choice(slots),
+                city=rng.choice(cities),
+            )
+            for _ in range(200)
+        ]
+        AdImpression.objects.bulk_create(impressions)
+        served = list(AdImpression.objects.filter(creative=creative))
+        for imp in rng.sample(served, k=min(10, len(served))):
+            AdClick.objects.create(impression=imp)
+
+    def _seed_push_subscriptions(self) -> None:
+        """One non-routable subscription per collector — lets the admin
+        panel show a device count. A real send would fail cleanly because
+        push_notify swallows errors and prunes 404/410 endpoints.
+        """
+        for user in User.objects.filter(role=User.Role.COLLECTOR.value):
+            PushSubscription.objects.update_or_create(
+                endpoint=f'https://push.example.invalid/seed-{user.id}',
+                defaults={
+                    'user': user,
+                    'p256dh': 'seed-p256dh-key',
+                    'auth': 'seed-auth-secret',
+                    'user_agent': 'Mozilla/5.0 (seed)',
+                },
+            )

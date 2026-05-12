@@ -8,7 +8,11 @@
 - **Bootstrap**: ✅ completado (commits `4170de8` → `fb51414`).
 - **Bloque A — Cleanup post-bootstrap** (rename, purga demo, deps, PWA bootstrap, i18n bootstrap, Memory Bank): ✅ completado (commits `0d2d857` → `8084a4d`).
 - **Bloque B — Implementación Release 01** (14 épicas): ✅ **las 14 épicas implementadas**. Algunos sub-items dentro de las épicas quedan marcados `[ ]` en `docs/release/01-release-checklist.md` con comentario `<!-- V2 -->` (búsqueda con autocompletado, branding en notificaciones, reportes de exposición Sponsor, reportes para anunciantes, gestor de álbumes con CSV, wiring real de next-intl).
-- **Auditoría new-feature-checklist** (fase docs E2E): ✅ — `USER_FLOW_MAP.md` + `flow-definitions.json` reescritos para las 14 épicas; los 39 tests de validación tagueados con `@flow:`; eliminados los 12 `page.waitForTimeout()`; `auth.spec.ts` + `smoke.spec.ts` actualizados a la realidad post-rewrite de `/sign-in`. Pendiente (fases siguientes del audit): tests backend `email_service`/`push_notify`, seeds de los 8 modelos sin fixture, backfill de tests de componentes.
+- **Auditoría new-feature-checklist** (en curso, por fases):
+  - ✅ Fase 1 (docs E2E): `USER_FLOW_MAP.md` + `flow-definitions.json` reescritos para las 14 épicas; los 46 tests de validación tagueados con `@flow:`; eliminados los 12 `page.waitForTimeout()`; `auth.spec.ts` + `smoke.spec.ts` actualizados a la realidad post-rewrite de `/sign-in`.
+  - ✅ Fase 2 (tests backend): `tests/services/test_email_service.py` (6) + `tests/services/test_push_notify.py` (10).
+  - ✅ Fase 3 (seeds): `create_fake_data` ahora seedea Review (×2, una con reply) + ReviewReport (×1) + MerchantSubscriptionPayment (×2) + AdImpression (×200) + AdClick (×10) + PushSubscription (1/colector). `TradeWhatsAppOptIn` se deja **sin seed a propósito** (los tests E2E session-03 necesitan que el trade #1 arranque con 0 opt-ins) y `create_fake_data` lo **limpia** del trade seedeado en cada corrida → re-seedear antes de la suite de validación reemplaza el `globalSetup` pendiente. `PasswordCode` se salta (legacy del template). El trade seedeado pasa a estado `completed`.
+  - ⬜ Fase 4 (tests de componentes frontend): backfill de `*.test.tsx` para los subdirs flacos (manual/ 0/3, merchant/ 1/4, onboarding/ 1/4, match/ 2/6, catalog/ 1/3, + singletons). Meta: cobertura de componentes ~40% → ≥80%.
 - **Bloque C — Validación E2E + deploy prep**: ✅ completado.
 
 ## Bloque B — Estado por épica (todas ✅)
@@ -77,7 +81,7 @@
 - Wiring real de `next-intl` — `messages/{es,en,pt}.json` existen y están poblados, pero las páginas usan copy hardcoded en español.
 - "Branding sutil en notificaciones oficiales" (emails/push con pie de Sponsor).
 - Admin: gestor de álbumes con CSV upload, gestor de creativas con UI.
-- `globalSetup` Playwright que limpie `TradeWhatsAppOptIn` antes de la suite de validación (hoy se limpia manual entre runs).
+- ~~`globalSetup` Playwright que limpie `TradeWhatsAppOptIn`~~ — resuelto: `create_fake_data` ahora resetea las opt-ins del trade seedeado, así que re-seedear antes de la suite de validación deja el estado limpio.
 
 ## Política de testing (heredada de CLAUDE.md)
 
