@@ -33,6 +33,15 @@ yarn.lock
 .next/
 out/
 
+# next-pwa build artifacts — generated on `npm run build`. The push
+# handlers live in the tracked public/sw-push.js; sw.js itself is
+# regenerated each build and must not be committed.
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/fallback-*.js
+
 # ============================================================================
 # Production
 # ============================================================================

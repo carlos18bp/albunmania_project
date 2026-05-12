@@ -88,9 +88,13 @@ export const usePushStore = create<PushState>((set) => ({
       // Reuse existing subscription if present, else create a new one.
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
+        // PushSubscriptionOptionsInit's `applicationServerKey` expects
+        // BufferSource. Pass the underlying ArrayBuffer to avoid the
+        // SharedArrayBuffer-flavour mismatch that strict TS surfaces.
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+            .buffer as ArrayBuffer,
         });
       }
 

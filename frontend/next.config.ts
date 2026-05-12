@@ -13,10 +13,16 @@ try {
     register: true,
     skipWaiting: true,
     disable: process.env.NODE_ENV === 'development',
+    // Pull the Web Push listeners (push / notificationclick) into the
+    // Workbox-generated sw.js. Keeping them in a separate file means
+    // `npm run build` never clobbers the push logic — sw.js owns
+    // caching, sw-push.js owns notifications. See public/sw-push.js.
+    importScripts: ['/sw-push.js'],
     runtimeCaching: [
       {
-        // Catálogo del álbum y assets de cromos — stale-while-revalidate
-        urlPattern: /\/api\/v1\/albums\/.*/i,
+        // Catálogo del álbum y assets de cromos — stale-while-revalidate.
+        // The API lives at /api/albums/ (no /v1/ prefix).
+        urlPattern: /\/api\/albums\/.*/i,
         handler: 'StaleWhileRevalidate',
         options: { cacheName: 'albunmania-catalog', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 } },
       },

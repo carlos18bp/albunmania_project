@@ -1,30 +1,23 @@
 /**
- * Albunmanía Service Worker — Web Push handler (Epic 9).
+ * Albunmanía Service Worker — Web Push handlers (Epic 9).
  *
- * The push event arrives with a JSON payload of shape:
+ * This file is NOT the Service Worker itself. next-pwa generates the
+ * real `public/sw.js` (Workbox: precache + runtime caching) on build,
+ * and `importScripts('/sw-push.js')` (configured in next.config.ts)
+ * pulls these listeners into that generated worker.
+ *
+ * Keeping the push logic here means `npm run build` never clobbers it
+ * — the generated sw.js owns caching, this file owns notifications.
+ *
+ * Push payload shape (from backend services/push_notify.py):
  *   { title, body, icon, badge, data: { url } }
- *
- * The notificationclick handler routes the user to the deep link
- * carried in `data.url` — typically the match detail page.
- *
- * On production builds next-pwa may inject Workbox routes on top of
- * this file. The push + notificationclick listeners stay in place
- * because they don't conflict with caching strategies.
  */
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
 self.addEventListener('push', (event) => {
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
   } catch (err) {
-    payload = { title: 'Albunmanía', body: event.data?.text() || '' };
+    payload = { title: 'Albunmanía', body: event.data ? event.data.text() : '' };
   }
 
   const title = payload.title || 'Albunmanía';
