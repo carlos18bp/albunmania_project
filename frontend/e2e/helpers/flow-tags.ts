@@ -23,6 +23,7 @@ export const AUTH_ONBOARDING_WIZARD = ['@flow:auth-onboarding-wizard', '@module:
 export const AUTH_GUEST_BROWSE = ['@flow:auth-guest-browse', '@module:auth', '@priority:P2'];
 export const AUTH_PROTECTED_REDIRECT = ['@flow:auth-protected-redirect', '@module:auth', '@priority:P1'];
 export const AUTH_SESSION_PERSISTENCE = ['@flow:auth-session-persistence', '@module:auth', '@priority:P2'];
+export const AUTH_SIGN_OUT = ['@flow:auth-sign-out', '@module:auth', '@priority:P2'];
 
 // ── Catalog ──
 export const CATALOG_GRID_FILTERS = ['@flow:catalog-grid-filters', '@module:catalog', '@priority:P1'];
@@ -36,6 +37,7 @@ export const MATCH_LIST_MINE = ['@flow:match-list-mine', '@module:match', '@prio
 export const MATCH_QR_MINE = ['@flow:match-qr-mine', '@module:match', '@priority:P1'];
 export const MATCH_QR_SCAN_CONFIRM = ['@flow:match-qr-scan-confirm', '@module:match', '@priority:P1'];
 export const MATCH_DETAIL_TRADE = ['@flow:match-detail-trade', '@module:match', '@priority:P1'];
+export const MATCH_SHARED_LIST_VIEW = ['@flow:match-shared-list-view', '@module:match', '@priority:P2'];
 
 // ── WhatsApp ──
 export const WHATSAPP_OPTIN_PER_TRADE = ['@flow:whatsapp-optin-per-trade', '@module:whatsapp', '@priority:P1'];

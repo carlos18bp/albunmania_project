@@ -4,7 +4,7 @@
 
 Use this document to understand each flow's steps, branching conditions, role restrictions, and API contracts before writing or reviewing E2E tests. It is paired with `frontend/e2e/flow-definitions.json` (machine-readable registry) and `frontend/e2e/helpers/flow-tags.ts` (`@flow:` tag constants).
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Last Updated:** 2026-05-12
 **Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual).
 
@@ -24,6 +24,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `auth-guest-browse` | Browse as guest (no login) | auth | P2 | guest | `/`, `/catalog/[slug]`, `/merchants`, `/manual` |
 | `auth-protected-redirect` | Protected route redirect | auth | P1 | all | `/dashboard`, `/admin`, `/merchants/me` |
 | `auth-session-persistence` | Session persistence (cookies) | auth | P2 | collector | any protected route |
+| `auth-sign-out` | Sign out | auth | P2 | all (authed) | Header / `/dashboard` |
 | `catalog-grid-filters` | Browse catalog + filters/search | catalog | P1 | collector | `/catalog/[slug]` |
 | `catalog-inventory-tap` | Inventory 0/1/2+ tap + sync | catalog | P1 | collector | `/catalog/[slug]` |
 | `catalog-special-edition` | Special-edition badge + filter | catalog | P2 | collector | `/catalog/[slug]` |
@@ -33,6 +34,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `match-qr-mine` | My QR code (share lists) | match | P1 | collector | `/match/qr` |
 | `match-qr-scan-confirm` | Scan QR → cross lists offline → confirm | match | P1 | collector | `/match/qr` |
 | `match-detail-trade` | Match/trade detail view | match | P1 | collector | `/match/[matchId]` |
+| `match-shared-list-view` | View a shared QR list | match | P2 | guest | `/share/[token]` |
 | `whatsapp-optin-per-trade` | Per-trade WhatsApp opt-in → wa.me link | whatsapp | P1 | collector | `/match/[matchId]` |
 | `merchant-public-list-map` | Merchant public list + Leaflet map | merchant | P1 | guest | `/merchants` |
 | `merchant-dashboard-edit` | Merchant self-service dashboard | merchant | P1 | merchant | `/merchants/me` |
@@ -260,6 +262,29 @@ Use this document to understand each flow's steps, branching conditions, role re
 
 ---
 
+### auth-sign-out
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | all (authenticated) |
+| **Frontend route** | Header (any page) and `/dashboard` |
+| **API endpoints** | None (client-side `authStore.signOut()`) |
+
+**Preconditions:** User is authenticated.
+
+**Steps:**
+1. The Header (authenticated slot) and `/dashboard` both render a **Cerrar sesión** control (`data-testid="header-signout"` in the Header).
+2. User clicks it → `authStore.signOut()` clears `access_token` / `refresh_token` from cookies.
+3. The auth guard (`useRequireAuth`) on the next protected navigation redirects to `/sign-in`; the Header switches back to the guest slot.
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Already on a public page | Header just flips to the guest slot; no redirect |
+| On a protected page | Redirect to `/sign-in` |
+
+---
+
 ## Catalog Module
 
 ### catalog-grid-filters
@@ -480,6 +505,31 @@ Use this document to understand each flow's steps, branching conditions, role re
 |-----------|----------|
 | Not a participant | `403`; the page does not render the trade |
 | Trade not yet completed | The "Calificar" CTA is hidden / disabled |
+
+---
+
+### match-shared-list-view
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | guest |
+| **Frontend route** | `/share/[token]?kind=available\|wanted` |
+| **API endpoints** | `GET /api/trade/share/<token>/?kind=available\|wanted` |
+
+**Preconditions:** A collector shared one of their two QR/links from `/match/qr` (signed token, `kind` = the available or the wanted list).
+
+**Steps:**
+1. The recipient (no login) opens `/share/<token>` (e.g. from WhatsApp / Instagram Stories). `?kind` defaults to `available`.
+2. Frontend `GET /api/trade/share/<token>/?kind=...` → returns `{ kind, collector: {city, avatar_url}, items: [{sticker_id, number, name, team, image_url, is_special_edition}], count }`.
+3. The page renders the title ("Cromos para intercambiar" / "Cromos buscados"), the collector's city + count, the cromos grid (special editions get a golden ring), and a **"Únete a Albunmanía y haz match"** CTA → `/sign-up`.
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Token expired / invalid | "El enlace expiró o no es válido." |
+| `?kind=wanted` | Title becomes "Cromos buscados" |
+| Loading | "Cargando…" |
+| Guest clicks the CTA | Navigates to `/sign-up` |
 
 ---
 

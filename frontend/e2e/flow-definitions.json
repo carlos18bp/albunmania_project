@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -64,6 +64,14 @@
       "roles": ["collector"],
       "priority": "P2",
       "description": "JWT stored in cookies survives reload; access token refreshed via /api/token/refresh/ when expired",
+      "expectedSpecs": 1
+    },
+    "auth-sign-out": {
+      "name": "Sign out",
+      "module": "auth",
+      "roles": ["collector", "merchant", "web-manager", "admin"],
+      "priority": "P2",
+      "description": "Authenticated user clicks 'Cerrar sesión' (Header or /dashboard); authStore.signOut() clears the JWT cookies and the auth guard sends them to /sign-in",
       "expectedSpecs": 1
     },
     "catalog-grid-filters": {
@@ -136,6 +144,14 @@
       "roles": ["collector"],
       "priority": "P1",
       "description": "/match/[matchId] renders trade items, WhatsApp opt-in toggle, review mini-block; 'Calificar' CTA after completion",
+      "expectedSpecs": 1
+    },
+    "match-shared-list-view": {
+      "name": "View a shared QR list",
+      "module": "match",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "Guest opens /share/[token]?kind=available|wanted (shared from /match/qr); GET /api/trade/share/<token>/ renders the collector's cromos grid (special editions highlighted) + a 'Únete a Albunmanía' CTA; expired/invalid token shows the error state",
       "expectedSpecs": 1
     },
     "whatsapp-optin-per-trade": {
