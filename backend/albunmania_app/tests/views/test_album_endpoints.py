@@ -70,6 +70,24 @@ def test_sticker_list_filters_special_only(api_client, m26, stickers):
 
 
 @pytest.mark.django_db
+def test_sticker_list_special_accepts_truthy_strings(api_client, m26, stickers):
+    """Frontend sends `special=true`; backend must honour it (was: only `special=1`)."""
+    for value in ('true', 'TRUE', 'yes', '1'):
+        response = api_client.get(
+            reverse('album-stickers', args=['mundial-26']) + f'?special={value}'
+        )
+        assert response.json()['count'] == 2, f'special={value!r} should match 2'
+
+
+@pytest.mark.django_db
+def test_sticker_list_special_false_excludes_special(api_client, m26, stickers):
+    response = api_client.get(reverse('album-stickers', args=['mundial-26']) + '?special=false')
+    body = response.json()
+    assert body['count'] == 1  # only Messi
+    assert body['results'][0]['name'] == 'Lionel Messi'
+
+
+@pytest.mark.django_db
 def test_sticker_list_filters_by_special_tier(api_client, m26, stickers):
     response = api_client.get(reverse('album-stickers', args=['mundial-26']) + '?special_tier=zero')
     assert response.json()['count'] == 1

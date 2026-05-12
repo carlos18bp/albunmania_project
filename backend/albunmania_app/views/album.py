@@ -46,7 +46,8 @@ def sticker_list(request, slug: str):
 
     Query params:
       team        — exact match
-      special     — '1' to keep only special editions
+      special     — '1', 'true', 'yes' to keep only special editions;
+                    '0', 'false', 'no' to exclude them
       special_tier — gold/metallic/brand/zero (filter by tier)
       number      — exact match
       q           — full-text-ish search on name + team + number
@@ -62,8 +63,11 @@ def sticker_list(request, slug: str):
     if team:
         qs = qs.filter(team__iexact=team)
 
-    if request.query_params.get('special') == '1':
+    special_param = (request.query_params.get('special') or '').strip().lower()
+    if special_param in ('1', 'true', 'yes'):
         qs = qs.filter(is_special_edition=True)
+    elif special_param in ('0', 'false', 'no'):
+        qs = qs.filter(is_special_edition=False)
 
     tier = request.query_params.get('special_tier')
     if tier:
