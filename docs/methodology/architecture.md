@@ -1,7 +1,7 @@
 # Architecture — Albunmanía
 
-> Snapshot 2026-05-12. Refleja Release 01 (14 épicas) + "Bloque D" (4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios) + "Bloque E" (4 GAPS P3: presencia "en línea ahora"/Live Badge, Mapa de Coleccionistas, búsqueda predictiva con dropdown, GeoIP2 por IP) + validación E2E + paquete `deploy/staging/`. **Los 8 GAPS de la auditoría de completitud están cerrados.**
-> Counts: 19 models, 14 services, 21 view modules, 21 url modules (~66 `path()`), 12 migrations. Tests: 381 backend / 375 frontend unit / ~74 E2E.
+> Snapshot 2026-05-12. Refleja Release 01 (14 épicas) + "Bloque D" (4 GAPS P2: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios) + "Bloque E" (4 GAPS P3: presencia "en línea ahora"/Live Badge, Mapa de Coleccionistas, búsqueda predictiva con dropdown, GeoIP2 por IP) + "Bloque F" (limpieza + hardening: build verde, podadas las rutas/auth vestigiales del template, push de match → tarea Huey, filtros disponibilidad/proximidad en el catálogo, cobertura ~94%) + validación E2E + paquete `deploy/staging/`. **Los 8 GAPS de la auditoría de completitud están cerrados.**
+> Counts: 19 models, 14 services, 21 view modules, 21 url modules (~66 `path()`), 12 migrations. Tests: 394 backend (cobertura ~94%) / 375 frontend unit / ~74 E2E.
 
 ## 1. System overview
 

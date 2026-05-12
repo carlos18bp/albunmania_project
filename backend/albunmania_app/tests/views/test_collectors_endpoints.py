@@ -39,6 +39,31 @@ def test_map_requires_authentication():
 
 
 @pytest.mark.django_db
+def test_map_rejects_invalid_limit():
+    me = _collector('me@example.com')
+    res = _client(me).get(reverse('collectors-map'), {'limit': 'abc'})
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert res.json()['error'] == 'invalid_limit'
+
+
+@pytest.mark.django_db
+def test_map_rejects_invalid_album_id():
+    me = _collector('me@example.com')
+    res = _client(me).get(reverse('collectors-map'), {'album_id': 'not-a-number'})
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert res.json()['error'] == 'invalid_album_id'
+
+
+@pytest.mark.django_db
+def test_map_rejects_invalid_geo_params():
+    me = _collector('me@example.com')
+    _collector('other@example.com', lat=4.6, lng=-74.0)  # so the bbox/haversine path runs
+    res = _client(me).get(reverse('collectors-map'), {'lat': 'x', 'lng': 'y', 'radius_km': 'z'})
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert res.json()['error'] == 'invalid_geo_params'
+
+
+@pytest.mark.django_db
 def test_map_returns_collectors_with_a_location():
     me = _collector('me@example.com')
     with_loc = _collector('a@example.com', lat=4.65, lng=-74.07, city='Bogotá', online=True)

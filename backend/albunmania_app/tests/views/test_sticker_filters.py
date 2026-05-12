@@ -126,6 +126,22 @@ def test_nearby_without_geo_and_no_profile_location_is_400(album, stickers):
 
 
 @pytest.mark.django_db
+def test_nearby_rejects_non_numeric_lat_lng(album, stickers):
+    me = User.objects.create_user(email='me@example.com', password='pw')
+    res = _client(me).get(_url(), {'nearby': 'true', 'lat': 'x', 'lng': 'y'})
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert res.json()['error'] == 'invalid_geo_params'
+
+
+@pytest.mark.django_db
+def test_nearby_rejects_non_numeric_radius(album, stickers):
+    me = _located('me@example.com', 4.65, -74.07)
+    res = _client(me).get(_url(), {'nearby': 'true', 'radius_km': 'banana'})
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert res.json()['error'] == 'invalid_geo_params'
+
+
+@pytest.mark.django_db
 def test_nearby_keeps_only_stickers_a_nearby_collector_offers(album, stickers):
     me = User.objects.create_user(email='me@example.com', password='pw')
     s1, s2, s3 = stickers

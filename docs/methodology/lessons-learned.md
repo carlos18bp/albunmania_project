@@ -469,3 +469,6 @@ Evita mockear `@/lib/services/http` y manejar promesas no-resueltas; las accione
 
 ### `services/__init__.py` re-exportaba algo que se borró
 - Al eliminar `services/email_service.py` hubo que vaciar `services/__init__.py` (re-exportaba `EmailService`) — un `__init__.py` que re-exporta es un acoplamiento oculto: `grep` por el símbolo, no solo por el archivo, antes de borrar.
+
+### La cobertura backend ya estaba alta — los reportes "viejos" engañan
+- El plan de Bloque F apuntaba a "subir cobertura del ~57% al ~65-70%" basándose en cifras del reporte de la época pre-Bloque-D. Al correr `pytest --cov` completo de verdad: **~93% global**, y los módulos "más bajos" en 86–90% (no 20-30%). Los ~50 tests añadidos en Bloques D/E/F (presence, collectors, geo, notification, report, tasks, sticker_filters, …) ya habían movido la aguja. Lección: **no planificar trabajo de cobertura sobre cifras de un reporte viejo** — correr `pytest --cov` actual primero; y ojo con que un `pytest` *parcial* (solo unos test files) imprime un reporte de cobertura engañosamente bajo (sólo de lo que corrió), no del proyecto. F5 acabó siendo 1 tanda corta de ramas-de-error en los archivos más bajos, no 2 tandas.

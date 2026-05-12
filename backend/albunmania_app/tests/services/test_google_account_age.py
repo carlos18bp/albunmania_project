@@ -136,3 +136,57 @@ def test_returns_false_when_metadata_sources_empty():
 
     assert ok is False
     assert age == -1
+
+
+@pytest.mark.django_db
+def test_returns_false_when_create_time_is_malformed():
+    """A non-empty but unparseable createTime is treated as missing."""
+    with patch(
+        'albunmania_app.services.google_account_age.requests.get',
+        return_value=_people_response('not-a-real-timestamp'),
+    ):
+        ok, age = verify_account_age('access-token')
+
+    assert ok is False
+    assert age == -1
+
+
+@pytest.mark.django_db
+def test_returns_false_on_non_json_body():
+    class NonJson:
+        status_code = 200
+        text = '<html>not json</html>'
+
+        def json(self):
+            raise ValueError('No JSON object could be decoded')
+
+    with patch(
+        'albunmania_app.services.google_account_age.requests.get',
+        return_value=NonJson(),
+    ):
+        ok, age = verify_account_age('access-token')
+
+    assert ok is False
+    assert age == -1
+
+
+@pytest.mark.django_db
+def test_uses_the_earliest_create_time_across_sources():
+    class MultiSource:
+        status_code = 200
+        text = ''
+
+        def json(self):
+            return {'metadata': {'sources': [
+                {'createTime': _iso_n_days_ago(10)},   # too young on its own
+                {'createTime': _iso_n_days_ago(400)},  # the earliest → should be used
+            ]}}
+
+    with patch(
+        'albunmania_app.services.google_account_age.requests.get',
+        return_value=MultiSource(),
+    ):
+        ok, age = verify_account_age('access-token')
+
+    assert ok is True
+    assert age >= MIN_ACCOUNT_AGE_DAYS

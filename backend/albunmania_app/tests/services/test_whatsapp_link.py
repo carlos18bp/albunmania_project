@@ -56,3 +56,17 @@ def test_returns_none_when_peer_has_no_whatsapp(setup):
 def test_returns_none_when_viewer_not_participant(setup):
     other = User.objects.create_user(email='outsider@x.com', password='pw')
     assert build_whatsapp_link(setup['trade'], viewer_id=other.id) is None
+
+
+@pytest.mark.django_db
+def test_one_directional_trade_renders_dash_for_the_empty_side(setup):
+    """A trade where the viewer only gives → '—' for the side they receive."""
+    a, b = setup['a'], setup['b']
+    trade = setup['trade']
+    only_one_id = trade.items[0]['sticker_id']
+    trade.items = [{'from_user': a.id, 'to_user': b.id, 'sticker_id': only_one_id}]
+    trade.save(update_fields=['items'])
+
+    text = parse_qs(urlparse(build_whatsapp_link(trade, viewer_id=a.id)).query)['text'][0]
+    assert f'Yo te doy: #{Sticker.objects.get(id=only_one_id).number}' in text
+    assert 'Yo busco: —' in text
