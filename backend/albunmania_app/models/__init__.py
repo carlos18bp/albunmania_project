@@ -15,6 +15,7 @@ from .ad_campaign import AdCampaign
 from .ad_creative import AdCreative
 from .ad_impression import AdClick, AdImpression
 from .review import REVIEW_TAGS, Review, ReviewReport
+from .push_subscription import PushSubscription
 
 __all__ = [
     'User',
@@ -37,4 +38,5 @@ __all__ = [
     'Review',
     'ReviewReport',
     'REVIEW_TAGS',
+    'PushSubscription',
 ]

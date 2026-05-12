@@ -6,7 +6,8 @@ from django.conf import settings
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import MerchantProfile, Profile, Review, User
+from .models import Match, MerchantProfile, Profile, Review, User
+from .services.push_notify import build_match_mutual_payload, send_to as push_send_to
 from .services.review_aggregates import recompute_for
 
 
@@ -48,3 +49,25 @@ def recompute_aggregates_on_save(sender, instance: Review, **kwargs):
 @receiver(post_delete, sender=Review)
 def recompute_aggregates_on_delete(sender, instance: Review, **kwargs):
     recompute_for(instance.reviewee_id)
+
+
+@receiver(post_save, sender=Match)
+def push_on_mutual_match(sender, instance: Match, created: bool, **kwargs):
+    """Notify both participants when a Match flips into mutual.
+
+    Best-effort — push errors are logged inside push_notify.send_to and
+    swallowed. We only fire on create + status==mutual to avoid sending
+    on every Match save (status updates happen often).
+    """
+    if not created or instance.status != Match.Status.MUTUAL:
+        return
+
+    User = type(instance.user_a)
+    pair = [instance.user_a, instance.user_b]
+    for me in pair:
+        peer = pair[1] if me is pair[0] else pair[0]
+        payload = build_match_mutual_payload(
+            match_id=instance.id,
+            other_user_email=peer.email,
+        )
+        push_send_to(me, payload)

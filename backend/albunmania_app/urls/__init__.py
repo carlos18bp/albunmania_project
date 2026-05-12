@@ -19,4 +19,5 @@ urlpatterns = [
     path('', include('albunmania_app.urls.review')),
     path('', include('albunmania_app.urls.admin_users')),
     path('', include('albunmania_app.urls.analytics')),
+    path('', include('albunmania_app.urls.push')),
 ]

@@ -1,6 +1,21 @@
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+
+
+@pytest.fixture(autouse=True)
+def _bypass_hcaptcha(monkeypatch):
+    """Force the hCaptcha service into bypass mode for the whole suite.
+
+    The captcha service treats an empty `HCAPTCHA_SECRET` as "dev mode"
+    and short-circuits verification to True. With a real (or test-key)
+    secret in the active .env, every test that POSTs through the auth
+    endpoints would otherwise hit the live hCaptcha siteverify URL with
+    a stub token and get a 400. Unsetting the secret here keeps the
+    auth tests deterministic and offline.
+    """
+    monkeypatch.setattr(settings, 'HCAPTCHA_SECRET', '')
 
 
 @pytest.fixture

@@ -268,6 +268,14 @@ HCAPTCHA_SECRET = os.getenv('DJANGO_HCAPTCHA_SECRET', '')
 # WhatsApp deep link base (used by Match WhatsApp opt-in flow in Epic 4).
 WHATSAPP_DEEP_LINK_BASE = os.getenv('WHATSAPP_DEEP_LINK_BASE', 'https://wa.me/')
 
+# VAPID keys for Web Push (Epic 9). Generate with `vapid --gen` and load
+# from env. Both keys are base64url-encoded raw bytes (uncompressed point
+# for the public key, 32-byte scalar for the private). pywebpush accepts
+# the b64url private key directly via vapid_private_key=.
+VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY', '')
+VAPID_CLAIMS_EMAIL = os.getenv('VAPID_CLAIMS_EMAIL', 'admin@albunmania.co')
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------

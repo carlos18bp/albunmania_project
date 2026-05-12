@@ -13,8 +13,9 @@ from albunmania_app.views.captcha_views import verify_recaptcha
 
 @pytest.mark.django_db
 def test_get_site_key_returns_configured_key(api_client, settings):
-    """Return the reCAPTCHA site key from settings."""
-    settings.RECAPTCHA_SITE_KEY = 'test-site-key'
+    """Return the hCaptcha site key from settings."""
+    settings.HCAPTCHA_SITEKEY = 'test-site-key'
+    settings.RECAPTCHA_SITE_KEY = ''
     url = reverse('captcha-site-key')
     response = api_client.get(url)
 
@@ -24,7 +25,8 @@ def test_get_site_key_returns_configured_key(api_client, settings):
 
 @pytest.mark.django_db
 def test_get_site_key_returns_empty_when_unset(api_client, settings):
-    """Return empty string when reCAPTCHA site key is not configured."""
+    """Return empty string when neither key is configured."""
+    settings.HCAPTCHA_SITEKEY = ''
     settings.RECAPTCHA_SITE_KEY = ''
     url = reverse('captcha-site-key')
     response = api_client.get(url)
