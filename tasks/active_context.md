@@ -6,7 +6,7 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-12
-**Foco:** Auditoría de Release 01 contra el `/new-feature-checklist` — **completada**, las 4 fases: (1) docs E2E + flujos reescritos + tags + sin `waitForTimeout`; (2) tests backend `email_service`/`push_notify`; (3) seeds de los modelos sin fixture en `create_fake_data`; (4) ~20 tests de componentes nuevos (cobertura de componentes ~90%) + borrado de `Footer.tsx` (dead code). El Memory Bank refresh quedó cerrado en el commit `30479fd`. Commits de la auditoría: `9f99425`, `9419fd7`, `aa9fc6c`, `d8896e8`, `82683c4`, `6b44f50`, `88cfbf4` (todos pushed).
+**Foco:** Auditoría de completitud del Release 01 — reconciliado `docs/release/01-release-checklist.md` con el codebase real (53→133 ítems `[x]`, comentarios inline con trazabilidad) + actualizado `tasks_plan.md`. **8 GAPS** detectados (descritos como "incluidos" pero NO construidos): centro de notificaciones + modelo Notification, modelo Report general + moderación de usuarios/trades, presencia "en línea ahora"/Live Badge, página /profile, mapa de coleccionistas, páginas T&C/privacidad/FAQ + componente FAQ, GeoIP2 por IP, dropdown de búsqueda predictiva. Antes: `/new-feature-checklist` audit completado (4 fases, commits `9f99425`→`51588d2`) + `/e2e-user-flows-check` (registro de `auth-sign-out` + `match-shared-list-view`). Memory Bank refresh: commit `30479fd`.
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado del producto

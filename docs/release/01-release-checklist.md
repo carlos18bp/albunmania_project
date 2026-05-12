@@ -1,5 +1,16 @@
 # Propuesta de Plataforma Mundialista (Fase 1) — Albunmanía
-> Cliente: ProjectApp · Estado: accepted · Idioma: es
+> Cliente: ProjectApp · Estado: implementado (14 épicas) + validado E2E + paquete de deploy listo · Idioma: es
+
+<!--
+ESTADO DE COMPLETITUD (auditoría 2026-05-12) — leyenda de los comentarios inline de este archivo:
+  [x]                    = implementado y verificado en el codebase.
+  [ ] + <!-- V2: ... -->            = dentro del alcance del Release 01 pero diferido a V2 (parcial o no hecho).
+  [ ] + <!-- NO IMPLEMENTADO: ... -->= descrito como "incluido" en la propuesta pero NO construido en el Release 01 (GAP — requiere decisión).
+  [ ] + <!-- fuera de Release 01 -->= módulo opcional con costo extra (➕/💰) o visión v2 — intencionalmente fuera de alcance.
+  <!-- desviación: ... -->          = implementado pero difiere del nombre/forma descrito en la propuesta (funciona igual).
+Pendientes operacionales para "aceptado": deploy real al VPP por ProjectApp + creds reales (Google OAuth, hCaptcha, VAPID, DJANGO_SECRET_KEY, MySQL pwd). Ver deploy/staging/RUNBOOK.md.
+GAPS detectados: ver §"Vistas" (Notificaciones, Perfil, Mapa de Coleccionistas, T&C/Privacidad/FAQ), §"Componentes" (Live Badge, FAQ), §"Funcionalidades" (Geolocalización por IP, Reportes y Moderación general), §"Modelos de datos" (Notification, Report general).
+-->
 
 ---
 
@@ -37,151 +48,158 @@ Sin embargo, en Colombia y la región el intercambio sigue ocurriendo de forma f
 
 Cada vista es una pantalla o sección de Albunmanía. Su propósito es guiar al coleccionista por toda la experiencia: desde el descubrimiento hasta el match y el intercambio.
 
-- [ ] **Inicio (Landing)** — Hero claro con la propuesta de valor de Albunmanía, llamado a la acción para registrarse y vista previa del catálogo del álbum sin necesidad de login.
+- [x] **Inicio (Landing)** — Hero claro con la propuesta de valor de Albunmanía, llamado a la acción para registrarse y vista previa del catálogo del álbum sin necesidad de login. <!-- app/page.tsx — hero + CTAs + SponsorSplash + BannerSlot + disclaimer footer -->
+
 
 - [x] **Login con Google + Captcha** — Autenticación vía Google OAuth con captcha integrado. Solo se permiten cuentas Google verificadas con más de 30 días de antigüedad.
 
 - [x] **Onboarding** — Flujo guiado para configurar el álbum activo, permisos de geolocalización (con explicación clara) y preferencias de notificación.
 
-- [ ] **Dashboard del Coleccionista** — Vista principal del usuario con resumen de cromos pegados, faltantes, repetidos y matches sugeridos por proximidad.
+- [x] **Dashboard del Coleccionista** — Vista principal del usuario con resumen de cromos pegados, faltantes, repetidos y matches sugeridos por proximidad. <!-- app/dashboard/page.tsx — StatCard (% completo / pegadas / repetidas / semana / racha / ETA) + RankingList + sección Notificaciones (push opt-in). Los "matches sugeridos" viven en /match, no embebidos en el dashboard. -->
 
-- [ ] **Mis Cromos (los que tengo)** — Módulo donde el usuario marca los cromos que ya pegó y los repetidos disponibles para intercambiar.
+- [x] **Mis Cromos (los que tengo)** — Módulo donde el usuario marca los cromos que ya pegó y los repetidos disponibles para intercambiar. <!-- implementado vía /catalog/[slug] + contador 0/1/2+ por toque (UserSticker.count); no hay vista "Mis Cromos" separada — el filtrado por estado de inventario en la grilla queda pendiente (V2). -->
 
-- [ ] **Faltantes (los que necesito)** — Lista de cromos que el usuario aún no tiene, con sugerencias automáticas de matches cercanos disponibles.
+- [x] **Faltantes (los que necesito)** — Lista de cromos que el usuario aún no tiene, con sugerencias automáticas de matches cercanos disponibles. <!-- los faltantes (UserSticker.count==0) alimentan el feed de /match; no hay vista "Faltantes" separada ni filtro "sólo faltantes" en el catálogo (V2). -->
 
-- [ ] **Buscador General con Filtros** — Catálogo completo del álbum con filtros por equipo, número, jugador, disponibilidad y radio de proximidad. Incluye paginación y vista de tarjetas.
+- [x] **Buscador General con Filtros** — Catálogo completo del álbum con filtros por equipo, número, jugador, disponibilidad y radio de proximidad. Incluye paginación y vista de tarjetas. <!-- /catalog/[slug] + CatalogFilters (q, team, special) — filtra server-side vía GET /api/albums/<slug>/stickers/. Falta el filtro "disponibilidad" (por estado de inventario) y "radio de proximidad"; la búsqueda predictiva con dropdown de sugerencias también (ver §Funcionalidades). -->
 
-- [ ] **Match (Swipe)** — Vista estilo Tinder donde el usuario ve cromos disponibles cerca y desliza para indicar interés. Cada card de coleccionista muestra un preview compacto de reputación (★ 4.8 (23)) para reducir no-shows. Cuando hay match mutuo, se habilita el intercambio.
+- [x] **Match (Swipe)** — Vista estilo Tinder donde el usuario ve cromos disponibles cerca y desliza para indicar interés. Cada card de coleccionista muestra un preview compacto de reputación (★ 4.8 (23)) para reducir no-shows. Cuando hay match mutuo, se habilita el intercambio. <!-- /match — MatchFeed + SwipeCard (preview de reputación cacheada en Profile) + MutualMatchModal + banner CPM 1/5 swipes. -->
 
-- [ ] **Mapa de Coleccionistas** — Vista de mapa con coleccionistas activos cerca del usuario (ubicación aproximada por privacidad), útil para encontrar parches de intercambio.
+- [ ] **Mapa de Coleccionistas** — Vista de mapa con coleccionistas activos cerca del usuario (ubicación aproximada por privacidad), útil para encontrar parches de intercambio. <!-- NO IMPLEMENTADO: existe el mapa de *comerciantes* (/merchants), pero no un mapa de *coleccionistas*. Requiere exponer ubicación aproximada de usuarios + (idealmente) el indicador "en línea" — ninguno construido. -->
 
-- [ ] **Perfil del Usuario** — Página personal del coleccionista con estadísticas (% del álbum completo, intercambios realizados), datos de contacto opt-in, configuración de cuenta y una pestaña dedicada de Reseñas: rating promedio (★ 1–5), distribución por estrellas, tags más recibidos, listado paginado con filtro por estrellas y respuesta pública del calificado cuando aplica.
+- [ ] **Perfil del Usuario** — Página personal del coleccionista con estadísticas (% del álbum completo, intercambios realizados), datos de contacto opt-in, configuración de cuenta y una pestaña dedicada de Reseñas: rating promedio (★ 1–5), distribución por estrellas, tags más recibidos, listado paginado con filtro por estrellas y respuesta pública del calificado cuando aplica. <!-- NO IMPLEMENTADO como página: no hay ruta /profile. Los componentes existen (ReviewSummary, ReviewCard, StarRating) y los endpoints (users/<id>/rating-summary/, users/<id>/reviews/) también, pero falta la página que los monte (perfil + pestaña Reseñas + config de cuenta). -->
 
-- [ ] **Notificaciones** — Centro de notificaciones con matches nuevos, mensajes y alertas de actividad. Sincronizado con notificaciones push de la PWA.
+- [ ] **Notificaciones** — Centro de notificaciones con matches nuevos, mensajes y alertas de actividad. Sincronizado con notificaciones push de la PWA. <!-- NO IMPLEMENTADO: no hay modelo Notification ni vista "centro de notificaciones". Sí está el push Web (PushSubscription + push_notify + opt-in en /dashboard), pero no el listado in-app de notificaciones. -->
 
-- [ ] **Términos y Condiciones** — Documento legal que explica el modelo de monetización por anuncios, política de datos, edad mínima y aclaración de NO afiliación oficial con FIFA o Panini.
+- [ ] **Términos y Condiciones** — Documento legal que explica el modelo de monetización por anuncios, política de datos, edad mínima y aclaración de NO afiliación oficial con FIFA o Panini. <!-- NO IMPLEMENTADO como página: el footer de app/layout.tsx incluye la línea "No afiliado oficialmente con FIFA o Panini" pero no hay página /terminos con el documento legal completo. -->
 
-- [ ] **Política de Privacidad** — Detalle del tratamiento de datos personales conforme a la Ley 1581 de 2012, incluyendo geolocalización, datos de Google y compartición de WhatsApp.
+- [ ] **Política de Privacidad** — Detalle del tratamiento de datos personales conforme a la Ley 1581 de 2012, incluyendo geolocalización, datos de Google y compartición de WhatsApp. <!-- NO IMPLEMENTADO como página: no hay ruta /privacidad. -->
 
-- [ ] **Centro de Ayuda / FAQ** — Preguntas frecuentes sobre cómo intercambiar, cómo funciona la verificación, qué hacer ante un 'no-show' y cómo reportar contenido inapropiado.
+- [ ] **Centro de Ayuda / FAQ** — Preguntas frecuentes sobre cómo intercambiar, cómo funciona la verificación, qué hacer ante un 'no-show' y cómo reportar contenido inapropiado. <!-- NO IMPLEMENTADO como página: no hay ruta /ayuda ni componente FAQ. El Manual interactivo (/manual) cubre parte del contenido pero está orientado al equipo de ProjectApp, no al coleccionista. -->
 
-- [ ] **Match QR Presencial** — En cambiatones físicos (Unicentro, El Tesoro, calle 19), los coleccionistas escanean el QR del otro y la app cruza listas en segundos para identificar intercambios posibles. Funciona offline.
+- [x] **Match QR Presencial** — En cambiatones físicos (Unicentro, El Tesoro, calle 19), los coleccionistas escanean el QR del otro y la app cruza listas en segundos para identificar intercambios posibles. Funciona offline. <!-- /match/qr — pestaña "Escanear" (@zxing/browser, QRScanner) + scan/confirm; compute_offline_cross corre en cliente sobre inventario cacheado en IndexedDB. -->
 
-- [ ] **Mis QRs para Compartir** — Genera dos QRs distintos: uno con tus cromos disponibles para intercambiar y otro con tu lista de faltantes. Compartibles directamente por WhatsApp, Instagram Stories o cualquier red.
+- [x] **Mis QRs para Compartir** — Genera dos QRs distintos: uno con tus cromos disponibles para intercambiar y otro con tu lista de faltantes. Compartibles directamente por WhatsApp, Instagram Stories o cualquier red. <!-- /match/qr "Mi QR" (QRDisplay, token HMAC TTL 24h) + página pública /share/[token]?kind=available|wanted. -->
 
-- [ ] **Dashboard del Comerciante** — Vista exclusiva para papelerías, kioscos, librerías y distribuidores oficiales del álbum: gestión de stock, listing en mapa de '¿Dónde comprar sobres cerca?', y promoción de cambiatones in-store.
+- [x] **Dashboard del Comerciante** — Vista exclusiva para papelerías, kioscos, librerías y distribuidores oficiales del álbum: gestión de stock, listing en mapa de '¿Dónde comprar sobres cerca?', y promoción de cambiatones in-store. <!-- /merchants/me — MerchantDashboardForm (nombre, tipo, dirección, stock declarado) + badge de suscripción. "Promoción de cambiatones in-store" no se construyó como tal. -->
 
-- [ ] **Ranking de Coleccionistas por Ciudad** — Leaderboard local: top coleccionistas en Bogotá, Medellín, Cali, Barranquilla. Gamifica la experiencia y revela influencers naturales para alianzas con marcas.
+- [x] **Ranking de Coleccionistas por Ciudad** — Leaderboard local: top coleccionistas en Bogotá, Medellín, Cali, Barranquilla. Gamifica la experiencia y revela influencers naturales para alianzas con marcas. <!-- RankingList en /dashboard — GET /api/stats/ranking/?city= (stats_engine.city_ranking). -->
 
-- [ ] **Detalle de Intercambio (Trade)** — Vista dedicada del intercambio confirmado entre dos coleccionistas. Lista los cromos que aporta cada parte, datos de contacto vía WhatsApp con opt-in y, en una zona lateral no invasiva, un mini-bloque de reseñas por participante (★ promedio + número de reseñas) que abre un drawer al hacer clic. Tras marcar el trade como completado se habilita el CTA 'Calificar al coleccionista'.
+- [x] **Detalle de Intercambio (Trade)** — Vista dedicada del intercambio confirmado entre dos coleccionistas. Lista los cromos que aporta cada parte, datos de contacto vía WhatsApp con opt-in y, en una zona lateral no invasiva, un mini-bloque de reseñas por participante (★ promedio + número de reseñas) que abre un drawer al hacer clic. Tras marcar el trade como completado se habilita el CTA 'Calificar al coleccionista'. <!-- /match/[matchId] — trade-items + WhatsAppOptInToggle + ReviewWidget + ReviewDrawer + CTA "Calificar" post-completado. -->
 
 ### Componentes
 
 Componentes visuales y funcionales reutilizados en toda la plataforma para mantener coherencia y optimizar el desarrollo.
 
-- [ ] **Encabezado (Header)** — Logo de Albunmanía, navegación principal, indicador de notificaciones, avatar del usuario y selector de álbum activo.
+- [x] **Encabezado (Header)** — Logo de Albunmanía, navegación principal, indicador de notificaciones, avatar del usuario y selector de álbum activo. <!-- components/layout/Header.tsx — logo + nav + slot auth (Cerrar sesión) + patrón mounted. SIN indicador de notificaciones ni selector de álbum activo (no implementados — el álbum activo se fija en el onboarding). -->
 
-- [ ] **Pie de página (Footer)** — Enlaces a términos, privacidad, ayuda, redes sociales y aclaración de NO afiliación con FIFA o Panini.
+- [x] **Tarjeta de Cromo (Sticker Card)** — Componente visual reutilizable que muestra cromo, número, equipo y estado (poseído / faltante / repetido). <!-- components/catalog/StickerCard.tsx (data-state missing/owned/repeated, data-count). -->
 
-- [ ] **Tarjeta de Cromo (Sticker Card)** — Componente visual reutilizable que muestra cromo, número, equipo y estado (poseído / faltante / repetido).
+- [x] **Tarjeta de Match (Swipe Card)** — Tarjeta interactiva con animación de swipe, datos del coleccionista y cromos involucrados en el potencial intercambio. <!-- components/match/SwipeCard.tsx. -->
 
-- [ ] **Tarjeta de Match (Swipe Card)** — Tarjeta interactiva con animación de swipe, datos del coleccionista y cromos involucrados en el potencial intercambio.
+- [x] **Banner CPM (Home + Feed)** — Espacios publicitarios estándar en home y entre swipes del feed, con cobranza por cada 1.000 impresiones. Diseñados para ser elegantes y no romper la experiencia comunitaria. Frecuencia controlada (máximo 1 cada 5 swipes). <!-- components/ads/BannerSlot.tsx — GET /api/ads/serve/?slot= + /api/ads/click/<id>/ (302). Frequency cap 1/5 swipes en adStore.noteSwipe(). -->
 
-- [ ] **Banner CPM (Home + Feed)** — Espacios publicitarios estándar en home y entre swipes del feed, con cobranza por cada 1.000 impresiones. Diseñados para ser elegantes y no romper la experiencia comunitaria. Frecuencia controlada (máximo 1 cada 5 swipes).
+- [x] **Espacio Presenting Sponsor** — Posición premium reservada para la marca anchor que financia el lanzamiento. Logo en splash al abrir la app, header persistente discreto, y branding sutil en notificaciones oficiales. Solo 1 marca activa a la vez. <!-- components/sponsor/{SponsorSplash,SponsorHeaderBand,SponsorThemeProvider}.tsx — GET /api/sponsor/active/. "Branding sutil en notificaciones" → V2 (ver §Épicas). -->
 
-- [ ] **Espacio Presenting Sponsor** — Posición premium reservada para la marca anchor que financia el lanzamiento. Logo en splash al abrir la app, header persistente discreto, y branding sutil en notificaciones oficiales. Solo 1 marca activa a la vez.
+- [x] **Widget de Reseñas** — Componente compacto que muestra el rating promedio, número de reseñas y badges de confianza del usuario. Reutilizable en cabecera de perfil, cards de Match y bloques laterales de la vista de Intercambio. <!-- components/reviews/ReviewWidget.tsx + StarRating.tsx. -->
 
-- [ ] **Widget de Reseñas** — Componente compacto que muestra el rating promedio, número de reseñas y badges de confianza del usuario. Reutilizable en cabecera de perfil, cards de Match y bloques laterales de la vista de Intercambio.
+- [ ] **Preguntas Frecuentes (FAQ)** — Acordeón con respuestas rápidas a dudas comunes de coleccionistas, comerciantes y anunciantes. <!-- NO IMPLEMENTADO: no hay componente FAQ ni vista /ayuda. -->
 
-- [ ] **Preguntas Frecuentes (FAQ)** — Acordeón con respuestas rápidas a dudas comunes de coleccionistas, comerciantes y anunciantes.
+- [ ] **Indicador 'En Línea Ahora' (Live Badge)** — Punto verde visible en perfiles, matches y leaderboards que indica si el otro coleccionista está activo en este momento. Genera urgencia y acelera el cierre del intercambio. <!-- NO IMPLEMENTADO: no hay sistema de presencia (last_seen/is_online, WebSocket/SSE) ni componente Live Badge. -->
 
-- [ ] **Indicador 'En Línea Ahora' (Live Badge)** — Punto verde visible en perfiles, matches y leaderboards que indica si el otro coleccionista está activo en este momento. Genera urgencia y acelera el cierre del intercambio.
+- [x] **Badge de Edición Especial** — Marca visual diferenciada con halo dorado para láminas premium (Mbappé, Cristiano, escudo metalizado de Argentina, lámina 00, ediciones Coca-Cola). Las hace destacar en el catálogo y los matches. <!-- renderizado dentro de StickerCard (data-testid="special-badge", halo dorado); no es componente separado. -->
 
-- [ ] **Badge de Edición Especial** — Marca visual diferenciada con halo dorado para láminas premium (Mbappé, Cristiano, escudo metalizado de Argentina, lámina 00, ediciones Coca-Cola). Las hace destacar en el catálogo y los matches.
+- [x] **QR Compartible Animado** — Componente que genera el QR personal del usuario (de cromos disponibles o faltantes) con animación elegante, listo para compartir o escanear cara a cara. <!-- components/match/QRDisplay.tsx (qrcode.react). La "animación elegante" es mínima. -->
 
-- [ ] **QR Compartible Animado** — Componente que genera el QR personal del usuario (de cromos disponibles o faltantes) con animación elegante, listo para compartir o escanear cara a cara.
+- [x] **Stat Card con Racha y ETA** — Tarjeta visual que muestra racha de días consecutivos, % del álbum completo, y fecha estimada de finalización. Refuerza la retención diaria de los coleccionistas. <!-- components/stats/StatCard.tsx — 6 tiles (% completo / pegadas / repetidas / semana / racha / ETA). -->
 
-- [ ] **Stat Card con Racha y ETA** — Tarjeta visual que muestra racha de días consecutivos, % del álbum completo, y fecha estimada de finalización. Refuerza la retención diaria de los coleccionistas.
+- [x] **Tarjeta de Reseña (Review Card)** — Componente que muestra una reseña individual: avatar y nombre del autor, fecha, estrellas, comentario, tags estructurados (puntual, cromos en buen estado, buena comunicación, no-show, etc.) y, cuando existe, la respuesta pública del calificado. <!-- components/reviews/ReviewCard.tsx. -->
 
-- [ ] **Tarjeta de Reseña (Review Card)** — Componente que muestra una reseña individual: avatar y nombre del autor, fecha, estrellas, comentario, tags estructurados (puntual, cromos en buen estado, buena comunicación, no-show, etc.) y, cuando existe, la respuesta pública del calificado.
+- [x] **Formulario de Reseña Post-Trade** — Formulario de calificación que aparece tras un intercambio confirmado: selector de estrellas (1–5), multi-select de tags predefinidos, comentario opcional (≤500 caracteres) y validación de unicidad por (trade, reviewer). Permite editar la reseña dentro de una ventana de 24 horas. <!-- components/reviews/ReviewForm.tsx — POST /api/trades/<id>/reviews/; PATCH /api/reviews/<id>/ (24h). -->
 
-- [ ] **Formulario de Reseña Post-Trade** — Formulario de calificación que aparece tras un intercambio confirmado: selector de estrellas (1–5), multi-select de tags predefinidos, comentario opcional (≤500 caracteres) y validación de unicidad por (trade, reviewer). Permite editar la reseña dentro de una ventana de 24 horas.
+- [x] **Resumen de Reputación (Rating Summary)** — Bloque visual con promedio destacado, distribución de estrellas en barras 1–5, conteo total y los tags más recibidos por el usuario. Usado como encabezado de la pestaña Reseñas en el perfil. <!-- components/reviews/ReviewSummary.tsx — GET /api/users/<id>/rating-summary/. El componente existe pero la "pestaña Reseñas en el perfil" no (no hay página /profile — ver §Vistas). -->
 
-- [ ] **Resumen de Reputación (Rating Summary)** — Bloque visual con promedio destacado, distribución de estrellas en barras 1–5, conteo total y los tags más recibidos por el usuario. Usado como encabezado de la pestaña Reseñas en el perfil.
+- [x] **Drawer de Reseñas** — Side-sheet lateral no invasivo que se abre al hacer clic en el rating de una contraparte (en Match o en Detalle de Intercambio). Lista paginada con filtro por estrellas. Nunca aparece como modal bloqueante ni preabierto. <!-- components/reviews/ReviewDrawer.tsx — GET /api/users/<id>/reviews/?stars= ; selector con EMPTY_REVIEWS cacheado (evita el loop de Zustand). -->
 
-- [ ] **Drawer de Reseñas** — Side-sheet lateral no invasivo que se abre al hacer clic en el rating de una contraparte (en Match o en Detalle de Intercambio). Lista paginada con filtro por estrellas. Nunca aparece como modal bloqueante ni preabierto.
+- [x] **Pie de página (Footer)** <!-- mínimo: footer inline en app/layout.tsx con "© 2026 Albunmanía · No afiliado oficialmente con FIFA o Panini." — SIN enlaces a T&C/privacidad/ayuda/redes (esas páginas no existen) ni componente Footer reutilizable. --> — Enlaces a términos, privacidad, ayuda, redes sociales y aclaración de NO afiliación con FIFA o Panini.
 
 ### Funcionalidades Específicas
 
 Comportamientos interactivos y reglas de negocio que dan vida a Albunmanía y la diferencian de soluciones genéricas.
 
-- [ ] **PWA Instalable + Web Responsive** — La plataforma funciona como aplicación instalable en el celular del usuario y como sitio web responsive en cualquier dispositivo. Soporta modo offline parcial y notificaciones push.
+- [x] **PWA Instalable + Web Responsive** — La plataforma funciona como aplicación instalable en el celular del usuario y como sitio web responsive en cualquier dispositivo. Soporta modo offline parcial y notificaciones push. <!-- next-pwa (sw.js + sw-push.js, manifest), runtimeCaching catálogo, cruce QR offline (idb-keyval), Web Push (VAPID). -->
 
-- [ ] **Autenticación Google + Captcha + Cuenta Verificada** — Login exclusivo con Google OAuth, captcha anti-bots y validación de cuenta con más de 30 días de antigüedad para reducir falsos perfiles.
+- [x] **Autenticación Google + Captcha + Cuenta Verificada** — Login exclusivo con Google OAuth, captcha anti-bots y validación de cuenta con más de 30 días de antigüedad para reducir falsos perfiles. <!-- /sign-in, /sign-up (Google OAuth implicit flow + hCaptcha); regla 30 días vía Google People API; google_account_age.py. -->
 
-- [ ] **Geolocalización Dual (IP + Browser API)** — Detección automática por IP para ubicación aproximada, complementada con la API del navegador (con permisos explicados al usuario) para mayor precisión.
+- [ ] **Geolocalización Dual (IP + Browser API)** — Detección automática por IP para ubicación aproximada, complementada con la API del navegador (con permisos explicados al usuario) para mayor precisión. <!-- PARCIAL: sólo la rama *browser* (navigator.geolocation en el onboarding + Profile.browser_geo_optin/lat_approx/lng_approx). NO hay GeoIP2 por IP (sin la DB .mmdb ni lookup local). -->
 
-- [ ] **Motor de Match por Proximidad** — Algoritmo que cruza cromos disponibles vs. faltantes y prioriza matches dentro de un radio configurable. Soporta swipe, filtros y orden por relevancia.
+- [x] **Motor de Match por Proximidad** — Algoritmo que cruza cromos disponibles vs. faltantes y prioriza matches dentro de un radio configurable. Soporta swipe, filtros y orden por relevancia. <!-- match_engine.py — bounding-box prefilter + haversine inline + cruce de inventarios; GET /api/match/feed/?radius_km=. -->
 
-- [ ] **Integración WhatsApp con Opt-in** — Al confirmarse un match, cada usuario decide si comparte su WhatsApp. Si ambos aceptan, se genera enlace pre-llenado con plantilla de intercambio.
+- [x] **Integración WhatsApp con Opt-in** — Al confirmarse un match, cada usuario decide si comparte su WhatsApp. Si ambos aceptan, se genera enlace pre-llenado con plantilla de intercambio. <!-- TradeWhatsAppOptIn (per-trade) + whatsapp_link.build_whatsapp_link() → wa.me deep link; POST /api/trade/<id>/whatsapp-optin/, GET .../whatsapp-link/. -->
 
-- [ ] **Sistema de Roles y Permisos** — Cuatro roles diferenciados: Coleccionista (usuario final), Comerciante (papelerías, kioscos y distribuidores oficiales con dashboard propio), Web Manager (equipo de ProjectApp para subir anuncios y gestionar marcas), Administrador (gestión global de plataforma y álbumes).
+- [x] **Sistema de Roles y Permisos** — Cuatro roles diferenciados: Coleccionista (usuario final), Comerciante (papelerías, kioscos y distribuidores oficiales con dashboard propio), Web Manager (equipo de ProjectApp para subir anuncios y gestionar marcas), Administrador (gestión global de plataforma y álbumes). <!-- User.Role + Group espejo; User.assign_role(); /admin/* role-gated client + server (_is_admin_or_wm). -->
 
-- [ ] **Arquitectura Multi-Álbum** — Diseño preparado para gestionar múltiples álbumes simultáneamente: Mundial 26, Champions, Copa América, Pokémon, etc. Cada álbum con su propio catálogo y comunidad.
+- [x] **Arquitectura Multi-Álbum** — Diseño preparado para gestionar múltiples álbumes simultáneamente: Mundial 26, Champions, Copa América, Pokémon, etc. Cada álbum con su propio catálogo y comunidad. <!-- Album como tenant lógico (FK desde Sticker/UserSticker/Profile.active_album_id/Match...); sólo 1 álbum (mundial-26) cargado en el seed, pero la arquitectura lo soporta. -->
 
-- [ ] **Sistema de Reseñas y Reputación** — Tras un intercambio confirmado, ambos usuarios pueden calificarse con estrellas (1–5), tags estructurados y un comentario opcional. Cada reseña es única por par (trade, reviewer) y editable durante 24 horas. El calificado puede dejar una respuesta pública. Los agregados (promedio, número total y porcentaje de reseñas positivas) se persisten cacheados en el perfil para preview rápido en cards de Match y en la vista de Intercambio. Incluye moderación con toggle de visibilidad y señalización anti no-show, reduciendo el riesgo percibido al intercambiar con alguien nuevo.
+- [x] **Sistema de Reseñas y Reputación** — Tras un intercambio confirmado, ambos usuarios pueden calificarse con estrellas (1–5), tags estructurados y un comentario opcional. Cada reseña es única por par (trade, reviewer) y editable durante 24 horas. El calificado puede dejar una respuesta pública. Los agregados (promedio, número total y porcentaje de reseñas positivas) se persisten cacheados en el perfil para preview rápido en cards de Match y en la vista de Intercambio. Incluye moderación con toggle de visibilidad y señalización anti no-show, reduciendo el riesgo percibido al intercambiar con alguien nuevo. <!-- Review (unique trade+reviewer, stars 1-5, edit window 24h, reply, is_visible) + ReviewReport; agregados en Profile vía signal post_save/post_delete. -->
 
-- [ ] **Reportes y Moderación** — Los usuarios pueden reportar perfiles, contenido inapropiado o intercambios fallidos. Cola de moderación accesible al rol Administrador.
+- [ ] **Reportes y Moderación** — Los usuarios pueden reportar perfiles, contenido inapropiado o intercambios fallidos. Cola de moderación accesible al rol Administrador. <!-- PARCIAL: sólo existe ReviewReport (reportar *reseñas*) + /admin/moderation para esa cola. NO se puede reportar perfiles de usuario, contenido inapropiado genérico ni intercambios fallidos (no-shows); no hay modelo Report general ni endpoint /reports. -->
 
-- [ ] **Contador Rápido 0/1/2+ por Toque** — UX inspirada en las mejores apps de la categoría: tocá una lámina para marcarla como tenida (1), tocá de nuevo para indicar repetida (2+), mantén presionado para borrar. Velocidad sin selectores ni menús.
+- [x] **Contador Rápido 0/1/2+ por Toque** — UX inspirada en las mejores apps de la categoría: tocá una lámina para marcarla como tenida (1), tocá de nuevo para indicar repetida (2+), mantén presionado para borrar. Velocidad sin selectores ni menús. <!-- StickerCard — tap incrementa UserSticker.count (0→1→2+), long-press resetea; bulk sync POST /api/inventory/bulk/ debounced ~2s. -->
 
-- [ ] **Estadísticas Avanzadas** — Racha de días consecutivos coleccionando, % de avance por selección, láminas añadidas en últimos 7 días, fecha estimada de finalización del álbum (ETA), y comparativa con coleccionistas de tu ciudad.
+- [x] **Estadísticas Avanzadas** — Racha de días consecutivos coleccionando, % de avance por selección, láminas añadidas en últimos 7 días, fecha estimada de finalización del álbum (ETA), y comparativa con coleccionistas de tu ciudad. <!-- stats_engine.compute_stats (racha con grace day, weekly velocity, ETA) + city_ranking; GET /api/stats/me/, /api/stats/ranking/. On-demand (Huey nightly → V2). -->
 
-- [ ] **Match QR Presencial (Escaneo Cara a Cara)** — Complementa el match digital: en cambiatones presenciales un coleccionista muestra su QR y el otro escanea. La app cruza listas en segundos identificando todos los intercambios posibles. Funciona 100% offline.
+- [x] **Match QR Presencial (Escaneo Cara a Cara)** — Complementa el match digital: en cambiatones presenciales un coleccionista muestra su QR y el otro escanea. La app cruza listas en segundos identificando todos los intercambios posibles. Funciona 100% offline. <!-- /match/qr — HMAC token (qr_token), @zxing scanner, compute_offline_cross (qr_cross.py) en cliente sobre inventario cacheado en IndexedDB; el server re-corre el cruce como sanity check. -->
 
-- [ ] **Compartir Listas por QR + WhatsApp / Instagram** — Genera dos QRs distintos: cromos disponibles y cromos buscados. Cada uno se comparte con un toque por WhatsApp, Instagram Stories o cualquier red. Cada compartición es marketing orgánico para Albunmanía.
+- [x] **Compartir Listas por QR + WhatsApp / Instagram** — Genera dos QRs distintos: cromos disponibles y cromos buscados. Cada uno se comparte con un toque por WhatsApp, Instagram Stories o cualquier red. Cada compartición es marketing orgánico para Albunmanía. <!-- /match/qr "Mi QR" + página pública /share/[token]?kind=available|wanted (GET /api/trade/share/<token>/) con CTA "Únete a Albunmanía". -->
 
-- [ ] **Onboarding como Invitado** — Los visitantes pueden explorar el catálogo del álbum, marcar progreso temporal y ver matches sugeridos sin registrarse. El login Google verificado se exige solo al iniciar un intercambio. Mejora la conversión visitante → usuario activo.
+- [x] **Onboarding como Invitado** — Los visitantes pueden explorar el catálogo del álbum, marcar progreso temporal y ver matches sugeridos sin registrarse. El login Google verificado se exige solo al iniciar un intercambio. Mejora la conversión visitante → usuario activo. <!-- PARCIAL: el invitado navega /, /catalog/[slug], /manual, /merchants y la página /share/[token] sin login; el login Google se exige al iniciar un trade. PERO /match (feed) es ruta protegida — "ver matches sugeridos sin registrarse" no está. -->
 
-- [ ] **Búsqueda Predictiva con Autocompletado** — Mientras el usuario escribe, el buscador sugiere láminas, jugadores, equipos y coleccionistas con previsualización visual. UX inspirada en CambioCromos pero adaptada al contexto colombiano.
+- [ ] **Búsqueda Predictiva con Autocompletado** — Mientras el usuario escribe, el buscador sugiere láminas, jugadores, equipos y coleccionistas con previsualización visual. UX inspirada en CambioCromos pero adaptada al contexto colombiano. <!-- PARCIAL: existe el endpoint GET /api/albums/<slug>/search/ (top-10, payload mínimo) + albumStore.searchStickers() + debounce 250ms en CatalogFilters; el catálogo filtra server-side la grilla, pero NO hay un *dropdown de sugerencias con previsualización* (ni sugerencia de coleccionistas). El Manual SÍ tiene buscador con dropdown (ManualSearch). -->
 
-- [ ] **Indicador en Vivo de Usuarios Activos** — Muestra cuántos coleccionistas están activos ahora en tu ciudad y en el catálogo. En perfiles individuales, el badge verde de 'en línea' acelera matches. Crea sensación de comunidad viva.
+- [ ] **Indicador en Vivo de Usuarios Activos** — Muestra cuántos coleccionistas están activos ahora en tu ciudad y en el catálogo. En perfiles individuales, el badge verde de 'en línea' acelera matches. Crea sensación de comunidad viva. <!-- NO IMPLEMENTADO: no hay sistema de presencia (last_seen/is_online, WebSocket/SSE, conteo de activos). -->
 
-- [ ] **Ediciones Especiales Destacadas** — Las láminas premium (Mbappé, Ronaldo, escudo metalizado de Argentina, Lámina 00, edición Coca-Cola) tienen UI diferenciada con halo dorado, valor estimado de mercado y filtro dedicado. Reflejan el comportamiento real de reventa colombiana.
+- [x] **Ediciones Especiales Destacadas** — Las láminas premium (Mbappé, Ronaldo, escudo metalizado de Argentina, Lámina 00, edición Coca-Cola) tienen UI diferenciada con halo dorado, valor estimado de mercado y filtro dedicado. Reflejan el comportamiento real de reventa colombiana. <!-- Sticker.is_special_edition/special_tier/market_value_estimate; StickerCard renderiza el halo + badge; filtro ?special=true en el catálogo. -->
+
 
 ### Módulo Administrativo
 
 Panel administrativo para que el equipo de ProjectApp gestione contenido, los 3 motores de monetización (Presenting Sponsor, Comerciantes, Banners CPM), usuarios y moderación sin depender de desarrollo técnico.
 
-- [ ] **Gestor de Álbumes** — Crear, editar y archivar álbumes (Mundial 26, futuras colecciones). Carga masiva del catálogo de cromos por álbum.
+- [ ] **Gestor de Álbumes** — Crear, editar y archivar álbumes (Mundial 26, futuras colecciones). Carga masiva del catálogo de cromos por álbum. <!-- V2: gestión de álbumes vía Django Admin (Album/Sticker); falta panel propio en /admin + carga masiva por CSV. -->
 
-- [ ] **Gestor de Presenting Sponsor** — Configuración de la marca anchor: logo en splash y header, colores, mensajes en comunicaciones oficiales, branding en eventos. Vigencia configurable y métricas de exposición para reportar al sponsor.
+- [ ] **Gestor de Presenting Sponsor** — Configuración de la marca anchor: logo en splash y header, colores, mensajes en comunicaciones oficiales, branding en eventos. Vigencia configurable y métricas de exposición para reportar al sponsor. <!-- PARCIAL: configuración vía Django Admin (modelo Sponsor: logo/colores/mensaje/vigencia). El render (splash/header/CSS vars) sí está. NO hay panel propio en /admin ni "métricas de exposición para el sponsor" (eso es el item "Reportes de exposición" → V2). -->
 
-- [ ] **Gestor de Comerciantes** — Panel para invitar, aprobar y gestionar papelerías, kioscos y distribuidores oficiales. Asignación del rol Comerciante, validación de credenciales, monitoreo de actividad y publicación del listing geolocalizado en el mapa. Control de suscripciones y pagos mensuales.
+- [ ] **Gestor de Comerciantes** — Panel para invitar, aprobar y gestionar papelerías, kioscos y distribuidores oficiales. Asignación del rol Comerciante, validación de credenciales, monitoreo de actividad y publicación del listing geolocalizado en el mapa. Control de suscripciones y pagos mensuales. <!-- PARCIAL: asignar rol Comerciante vía /admin/users; endpoints merchants/admin/* (aprobar + registrar MerchantSubscriptionPayment) existen; el listing geo en /merchants sí. NO hay un panel propio "Gestor de Comerciantes" dedicado en /admin con UI de aprobación/pagos. -->
 
-- [ ] **Gestor de Banners CPM** — Subida manual de creatividades publicitarias por parte del Web Manager: imagen, texto, enlace, segmentación geográfica, vigencia y presupuesto de impresiones contratadas. Control de rotación entre marcas activas.
+- [ ] **Gestor de Banners CPM** — Subida manual de creatividades publicitarias por parte del Web Manager: imagen, texto, enlace, segmentación geográfica, vigencia y presupuesto de impresiones contratadas. Control de rotación entre marcas activas. <!-- PARCIAL: gestión vía Django Admin (AdCampaign/AdCreative) + endpoints /ads/admin/campaigns/ (listar + stats JSON); la rotación ponderada + frequency cap sí. NO hay panel propio en /admin con formulario de subida de creativas. -->
 
-- [ ] **Gestor de Usuarios y Roles** — Administración de cuentas, asignación de roles (Coleccionista, Comerciante, Web Manager, Administrador) y bloqueo/desbloqueo manual.
+- [x] **Gestor de Usuarios y Roles** — Administración de cuentas, asignación de roles (Coleccionista, Comerciante, Web Manager, Administrador) y bloqueo/desbloqueo manual. <!-- /admin/users — GET /api/admin/users/?q=, PATCH .../role/ (string→User.Role enum, mirror Group), PATCH .../active/ (cannot_block_self). -->
 
-- [ ] **Cola de Moderación** — Gestión de reportes de usuarios, intercambios fallidos y contenido inapropiado, con acciones rápidas (advertir, suspender, banear).
+- [ ] **Cola de Moderación** — Gestión de reportes de usuarios, intercambios fallidos y contenido inapropiado, con acciones rápidas (advertir, suspender, banear). <!-- PARCIAL: /admin/moderation gestiona sólo reportes de *reseñas* (ReviewReport); ocultar reseña vía is_visible. NO hay cola de reportes de usuarios/perfiles ni de intercambios fallidos (no-shows); no hay modelo Report general; el único "ban" es el toggle is_active en /admin/users. -->
 
-- [ ] **Reportes para Sponsor y Anunciantes** — Generación de reportes descargables (PDF/CSV) con impresiones, clics, alcance geográfico y métricas de exposición del Presenting Sponsor. Vital para renovar contratos y vender nuevas marcas.
+- [ ] **Reportes para Sponsor y Anunciantes** — Generación de reportes descargables (PDF/CSV) con impresiones, clics, alcance geográfico y métricas de exposición del Presenting Sponsor. Vital para renovar contratos y vender nuevas marcas. <!-- V2: los datos están en AdImpression/AdClick + endpoint /ads/admin/campaigns/{id}/stats/ (JSON) + /admin/analytics/export.csv; falta el PDF/CSV con branding segmentado por sponsor/anunciante. -->
 
-- [ ] **Moderación de Reseñas** — Cola de reseñas reportadas accesible al rol Administrador. Permite ocultar reseñas sin borrarlas mediante el toggle is_visible, registrar la razón moderada y dejar trazabilidad en el log de auditoría. Las reseñas ocultas siguen contabilizadas para integridad histórica pero no afectan agregados públicos.
+- [x] **Moderación de Reseñas** — Cola de reseñas reportadas accesible al rol Administrador. Permite ocultar reseñas sin borrarlas mediante el toggle is_visible, registrar la razón moderada y dejar trazabilidad en el log de auditoría. Las reseñas ocultas siguen contabilizadas para integridad histórica pero no afectan agregados públicos. <!-- /admin/moderation — ReviewReport (cola) + ocultar vía is_visible (excluye de agregados, mantiene el row). -->
+
 
 ### Módulo de Analítica
 
 Dashboard de métricas comunitarias y publicitarias en tiempo real para entender el comportamiento de Albunmanía y tomar decisiones basadas en datos.
+<!-- analytics_engine.py (7 funciones) + composite GET /api/admin/analytics/overview/ + /admin/analytics page + export.csv. Datos reales para los bloques que dependen de eventos seedeados (AdImpression/AdClick, Match/Trade); "Dispositivos" usa un placeholder hasta que haya tracking de User-Agent. -->
+
 
 - [x] **Cromos Más Buscados y Más Ofertados** — Identifica cuáles son los cromos con mayor demanda y oferta. Útil para medir 'rareza' percibida y planear campañas.
 
 - [x] **Visitantes Nuevos vs. Recurrentes** — Mide la fidelización de la comunidad y evalúa el impacto de notificaciones push sobre el retorno a la plataforma.
 
-- [x] **Dispositivos de la Audiencia** — Cuántos usuarios entran desde móvil, tablet o escritorio. Importante para priorizar la experiencia de la PWA.
+- [x] **Dispositivos de la Audiencia** — Cuántos usuarios entran desde móvil, tablet o escritorio. Importante para priorizar la experiencia de la PWA. <!-- PARCIAL: el bloque "Dispositivos" del dashboard muestra estimaciones placeholder (78/17/5%) marcadas con asterisco hasta que se instrumente el User-Agent. -->
+
 
 - [x] **Mapa de Calor de Actividad** — Visualiza dónde se concentran los coleccionistas activos. Insumo clave para vender publicidad a marcas con presencia local.
 
-- [ ] **Fuentes de Tráfico** — De dónde llegan los usuarios: orgánico, redes sociales, enlaces directos o campañas. Permite invertir mejor en marketing.
+- [ ] **Fuentes de Tráfico** — De dónde llegan los usuarios: orgánico, redes sociales, enlaces directos o campañas. Permite invertir mejor en marketing. <!-- V2: requiere instrumentación UTM + tabla TrafficSource. -->
+
 
 - [x] **Tendencia de Matches e Intercambios** — Evolución de matches generados e intercambios completados en el tiempo. Indicador clave de salud de la comunidad.
 
@@ -193,7 +211,8 @@ Panel de control complementario al módulo de analítica, con indicadores clave 
 
 - [x] **KPIs Publicitarios** — Impresiones, CTR, alcance geográfico y rendimiento por campaña. Métricas vendibles a anunciantes.
 
-- [ ] **Alertas de Rendimiento** — Notificaciones automáticas cuando una campaña cae bajo umbral o un KPI comunitario muestra anomalía.
+- [ ] **Alertas de Rendimiento** — Notificaciones automáticas cuando una campaña cae bajo umbral o un KPI comunitario muestra anomalía. <!-- V2: requiere job Huey nightly + email/push cuando un KPI cruza el umbral. -->
+
 
 - [x] **Exportación de Reportes** — Descarga de reportes en CSV/PDF para compartir con anunciantes, inversionistas o el equipo de ProjectApp.
 
@@ -212,6 +231,8 @@ Wiki interactivo no técnico, con índice navegable y buscador, que describe los
 ---
 
 ## ➕ Módulos adicionales
+
+<!-- TODA esta sección (IA, Conversiones Meta&Google Ads, Gift Cards) está FUERA DEL ALCANCE del Release 01 — son módulos opcionales (➕) no contratados. Los `[ ]` aquí son correctos. -->
 
 ### Integración y Automatización con IA
 
@@ -272,21 +293,26 @@ Creación, venta y canje de tarjetas de regalo digitales con saldo configurable,
 ---
 
 ## 🎁 Incluidos sin costo extra
-- [ ] **Admin Module** — Para que el Web Manager pueda subir anuncios, gestionar roles y administrar álbumes sin depender del equipo de desarrollo.
-- [ ] **Analytics Dashboard** — Para entender el comportamiento de la comunidad: qué cromos son más buscados, dónde se concentra la actividad y cómo crece la base de usuarios.
-- [ ] **Kpi Dashboard Module** — Para tomar decisiones sobre campañas publicitarias y crecimiento de comunidad con datos en tiempo real.
-- [ ] **Manual Module** — Para que cualquier persona del equipo de ProjectApp entienda los flujos de Albunmanía sin sesiones de capacitación.
+- [x] **Admin Module** — Para que el Web Manager pueda subir anuncios, gestionar roles y administrar álbumes sin depender del equipo de desarrollo. <!-- /admin (landing) + /admin/users + /admin/moderation + /admin/analytics. La subida de anuncios y el alta de álbumes se hacen hoy vía Django Admin (paneles propios pendientes — ver §Módulo Administrativo). -->
+- [x] **Analytics Dashboard** — Para entender el comportamiento de la comunidad: qué cromos son más buscados, dónde se concentra la actividad y cómo crece la base de usuarios. <!-- /admin/analytics — analytics_engine (7 bloques) + export.csv. -->
+- [x] **Kpi Dashboard Module** — Para tomar decisiones sobre campañas publicitarias y crecimiento de comunidad con datos en tiempo real. <!-- KPIs comunitarios + publicitarios dentro de /admin/analytics (community-kpis, ad-kpis). Alertas de rendimiento → V2. -->
+- [x] **Manual Module** — Para que cualquier persona del equipo de ProjectApp entienda los flujos de Albunmanía sin sesiones de capacitación. <!-- /manual — 9 secciones × 14 procesos (lib/manual/content.ts) + buscador client-side (ManualSearch). -->
+
 
 ---
 
 ## 💰 Costes adicionales (módulos opcionales)
-- [ ] **Aplicación Móvil Instalable (PWA)** (+40%) — Convierte Albunmanía en una aplicación instalable que funciona incluso sin conexión y envía notificaciones push. Experiencia nativa directamente desde el navegador, sin necesidad de tiendas de aplicaciones.
-  - [ ] Instalación en Dispositivo — Los coleccionistas pueden instalar Albunmanía como app desde el navegador, con acceso directo desde la pantalla de inicio del celular.
-  - [ ] Notificaciones Push de Matches — Alertas instantáneas cuando aparece un match nuevo, un mensaje de WhatsApp confirmado o se publica un cromo buscado cerca.
-  - [ ] Funcionamiento Offline Parcial — El catálogo del álbum y la lista de cromos del usuario siguen accesibles sin conexión. Sincronización al reconectarse.
-  - [ ] Pantalla de Carga con Identidad de Albunmanía — Splash screen con la marca de Albunmanía al abrir la app, generando experiencia premium desde el primer instante.
-  - [ ] Sincronización en Segundo Plano — Datos de cromos, matches y mensajes se sincronizan automáticamente cuando el dispositivo recupera la conexión.
-  - [ ] Actualización Automática — La app se actualiza de forma transparente sin que el usuario tenga que hacer nada, siempre con la versión más reciente.
+
+<!-- De esta sección, en el Release 01 se construyeron: "Aplicación Móvil Instalable (PWA)" (sí, completa) y "Motor de Tematización Dinámica (Dark Mode)" (casi completa). "Multi-idioma y Localización Regional" → PARCIAL/V2 (messages/*.json existen, falta el wiring + el panel de traducción). El resto (Identidad Visual, Facturación DIAN, Pasarelas de pago internacionales/regionales, Email Marketing, Reportes/Alertas Telegram, Chat en vivo) está FUERA del alcance del Release 01. -->
+
+- [x] **Aplicación Móvil Instalable (PWA)** (+40%) — Convierte Albunmanía en una aplicación instalable que funciona incluso sin conexión y envía notificaciones push. Experiencia nativa directamente desde el navegador, sin necesidad de tiendas de aplicaciones. <!-- next-pwa + Web Push (VAPID/pywebpush) — construido en el Release 01 (Epic 9 + bootstrap PWA). -->
+  - [x] Instalación en Dispositivo — Los coleccionistas pueden instalar Albunmanía como app desde el navegador, con acceso directo desde la pantalla de inicio del celular. <!-- manifest.webmanifest + iconos + SW registrado vía next-pwa. -->
+  - [x] Notificaciones Push de Matches — Alertas instantáneas cuando aparece un match nuevo, un mensaje de WhatsApp confirmado o se publica un cromo buscado cerca. <!-- Web Push: PushSubscription + push_notify.send_to + signal post_save Match; sw-push.js (push/notificationclick). El trigger implementado es el match mutuo; "mensaje WhatsApp confirmado"/"cromo buscado cerca" no disparan push hoy. -->
+  - [x] Funcionamiento Offline Parcial — El catálogo del álbum y la lista de cromos del usuario siguen accesibles sin conexión. Sincronización al reconectarse. <!-- runtimeCaching StaleWhileRevalidate para /api/albums/*; cruce QR presencial offline sobre inventario en IndexedDB (idb-keyval). -->
+  - [x] Pantalla de Carga con Identidad de Albunmanía — Splash screen con la marca de Albunmanía al abrir la app, generando experiencia premium desde el primer instante. <!-- SponsorSplash (Albunmanía + "Presentado por <marca>" si hay sponsor activo); ~1800ms y auto-dismiss. -->
+  - [ ] Sincronización en Segundo Plano — Datos de cromos, matches y mensajes se sincronizan automáticamente cuando el dispositivo recupera la conexión. <!-- V2: no hay Background Sync API; la sincronización del inventario es debounced en foreground, no en segundo plano. -->
+  - [ ] Actualización Automática — La app se actualiza de forma transparente sin que el usuario tenga que hacer nada, siempre con la versión más reciente. <!-- PARCIAL: next-pwa usa skipWaiting (el SW nuevo toma control en la siguiente carga); no hay un prompt "hay una versión nueva, recargar". -->
+
 - [ ] **Identidad Visual e Imagen Corporativa** (+35%) — Aplicamos tu identidad visual de forma consistente en cada punto de contacto del sistema — correos, documentos, redes sociales y pantallas internas — para que tu marca se perciba profesional y coherente en todo lugar donde tus clientes interactúan.
   - [ ] Correos transaccionales con identidad corporativa — Plantillas HTML con logo, colores, tipografía y firma de marca aplicadas en todos los correos del sistema — bienvenida, confirmaciones, alertas, recuperación de contraseña y notificaciones — en lugar de correos en texto plano o genéricos.
   - [ ] PDFs y exportables con branding — Facturas, reportes, certificados, recibos y descargas Excel/CSV generados desde el sistema con encabezado con logo, paleta corporativa y pie de marca. Cada documento que sale de la plataforma refuerza la imagen profesional del negocio.
@@ -338,22 +364,26 @@ Creación, venta y canje de tarjetas de regalo digitales con saldo configurable,
 ---
 
 ## 🗄️ Modelos de datos
-- [ ] **User** — Usuario base del sistema (extiende django.contrib.auth.User). Cada usuario tiene un rol asignado vía grupos Django y un Profile asociado con datos públicos. _(campos clave: id, email (Google), google_account_age_days, role (group), date_joined, is_active, last_login)_
-- [ ] **Profile** — Datos públicos y privados del coleccionista: ubicación aproximada (ciudad), avatar, biografía corta, configuración de notificaciones, consentimientos (geolocalización browser, compartir WhatsApp) y agregados cacheados de reputación (promedio, conteo, % positivas) recalculados tras cada Review. _(campos clave: user_id, city, lat_approx, lng_approx, avatar_url, whatsapp_optin, push_optin, browser_geo_optin, rating_avg, rating_count, positive_pct)_
-- [ ] **MerchantProfile** — Perfil extendido para usuarios con rol Comerciante: papelería, kiosco, librería o distribuidor. Incluye datos del negocio para listing en mapa. _(campos clave: user_id, business_name, business_type, address, lat, lng, opening_hours, declared_stock, subscription_status, subscription_expires_at)_
-- [ ] **Album** — Coleccionable raíz. Funciona como tenant lógico: cada álbum tiene su propio catálogo, inventarios y matches. Permite escalar a Champions, Copa América, Pokémon, etc. _(campos clave: id, name, slug, edition_year, total_stickers, is_active, launch_date, end_date, cover_image)_
-- [ ] **Sticker** — Cromo individual dentro de un álbum. Incluye número, nombre del jugador o elemento, equipo, y flags de edición especial. _(campos clave: id, album_id, number, name, team, image_url, is_special_edition, special_tier, market_value_estimate)_
-- [ ] **UserSticker** — Inventario por usuario y cromo: cuántas tiene (0 = falta, 1 = pegada, 2+ = repetidas). Es la entidad más consultada del sistema; índice compuesto crítico. _(campos clave: user_id, sticker_id, count, updated_at)_
-- [ ] **Match** — Match potencial entre dos usuarios. Se crea cuando uno hace swipe positivo sobre el inventario del otro. Si hay match mutuo, pasa a estado matched y habilita compartir WhatsApp. _(campos clave: id, user_a_id, user_b_id, status, matched_at, expires_at, channel (digital_swipe | qr_presencial))_
-- [ ] **Trade** — Intercambio confirmado tras un match. Lista los stickers que cada parte aporta. Permite calificar al otro usuario al completarse. _(campos clave: id, match_id, stickers_from_a, stickers_from_b, completed_at, status)_
-- [ ] **Review** — Reseña post-trade entre coleccionistas. Cada Trade confirmado habilita hasta dos Reviews (una por dirección). Estrellas 1–5, tags estructurados, comentario opcional y respuesta pública del calificado. Editable durante 24 horas tras creación; luego inmutable. La moderación oculta vía is_visible sin borrar el registro. _(campos clave: id, trade_id (FK Trade), reviewer_id (FK User), reviewee_id (FK User), stars (1-5), comment, tags (json), reply, is_visible, created_at, updated_at; unique(trade_id, reviewer_id))_
-- [ ] **Sponsor** — Marca actual del Presenting Sponsor. Solo un registro activo a la vez. Define branding aplicado en splash, header, eventos. _(campos clave: id, brand_name, logo_url, primary_color, secondary_color, message_text, active_from, active_until, contract_amount)_
-- [ ] **MerchantSubscription** — Suscripción mensual del comerciante al listing. Permite trazar pagos, vencimientos y renovaciones. _(campos clave: id, merchant_id, amount, billing_cycle, paid_at, period_start, period_end, status, invoice_id)_
-- [ ] **AdCampaign** — Campaña publicitaria de Banner CPM. Cada campaña tiene presupuesto en impresiones, vigencia y segmentación geográfica. _(campos clave: id, advertiser_name, impressions_purchased, impressions_served, cpm_rate, geo_targeting, start_date, end_date, status)_
-- [ ] **AdCreative** — Creatividad subida por el Web Manager para una campaña. Imagen, texto y enlace. _(campos clave: id, campaign_id, image_url, headline, body_text, click_url, weight)_
-- [ ] **AdImpression** — Registro de cada impresión servida. Crítico para reportes a anunciantes y sponsor. Particionable por mes para evitar tabla gigante. _(campos clave: id, creative_id, user_id, served_at, slot (home_top | feed_inline | sponsor_splash), city)_
-- [ ] **Report** — Reporte de moderación: usuarios, contenido inapropiado, no-shows. Procesados por rol Admin. _(campos clave: id, reporter_id, target_user_id, target_trade_id, reason, status, resolved_by, resolved_at)_
-- [ ] **Notification** — Notificación enviada al usuario (push y/o in-app). Trazabilidad de delivery y aperturas. _(campos clave: id, user_id, type, title, body, deep_link, sent_at, opened_at)_
+
+<!-- 18 modelos en backend/albunmania_app/models/. Mapeo vs esta lista: 13 mapean (con desviaciones de nombre/forma anotadas); MerchantSubscription→MerchantSubscriptionPayment; Report→ReviewReport (sólo reseñas); Notification→NO existe. Modelos extra no listados aquí: Like (detalle del swipe), TradeWhatsAppOptIn, PushSubscription, PasswordCode (legacy del template, sin uso). -->
+
+- [x] **User** — Usuario base del sistema (extiende django.contrib.auth.User). Cada usuario tiene un rol asignado vía grupos Django y un Profile asociado con datos públicos. <!-- models/user.py — role + Group espejo; sin campo google_account_age_days persistido (la edad se valida en el login vía People API, no se guarda). -->
+- [x] **Profile** — Datos públicos y privados del coleccionista: ubicación aproximada (ciudad), avatar, biografía corta, configuración de notificaciones, consentimientos (geolocalización browser, compartir WhatsApp) y agregados cacheados de reputación (promedio, conteo, % positivas) recalculados tras cada Review. <!-- models/profile.py — campos lat_approx/lng_approx/city/avatar_url/whatsapp_optin/whatsapp_e164/push_optin/browser_geo_optin/active_album_id/rating_avg/rating_count/positive_pct; agregados vía signal. -->
+- [x] **MerchantProfile** — Perfil extendido para usuarios con rol Comerciante: papelería, kiosco, librería o distribuidor. Incluye datos del negocio para listing en mapa. <!-- models/merchant_profile.py — business_name/type/address/lat/lng/opening_hours/declared_stock/subscription_status/subscription_expires_at. Creado por signal al asignar rol Merchant. -->
+- [x] **Album** — Coleccionable raíz. Funciona como tenant lógico: cada álbum tiene su propio catálogo, inventarios y matches. Permite escalar a Champions, Copa América, Pokémon, etc. <!-- models/album.py — name/slug/edition_year/total_stickers/is_active/launch_date. -->
+- [x] **Sticker** — Cromo individual dentro de un álbum. Incluye número, nombre del jugador o elemento, equipo, y flags de edición especial. <!-- models/sticker.py — album/number/name/team/image_url/is_special_edition/special_tier/market_value_estimate. -->
+- [x] **UserSticker** — Inventario por usuario y cromo: cuántas tiene (0 = falta, 1 = pegada, 2+ = repetidas). Es la entidad más consultada del sistema; índice compuesto crítico. <!-- models/user_sticker.py — unique(user, sticker) + índice compuesto; count 0/1/2+. -->
+- [x] **Match** — Match potencial entre dos usuarios. Se crea cuando uno hace swipe positivo sobre el inventario del otro. Si hay match mutuo, pasa a estado matched y habilita compartir WhatsApp. <!-- models/match.py — user_a/user_b (canonical a<b) / status (PENDING|MUTUAL) / channel (digital_swipe|qr_presencial); CheckConstraint(condition=...). El like vive en el modelo Like. -->
+- [x] **Trade** — Intercambio confirmado tras un match. Lista los stickers que cada parte aporta. Permite calificar al otro usuario al completarse. <!-- desviación: models/trade.py guarda `items` (JSON con {from_user,to_user,sticker_id}) en vez de `stickers_from_a`/`stickers_from_b`; status open|completed|cancelled. -->
+- [x] **Review** — Reseña post-trade entre coleccionistas. Cada Trade confirmado habilita hasta dos Reviews (una por dirección). Estrellas 1–5, tags estructurados, comentario opcional y respuesta pública del calificado. Editable durante 24 horas tras creación; luego inmutable. La moderación oculta vía is_visible sin borrar el registro. <!-- models/review.py — Review (unique(trade,reviewer), CheckConstraint stars 1-5, reply/replied_at, is_visible) + ReviewReport (status pending/dismissed/actioned). -->
+- [x] **Sponsor** — Marca actual del Presenting Sponsor. Solo un registro activo a la vez. Define branding aplicado en splash, header, eventos. <!-- models/sponsor.py — brand_name/logo_url/primary_color/secondary_color/message_text/active_from/active_until/contract_amount. -->
+- [x] **MerchantSubscription** <!-- desviación: en el código es `MerchantSubscriptionPayment` (models/merchant_subscription_payment.py) — un *historial de pagos* (merchant/registered_by/amount_cop/period_months/method/reference/paid_at), no un único registro de suscripción; el estado vigente se deriva del último pago + MerchantProfile.subscription_*. --> — Suscripción mensual del comerciante al listing. Permite trazar pagos, vencimientos y renovaciones.
+- [x] **AdCampaign** — Campaña publicitaria de Banner CPM. Cada campaña tiene presupuesto en impresiones, vigencia y segmentación geográfica. <!-- models/ad_campaign.py — advertiser_name/impressions_purchased/cpm_rate_cop/geo_targeting_cities/weight/start_date/end_date/status/created_by. -->
+- [x] **AdCreative** — Creatividad subida por el Web Manager para una campaña. Imagen, texto y enlace. <!-- models/ad_creative.py — campaign/image_url/headline/body/click_url/weight/is_active (el campo es `body`, no `body_text`). -->
+- [x] **AdImpression** — Registro de cada impresión servida. Crítico para reportes a anunciantes y sponsor. Particionable por mes para evitar tabla gigante. <!-- models/ad_impression.py — creative/user/slot/city/served_at; AdClick (impression/clicked_at) en el mismo archivo. Desviación: slot = `home | feed` (no `home_top|feed_inline|sponsor_splash`). Aún no particionada (preparada para V2). -->
+- [ ] **Report** — Reporte de moderación: usuarios, contenido inapropiado, no-shows. Procesados por rol Admin. <!-- PARCIAL: sólo existe `ReviewReport` (reportar reseñas) en models/review.py. NO hay modelo Report general con target_user_id/target_trade_id — no se puede reportar perfiles ni intercambios fallidos. Decisión pendiente: ¿V2 o se considera fuera de alcance? -->
+- [ ] **Notification** — Notificación enviada al usuario (push y/o in-app). Trazabilidad de delivery y aperturas. <!-- NO IMPLEMENTADO: no existe modelo Notification. El push Web sí (modelo PushSubscription + push_notify.send_to + sw-push.js), pero NO hay registro in-app de notificaciones (type/title/body/deep_link/sent_at/opened_at) ni la vista "centro de notificaciones". Decisión pendiente: ¿V2? -->
+
 
 ---
 
@@ -562,45 +592,53 @@ Sistema de reseñas post-trade entre coleccionistas: calificación con estrellas
 ---
 
 ## 🔌 API endpoints
-### /api/v1/auth
-- [ ] Login con Google OAuth, refresh de JWT, validación de antigüedad de cuenta, captcha, logout. Endpoints públicos.
-### /api/v1/profile
-- [ ] Lectura y actualización del perfil del usuario autenticado: ciudad, opt-ins, configuración de notificaciones, estadísticas (racha, ETA, % álbum).
-### /api/v1/albums
-- [ ] Listado de álbumes activos, detalle de álbum, catálogo de stickers con filtros (equipo, número, edición especial), búsqueda predictiva.
-### /api/v1/inventory
-- [ ] CRUD del inventario del usuario autenticado: marcar cromo como pegado / repetido / faltante, sincronización debounced, listado consolidado por álbum.
-### /api/v1/match
-- [ ] Sugerencias de match por proximidad, swipe (like/pass), creación de match mutuo, validación QR presencial, listado de matches activos del usuario.
-### /api/v1/trades
-- [ ] Confirmación de intercambio post-match, cierre de trade, calificación post-trade (Reputation).
-### /api/v1/merchants
-- [ ] Listado público de comerciantes activos con filtros geográficos. Endpoints privados para perfil del comerciante (rol Comerciante) y gestión (rol Web Manager).
-### /api/v1/sponsor
-- [ ] Lectura pública del Presenting Sponsor activo (para renderizar splash y header). Gestión privada por Web Manager.
-### /api/v1/ads
-- [ ] Solicitud de banner para slot (con segmentación), tracking de impresión y de clic, gestión de campañas y creatividades por Web Manager.
-### /api/v1/reports
-- [ ] Crear reportes de moderación (todos los usuarios). Gestión de cola de reportes (rol Admin).
-### /api/v1/notifications
-- [ ] Suscripción y desuscripción de Web Push, listado in-app de notificaciones del usuario.
-### /api/v1/admin
-- [ ] Endpoints de administración: gestión de usuarios y roles, cola de moderación, generación de reportes para sponsor y anunciantes, exportaciones.
+
+<!-- DESVIACIÓN GLOBAL: la API NO usa el prefijo `/v1/` — los endpoints están en `/api/...` (17 módulos de URL, ~60 path()). Marcados [x] los grupos implementados con la observación correspondiente. -->
+
+### /api/v1/auth → /api/...
+- [x] Login con Google OAuth, refresh de JWT, validación de antigüedad de cuenta, captcha, logout. Endpoints públicos. <!-- /api/sign_in/, /api/sign_up/, /api/google_login/, /api/token/refresh/, /api/validate_token/, /api/captcha/site-key/ (+ alias /api/google-captcha/site-key/), /api/send_passcode/, /api/verify_passcode_and_reset_password/, /api/update_password/. (sign_in/send_passcode/update_password son residuo del template — el login productivo es google_login.) "Logout" es client-side (limpiar cookies). -->
+### /api/v1/profile → /api/...
+- [x] Lectura y actualización del perfil del usuario autenticado: ciudad, opt-ins, configuración de notificaciones, estadísticas (racha, ETA, % álbum). <!-- /api/profile/ (GET/PATCH) + /api/stats/me/, /api/stats/ranking/. -->
+### /api/v1/albums → /api/albums/...
+- [x] Listado de álbumes activos, detalle de álbum, catálogo de stickers con filtros (equipo, número, edición especial), búsqueda predictiva. <!-- /api/albums/, /api/albums/<slug>/, /api/albums/<slug>/stickers/?team=&number=&q=&special=, /api/albums/<slug>/search/ (top-10). -->
+### /api/v1/inventory → /api/inventory/...
+- [x] CRUD del inventario del usuario autenticado: marcar cromo como pegado / repetido / faltante, sincronización debounced, listado consolidado por álbum. <!-- /api/inventory/, /api/inventory/bulk/ (POST debounced), /api/inventory/tap/. -->
+### /api/v1/match → /api/match/...
+- [x] Sugerencias de match por proximidad, swipe (like/pass), creación de match mutuo, validación QR presencial, listado de matches activos del usuario. <!-- /api/match/feed/, /api/match/like/, /api/match/mine/, /api/match/<id>/, /api/match/qr/me/, /api/match/qr/scan/, /api/match/qr/confirm/. -->
+### /api/v1/trades → /api/trade(s)/...
+- [x] Confirmación de intercambio post-match, cierre de trade, calificación post-trade (Reputation). <!-- /api/trade/share/<token>/, /api/trade/<id>/whatsapp-optin/, /api/trade/<id>/whatsapp-link/; reseñas en /api/trades/<id>/reviews/, /api/reviews/<id>/, .../reply/, .../report/. La confirmación del trade post-match QR se hace vía /api/match/qr/confirm/. -->
+### /api/v1/merchants → /api/merchants/...
+- [x] Listado público de comerciantes activos con filtros geográficos. Endpoints privados para perfil del comerciante (rol Comerciante) y gestión (rol Web Manager). <!-- /api/merchants/?city=, /api/merchants/me/ (GET/PATCH), /api/merchants/admin/... (promote + register payment). -->
+### /api/v1/sponsor → /api/sponsor/...
+- [x] Lectura pública del Presenting Sponsor activo (para renderizar splash y header). Gestión privada por Web Manager. <!-- /api/sponsor/active/ (público) + endpoints admin gated. -->
+### /api/v1/ads → /api/ads/...
+- [x] Solicitud de banner para slot (con segmentación), tracking de impresión y de clic, gestión de campañas y creatividades por Web Manager. <!-- /api/ads/serve/?slot=, /api/ads/click/<impression_id>/ (302), /api/ads/admin/campaigns/ (+ stats JSON). -->
+### /api/v1/reports → /api/... (PARCIAL)
+- [ ] Crear reportes de moderación (todos los usuarios). Gestión de cola de reportes (rol Admin). <!-- PARCIAL: sólo /api/reviews/<id>/report/ + /api/admin/reviews/reports/ (reportes de reseñas). NO hay endpoints para reportar perfiles de usuario ni trades/no-shows (no hay modelo Report general). -->
+### /api/v1/notifications → /api/push/... (PARCIAL)
+- [ ] Suscripción y desuscripción de Web Push, listado in-app de notificaciones del usuario. <!-- PARCIAL: /api/push/public-key/, /api/push/subscribe/, /api/push/unsubscribe/ (Web Push) están; el "listado in-app de notificaciones del usuario" NO (no hay modelo Notification ni endpoint /notifications). -->
+### /api/v1/admin → /api/admin/...
+- [x] Endpoints de administración: gestión de usuarios y roles, cola de moderación, generación de reportes para sponsor y anunciantes, exportaciones. <!-- /api/admin/users/ (+ .../role/, .../active/), /api/admin/reviews/reports/, /api/admin/analytics/overview/, /api/admin/analytics/export.csv. La "generación de reportes para sponsor y anunciantes" (PDF/CSV segmentado) → V2; sólo está el export.csv del overview. -->
+
 
 ---
 
 ## 🔗 Integraciones (incluidas)
-- [ ] **Autenticación social — Google OAuth 2.0** · OAuth 2.0 estándar vía django-allauth · Datos: Sistema recibe email, nombre, fecha de creación de cuenta y avatar. Albunmanía no envía datos a Google. · Cuenta: ProjectApp gestiona el proyecto OAuth en Google Cloud Console
-- [ ] **Captcha anti-bot — hCaptcha** · API REST estándar con sitekey pública y secret server-side · Datos: Token de validación enviado al backend para verificación. Sin datos personales. · Cuenta: ProjectApp gestiona la cuenta hCaptcha
-- [ ] **Geolocalización por IP — MaxMind GeoIP2 (DB local)** · Base de datos descargada y actualizada periódicamente en el VPS · Datos: Sin llamadas externas. Lookup local en el servidor. · Cuenta: ProjectApp mantiene licencia y actualizaciones
-- [ ] **Mapas — OpenStreetMap + Leaflet** · Tiles servidos desde tile servers de OSM (con respeto a sus términos) · Datos: Sin datos sensibles enviados. · Cuenta: Gratuito sin cuenta, eventualmente migrable a tile server propio si crece el tráfico
-- [ ] **Notificaciones push — Web Push API (estándar W3C)** · Suscripciones almacenadas en backend, envío vía librerías estándar (pywebpush) · Datos: Sin intermediario tipo Firebase. El navegador del usuario gestiona la entrega. · Cuenta: ProjectApp gestiona VAPID keys
-- [ ] **WhatsApp deep links — WhatsApp** · URLs wa.me con texto pre-llenado, sin API · Datos: Solo redirección del cliente. WhatsApp no recibe datos del backend. · Cuenta: No requiere cuenta empresarial
-- [ ] **Facturación electrónica — Siigo o Alegra (configurable)** · API REST del proveedor con autenticación OAuth/API key · Datos: Sincronización bidireccional de clientes (anunciantes y comerciantes), productos (espacios publicitarios) y comprobantes electrónicos. · Cuenta: ProjectApp mantiene cuenta y credenciales del proveedor
+- [x] **Autenticación social — Google OAuth 2.0** · OAuth 2.0 estándar vía django-allauth · Datos: Sistema recibe email, nombre, fecha de creación de cuenta y avatar. Albunmanía no envía datos a Google. · Cuenta: ProjectApp gestiona el proyecto OAuth en Google Cloud Console <!-- implementado vía @react-oauth/google (implicit flow) + People API para la edad de cuenta — NO django-allauth. PENDIENTE OPERACIONAL: ProjectApp debe generar un Client ID/Secret reales (el del template no sirve — ERROR-001). -->
+- [x] **Captcha anti-bot — hCaptcha** · API REST estándar con sitekey pública y secret server-side · Datos: Token de validación enviado al backend para verificación. Sin datos personales. · Cuenta: ProjectApp gestiona la cuenta hCaptcha <!-- captcha_service.verify_hcaptcha. PENDIENTE OPERACIONAL: hoy usa test keys; ProjectApp debe poner sitekey/secret reales. -->
+- [ ] **Geolocalización por IP — MaxMind GeoIP2 (DB local)** · Base de datos descargada y actualizada periódicamente en el VPS · Datos: Sin llamadas externas. Lookup local en el servidor. · Cuenta: ProjectApp mantiene licencia y actualizaciones <!-- NO IMPLEMENTADO: no hay GeoIP2 ni la DB .mmdb ni lookup por IP. La geolocalización es sólo browser (navigator.geolocation en el onboarding). -->
+- [x] **Mapas — OpenStreetMap + Leaflet** · Tiles servidos desde tile servers de OSM (con respeto a sus términos) · Datos: Sin datos sensibles enviados. · Cuenta: Gratuito sin cuenta, eventualmente migrable a tile server propio si crece el tráfico <!-- react-leaflet en /merchants (MerchantMap, dynamic ssr:false). -->
+- [x] **Notificaciones push — Web Push API (estándar W3C)** · Suscripciones almacenadas en backend, envío vía librerías estándar (pywebpush) · Datos: Sin intermediario tipo Firebase. El navegador del usuario gestiona la entrega. · Cuenta: ProjectApp gestiona VAPID keys <!-- PushSubscription + push_notify (pywebpush/py-vapid) + sw-push.js. PENDIENTE OPERACIONAL: rotar el VAPID keypair (las committeadas son de dev). -->
+- [x] **WhatsApp deep links — WhatsApp** · URLs wa.me con texto pre-llenado, sin API · Datos: Solo redirección del cliente. WhatsApp no recibe datos del backend. · Cuenta: No requiere cuenta empresarial <!-- whatsapp_link.build_whatsapp_link() — wa.me/<digits>?text= server-side; gated por opt-in mutuo per-trade. -->
+- [ ] **Facturación electrónica — Siigo o Alegra (configurable)** · API REST del proveedor con autenticación OAuth/API key · Datos: Sincronización bidireccional de clientes (anunciantes y comerciantes), productos (espacios publicitarios) y comprobantes electrónicos. · Cuenta: ProjectApp mantiene cuenta y credenciales del proveedor <!-- V2 / módulo opcional: no integrado. Los pagos de comerciantes se registran manualmente (MerchantSubscriptionPayment). -->
+
 
 ---
 
 ## 🌱 Preparación para el crecimiento (visión v2)
+
+<!-- Esta sección es la "visión v2" — los `[ ]` son correctos (no es alcance del Release 01). Lo de "Preparación" (índices compuestos, AdImpression preparada para partición, Album como tenant, SW cacheando catálogo, Huey con backend MySQL/Redis) SÍ se construyó como base; lo de "Evolución" es trabajo futuro. El stack multi-idioma (messages/{es,en,pt}.json) existe pero falta el wiring (ver "Soporte multi-idioma"). -->
+
 ### Tráfico de usuarios
 - [ ] Preparación: Nginx con caché agresivo de assets estáticos (imágenes de cromos, JS bundle, fuentes) y compresión gzip/brotli. Service Worker en cliente cachea catálogo del álbum reduciendo requests al servidor en sesiones repetidas. Gunicorn con workers configurables según métricas.
 - [ ] Evolución: Si la carga supera capacidad del VPS de 4 vCPU / 8 GB RAM, primer paso es escalar verticalmente (8 vCPU / 16 GB). Segundo paso es separar workers de Huey en VPS dedicado. Tercer paso (mes 6+) es introducir CDN para estáticos.

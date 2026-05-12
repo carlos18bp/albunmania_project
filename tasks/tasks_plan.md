@@ -7,7 +7,7 @@
 
 - **Bootstrap**: ✅ completado (commits `4170de8` → `fb51414`).
 - **Bloque A — Cleanup post-bootstrap** (rename, purga demo, deps, PWA bootstrap, i18n bootstrap, Memory Bank): ✅ completado (commits `0d2d857` → `8084a4d`).
-- **Bloque B — Implementación Release 01** (14 épicas): ✅ **las 14 épicas implementadas**. Algunos sub-items dentro de las épicas quedan marcados `[ ]` en `docs/release/01-release-checklist.md` con comentario `<!-- V2 -->` (búsqueda con autocompletado, branding en notificaciones, reportes de exposición Sponsor, reportes para anunciantes, gestor de álbumes con CSV, wiring real de next-intl).
+- **Bloque B — Implementación Release 01** (14 épicas): ✅ **las 14 épicas implementadas**. La **auditoría de completitud (2026-05-12)** reconcilió `docs/release/01-release-checklist.md` con el codebase real (53→133 ítems `[x]`, comentarios inline `<!-- ... -->` con trazabilidad): la mayoría del scope está hecho; quedan sub-items `<!-- V2 -->` (búsqueda con autocompletado, branding en notificaciones, reportes Sponsor/anunciantes, gestor de álbumes CSV, wiring next-intl) y **8 GAPS** descritos como "incluidos" pero NO construidos (centro de notificaciones + modelo Notification, modelo Report general + moderación de usuarios/trades, presencia "en línea ahora"/Live Badge, página /profile, mapa de coleccionistas, páginas T&C/privacidad/FAQ + componente FAQ, GeoIP2 por IP, dropdown de búsqueda predictiva) — ver §"Known issues / pendientes" y los comentarios del checklist.
 - **Auditoría new-feature-checklist** (en curso, por fases):
   - ✅ Fase 1 (docs E2E): `USER_FLOW_MAP.md` + `flow-definitions.json` reescritos para las 14 épicas; los 46 tests de validación tagueados con `@flow:`; eliminados los 12 `page.waitForTimeout()`; `auth.spec.ts` + `smoke.spec.ts` actualizados a la realidad post-rewrite de `/sign-in`.
   - ✅ Fase 2 (tests backend): `tests/services/test_email_service.py` (6) + `tests/services/test_push_notify.py` (10).
@@ -74,14 +74,26 @@
 - **hCaptcha keys reales** — hoy usa test keys.
 - `DJANGO_SECRET_KEY` + password MySQL `albunmania_staging`.
 
-### V2 (no bloqueantes)
+### GAPS detectados en la auditoría de completitud (2026-05-12) — descritos como "incluidos" en la propuesta pero NO construidos en el Release 01; requieren decisión (¿V2 o fuera de alcance?)
+- **Centro de notificaciones in-app + modelo `Notification`** — sólo hay Web Push (PushSubscription). No hay vista "Notificaciones" ni registro in-app (type/title/body/deep_link/sent_at/opened_at).
+- **Modelo `Report` general + moderación de usuarios/perfiles/trades/no-shows** — sólo existe `ReviewReport`; `/admin/moderation` gestiona sólo reportes de reseñas. No se puede reportar un perfil ni un trade fallido.
+- **Presencia / "en línea ahora" / Live Badge / "X coleccionistas activos ahora"** — no hay `last_seen`/`is_online`, ni WebSocket/SSE, ni componente Live Badge.
+- **Página `/profile` (Perfil del Usuario con pestaña Reseñas + config de cuenta)** — los componentes (`ReviewSummary`, `ReviewCard`) y endpoints existen, pero falta la página que los monte.
+- **Mapa de Coleccionistas** (`/mapa`) — existe el mapa de *comerciantes*, no de coleccionistas.
+- **Páginas T&C / Política de Privacidad / Centro de Ayuda·FAQ** + componente FAQ — no construidas (el footer sólo tiene la línea de disclaimer; el Manual cubre parte pero es interno).
+- **GeoIP2 (geolocalización por IP)** — sólo la rama browser; sin la DB `.mmdb` ni lookup por IP → la feature "Geolocalización Dual" queda parcial.
+- **Búsqueda predictiva con dropdown de autocompletado** — el endpoint `albums/<slug>/search/` y `searchStickers()` existen + debounce 250ms, pero la UI del catálogo sólo filtra la grilla; falta el dropdown de sugerencias con previsualización (y la sugerencia de coleccionistas).
+
+### V2 (no bloqueantes, ya conocidos)
 - "Fuentes de Tráfico" (analytics) — instrumentación UTM + tabla `TrafficSource`.
 - "Alertas de Rendimiento" (KPIs) — Huey nightly + email/push cuando un KPI cae bajo umbral.
 - "Reportes PDF de Sponsor" + "Reportes para anunciantes" — pipeline Huey + storage + descarga firmada.
 - Wiring real de `next-intl` — `messages/{es,en,pt}.json` existen y están poblados, pero las páginas usan copy hardcoded en español.
 - "Branding sutil en notificaciones oficiales" (emails/push con pie de Sponsor).
-- Admin: gestor de álbumes con CSV upload, gestor de creativas con UI.
+- Admin: gestor de álbumes con CSV upload, gestor de comerciantes (UI de aprobación/pagos), gestor de creativas con UI — hoy todo eso vía Django Admin.
 - ~~`globalSetup` Playwright que limpie `TradeWhatsAppOptIn`~~ — resuelto: `create_fake_data` ahora resetea las opt-ins del trade seedeado, así que re-seedear antes de la suite de validación deja el estado limpio.
+
+> Detalle completo y trazabilidad por ítem: ver los comentarios inline `<!-- ... -->` en `docs/release/01-release-checklist.md` (reconciliado el 2026-05-12).
 
 ## Política de testing (heredada de CLAUDE.md)
 
