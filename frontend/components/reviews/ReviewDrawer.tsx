@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import ReviewCard from './ReviewCard';
 import ReviewSummary from './ReviewSummary';
 import { useReviewStore } from '@/lib/stores/reviewStore';
+import type { Review } from '@/lib/stores/reviewStore';
 
 type Props = {
   userId: number;
@@ -12,8 +13,14 @@ type Props = {
   onClose: () => void;
 };
 
+// Stable empty-array reference so the Zustand selector always returns
+// the same object identity when no reviews have been fetched yet —
+// otherwise React's useSyncExternalStore detects a "changed snapshot"
+// on every render and triggers `Maximum update depth exceeded`.
+const EMPTY_REVIEWS: readonly Review[] = Object.freeze([]);
+
 export default function ReviewDrawer({ userId, open, onClose }: Props) {
-  const reviews = useReviewStore((s) => s.byUser[userId] ?? []);
+  const reviews = useReviewStore((s) => s.byUser[userId] ?? EMPTY_REVIEWS);
   const fetchUserReviews = useReviewStore((s) => s.fetchUserReviews);
   const [filter, setFilter] = useState<number | null>(null);
 
