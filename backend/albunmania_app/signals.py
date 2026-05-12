@@ -6,8 +6,10 @@ from django.conf import settings
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
+from albunmania_project.tasks import deliver_match_push
+
 from .models import Match, MerchantProfile, Notification, Profile, Review, User
-from .services.push_notify import build_match_mutual_payload, send_to as push_send_to
+from .services.push_notify import build_match_mutual_payload
 from .services.review_aggregates import recompute_for
 
 
@@ -54,9 +56,10 @@ def recompute_aggregates_on_delete(sender, instance: Review, **kwargs):
 @receiver(post_save, sender=Match)
 def notify_on_mutual_match(sender, instance: Match, created: bool, **kwargs):
     """On a new mutual Match: create an in-app Notification for each
-    participant and fire a Web Push (best-effort — push errors are logged
-    inside push_notify.send_to and swallowed). Only on create + status
-    == mutual (status updates happen often).
+    participant and enqueue a Web Push (best-effort, off the request path —
+    `deliver_match_push` runs in a Huey worker; in dev/test Huey is in
+    immediate mode so it runs synchronously). Only on create + status ==
+    mutual (status updates happen often).
     """
     if not created or instance.status != Match.Status.MUTUAL:
         return
@@ -77,4 +80,4 @@ def notify_on_mutual_match(sender, instance: Match, created: bool, **kwargs):
             actor=peer,
             match=instance,
         )
-        push_send_to(me, payload)
+        deliver_match_push(me.id, payload)

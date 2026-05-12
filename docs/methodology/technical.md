@@ -80,7 +80,7 @@ backend/
 │   │                                 # review_aggregates, analytics_engine, push_notify, presence, geoip
 │   ├── signals.py                    # post_save User → Profile/MerchantProfile;
 │   │                                 # post_save/post_delete Review → recompute aggregates;
-│   │                                 # post_save Match(status=mutual, created) → Notification a ambos + push
+│   │                                 # post_save Match(status=mutual, created) → Notification a ambos + enqueue deliver_match_push (Huey)
 │   ├── utils/auth_utils.py           # generate_auth_tokens (JWT)
 │   ├── forms/, admin.py, apps.py
 │   ├── tests/          (56 test_*.py) # {models,serializers,views,services,utils,commands}/
@@ -96,7 +96,7 @@ backend/
 │   ├── settings_dev.py   # SQLite + DEBUG=True
 │   ├── settings_prod.py  # MySQL + headers prod
 │   ├── urls.py           # health + admin + JWT + include albunmania_app.urls
-│   ├── tasks.py          # Huey task defs
+│   ├── tasks.py          # Huey: deliver_match_push (on-demand) + periodic backups/silk
 │   ├── asgi.py / wsgi.py
 ├── django_attachments/   # app custom (file uploads + cleanup)
 ├── .env                  # local dev (gitignored): hCaptcha test keys + VAPID dev keys + SECRET_KEY
@@ -191,7 +191,7 @@ Todos bajo `/api/` (root urls.py). Frontend usa `NEXT_PUBLIC_API_BASE_URL=/api` 
 
 ## 6. Async tasks (Huey)
 
-`backend/albunmania_project/tasks.py` (broker Redis). Hoy el push de match es **síncrono** vía signal (`push_notify.send_to`); a futuro mover a Huey + cálculo nocturno de stats cacheados, generación de reportes PDF, particionamiento mensual de `AdImpression`, limpieza de matches expirados, cierre formal de la ventana de edición de Review.
+`backend/albunmania_project/tasks.py` (broker Redis; `HUEY = RedisHuey(..., immediate=not IS_PRODUCTION)` → en dev/test las tareas corren síncronas in-process). Tareas: `deliver_match_push(user_id, payload)` (`@db_task()` — el Web Push del match mutuo; lo encola `signals.notify_on_mutual_match` para sacar el HTTP del request path) + las periódicas `scheduled_backup`/`silk_garbage_collection`/`weekly_slow_queries_report`/`silk_reports_cleanup`. A futuro: cálculo nocturno de stats cacheados, generación de reportes PDF, particionamiento mensual de `AdImpression`, limpieza de matches expirados, cierre formal de la ventana de edición de Review.
 
 ## 7. Seguridad
 

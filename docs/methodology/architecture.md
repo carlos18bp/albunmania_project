@@ -23,11 +23,11 @@ flowchart TD
         AUTH[JWT cookies + Google OAuth + hCaptcha + regla 30 días]
         ADMIN[Django Admin]
         SVC[Service layer · 14 servicios]
-        SIG[Signals · Review aggregates · Match→Notification+Push]
+        SIG[Signals · Review aggregates · Match→Notification + enqueue push]
     end
 
     subgraph Async["Huey worker (albunmania-staging-huey)"]
-        TASKS[Email cooldown, stats nightly→V2,<br/>billing→V2, match cleanup]
+        TASKS[deliver_match_push (Web Push del match) +<br/>backups/silk periódicos; stats nightly→V2]
     end
 
     subgraph Data["Persistencia"]
@@ -61,9 +61,10 @@ flowchart TD
     SVC --> GEOIP
     API --> SIG
     SIG --> MYSQL
-    SIG -->|webpush| WPUSH
+    SIG -->|enqueue| TASKS
     API -->|enqueue| TASKS
     TASKS --> MYSQL
+    TASKS -->|webpush| WPUSH
     TASKS --> SIIGO
     UI -->|deep link| WAPP
     UI -->|tiles| OSM
@@ -80,6 +81,7 @@ sequenceDiagram
     participant API as DRF /api/match
     participant DB as MySQL
     participant SIG as signals.py (post_save Match)
+    participant HUEY as Huey worker (deliver_match_push)
     actor User_B (push)
 
     User_A->>FE: Abre /match (Swipe)
@@ -94,8 +96,10 @@ sequenceDiagram
     alt match mutuo (status=MUTUAL)
         API->>DB: Match.status = MUTUAL
         DB-->>SIG: post_save(created, status=MUTUAL)
-        SIG->>DB: SELECT PushSubscription de ambos
-        SIG-->>User_B (push): webpush(build_match_mutual_payload)
+        SIG->>DB: Notification.create para ambos
+        SIG->>HUEY: enqueue deliver_match_push(user_id, payload)  (×2)
+        HUEY->>DB: SELECT PushSubscription del user
+        HUEY-->>User_B (push): webpush(build_match_mutual_payload)
         API-->>FE: {matched: true}
         FE->>User_A: diálogo "compartir WhatsApp?" (opt-in per-trade)
     else sin match aún
@@ -146,7 +150,8 @@ sequenceDiagram
     FE->>API: POST /push/subscribe/ {endpoint, keys}
     API->>DB: PushSubscription.objects.update_or_create(endpoint)
     Note over DB,PS: ...más tarde, un Match mutuo...
-    DB->>API: signals.py → push_notify.send_to(user, payload)
+    DB->>API: signals.py → enqueue deliver_match_push(user_id, payload) (Huey)
+    API->>API: worker: push_notify.send_to(user, payload)
     API->>PS: webpush(subscription, payload, vapid_*)
     PS->>SW: push event
     SW->>SW: sw-push.js → showNotification(title, {body, icon, data.url})

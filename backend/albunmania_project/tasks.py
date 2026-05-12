@@ -1,7 +1,10 @@
 """
-Scheduled operational tasks with Huey.
+Background + scheduled tasks with Huey.
 
-Tasks:
+On-demand:
+- deliver_match_push: send the Web Push for a mutual match (off the request path)
+
+Scheduled:
 - scheduled_backup: DB + media backup weekly (Sunday at 3:00 AM UTC)
 - silk_garbage_collection: Daily cleanup of Silk profiling data (4:00 AM)
 - weekly_slow_queries_report: Weekly performance report (Mondays 8:00 AM)
@@ -16,9 +19,28 @@ from pathlib import Path
 from django.conf import settings
 from django.utils import timezone
 from huey import crontab
-from huey.contrib.djhuey import db_periodic_task
+from huey.contrib.djhuey import db_periodic_task, db_task
 
 logger = logging.getLogger('backups')
+push_logger = logging.getLogger('albunmania_app.push')
+
+
+@db_task()
+def deliver_match_push(user_id: int, payload: dict):
+    """Send the Web Push notification for a mutual match to one participant.
+
+    Enqueued by `signals.notify_on_mutual_match` so the HTTP calls to the push
+    services happen off the request path. Best-effort: `push_notify.send_to`
+    swallows/logs delivery errors and auto-prunes dead subscriptions.
+    """
+    from albunmania_app.models import User
+    from albunmania_app.services.push_notify import send_to
+
+    user = User.objects.filter(id=user_id).first()
+    if user is None:
+        push_logger.warning('deliver_match_push: user %s not found; skipping push.', user_id)
+        return
+    send_to(user, payload)
 
 
 @db_periodic_task(crontab(day_of_week='0', hour='3', minute='0'))

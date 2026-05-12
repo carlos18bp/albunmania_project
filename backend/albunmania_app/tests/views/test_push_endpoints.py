@@ -92,7 +92,10 @@ def test_mutual_match_signal_fires_push_to_both_participants():
     )
     a_id, b_id = (a.id, b.id) if a.id < b.id else (b.id, a.id)
 
-    with patch('albunmania_app.signals.push_send_to') as mock_send:
+    # The signal enqueues `deliver_match_push` (a Huey task); in tests Huey runs
+    # in immediate mode, so the task executes synchronously and calls
+    # push_notify.send_to — patch it at the source.
+    with patch('albunmania_app.services.push_notify.send_to') as mock_send:
         Match.objects.create(
             user_a_id=a_id, user_b_id=b_id,
             channel=Match.Channel.SWIPE, status=Match.Status.MUTUAL,
