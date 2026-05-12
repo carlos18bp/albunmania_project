@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Bell } from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { useNotificationStore } from '@/lib/stores/notificationStore';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 /**
@@ -21,8 +23,13 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const signOut = useAuthStore((s) => s.signOut);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const fetchUnreadCount = useNotificationStore((s) => s.fetchUnreadCount);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (mounted && isAuthenticated) void fetchUnreadCount().catch(() => undefined);
+  }, [mounted, isAuthenticated, fetchUnreadCount]);
 
   return (
     <header
@@ -59,6 +66,22 @@ export default function Header() {
                 href="/match"
               >
                 Match
+              </Link>
+              <Link
+                href="/notificaciones"
+                data-testid="header-notifications"
+                aria-label={unreadCount > 0 ? `Notificaciones (${unreadCount} sin leer)` : 'Notificaciones'}
+                className="relative px-2 py-1 rounded hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                {unreadCount > 0 && (
+                  <span
+                    data-testid="header-notifications-badge"
+                    className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </Link>
               <Link
                 className="px-2 py-1 rounded hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

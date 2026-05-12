@@ -7,8 +7,8 @@ jest.mock('../../../lib/services/http', () => ({
 }));
 jest.mock('next/image', () => ({
   __esModule: true,
-  // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-  default: (props: Record<string, unknown>) => <img {...(props as never)} />,
+  // eslint-disable-next-line @next/next/no-img-element
+  default: ({ src, alt }: { src?: string; alt?: string }) => <img src={src} alt={alt} />,
 }));
 
 import { useInventoryStore } from '../../../lib/stores/inventoryStore';

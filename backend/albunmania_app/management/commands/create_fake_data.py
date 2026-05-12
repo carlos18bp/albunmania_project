@@ -15,8 +15,8 @@ from django.utils import timezone
 
 from albunmania_app.models import (
     AdCampaign, AdClick, AdCreative, AdImpression, Album, Like, Match,
-    MerchantProfile, MerchantSubscriptionPayment, PushSubscription, Review,
-    ReviewReport, Sponsor, Sticker, Trade, TradeWhatsAppOptIn, User,
+    MerchantProfile, MerchantSubscriptionPayment, Notification, PushSubscription,
+    Review, ReviewReport, Sponsor, Sticker, Trade, TradeWhatsAppOptIn, User,
     UserSticker,
 )
 
@@ -69,6 +69,9 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('\n--- Push subscriptions (1 per collector, non-routable) ---'))
         self._seed_push_subscriptions()
+
+        self.stdout.write(self.style.SUCCESS('\n--- In-app notifications (canonical collectors) ---'))
+        self._seed_notifications()
 
         self.stdout.write(self.style.SUCCESS('\n==== Fake Data Creation Complete ===='))
 
@@ -373,3 +376,37 @@ class Command(BaseCommand):
                     'user_agent': 'Mozilla/5.0 (seed)',
                 },
             )
+
+    def _seed_notifications(self) -> None:
+        """A few in-app notifications for the canonical collectors so the
+        /notificaciones center and the Header bell badge aren't empty.
+        Idempotent: reset to a fixed set each run.
+        """
+        try:
+            user = User.objects.get(email='user@example.com')
+            user2 = User.objects.get(email='user2@example.com')
+        except User.DoesNotExist:
+            self.stdout.write(self.style.WARNING('  · skipped: missing canonical collectors'))
+            return
+        Notification.objects.filter(user__in=[user, user2]).delete()
+        match = Match.objects.filter(
+            user_a_id=min(user.id, user2.id), user_b_id=max(user.id, user2.id), channel=Match.Channel.SWIPE,
+        ).first()
+        now = timezone.now()
+        # user: one unread match notification + one read review notification.
+        Notification.objects.create(
+            user=user, kind=Notification.Kind.MATCH_MUTUAL,
+            title='¡Match en Albunmanía!', body=f'{user2.email} también quiere intercambiar contigo.',
+            url=f'/match/{match.id}' if match else '/match', actor=user2, match=match,
+        )
+        Notification.objects.create(
+            user=user, kind=Notification.Kind.REVIEW_RECEIVED,
+            title='Recibiste una reseña', body=f'{user2.email} te calificó con 4★.',
+            url='/profile/me', actor=user2, read_at=now - timedelta(days=1),
+        )
+        # user2: one unread match notification.
+        Notification.objects.create(
+            user=user2, kind=Notification.Kind.MATCH_MUTUAL,
+            title='¡Match en Albunmanía!', body=f'{user.email} también quiere intercambiar contigo.',
+            url=f'/match/{match.id}' if match else '/match', actor=user, match=match,
+        )

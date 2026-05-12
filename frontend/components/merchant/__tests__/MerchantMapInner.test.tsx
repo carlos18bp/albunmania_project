@@ -18,8 +18,8 @@ import MerchantMapInner from '../MerchantMapInner';
 import type { Merchant } from '../../../lib/stores/merchantStore';
 
 const merchants: Merchant[] = [
-  { user_id: 1, business_name: 'Papelería El Sol', business_type: 'papeleria', address: 'Cra 7 # 50-15', lat: '4.65', lng: '-74.07' },
-  { user_id: 2, business_name: 'Kiosco Norte', business_type: 'kiosco', address: 'Cl 100 # 15-20', lat: 4.69, lng: -74.05 },
+  { user_id: 1, business_name: 'Papelería El Sol', business_type: 'papeleria', address: 'Cra 7 # 50-15', lat: '4.65', lng: '-74.07', opening_hours: {}, is_listing_visible: true },
+  { user_id: 2, business_name: 'Kiosco Norte', business_type: 'kiosco', address: 'Cl 100 # 15-20', lat: 4.69, lng: -74.05, opening_hours: {}, is_listing_visible: true },
 ];
 
 describe('MerchantMapInner', () => {

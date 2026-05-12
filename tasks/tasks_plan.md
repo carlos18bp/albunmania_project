@@ -74,13 +74,17 @@
 - **hCaptcha keys reales** — hoy usa test keys.
 - `DJANGO_SECRET_KEY` + password MySQL `albunmania_staging`.
 
-### GAPS detectados en la auditoría de completitud (2026-05-12) — descritos como "incluidos" en la propuesta pero NO construidos en el Release 01; requieren decisión (¿V2 o fuera de alcance?)
-- **Centro de notificaciones in-app + modelo `Notification`** — sólo hay Web Push (PushSubscription). No hay vista "Notificaciones" ni registro in-app (type/title/body/deep_link/sent_at/opened_at).
-- **Modelo `Report` general + moderación de usuarios/perfiles/trades/no-shows** — sólo existe `ReviewReport`; `/admin/moderation` gestiona sólo reportes de reseñas. No se puede reportar un perfil ni un trade fallido.
-- **Presencia / "en línea ahora" / Live Badge / "X coleccionistas activos ahora"** — no hay `last_seen`/`is_online`, ni WebSocket/SSE, ni componente Live Badge.
-- **Página `/profile` (Perfil del Usuario con pestaña Reseñas + config de cuenta)** — los componentes (`ReviewSummary`, `ReviewCard`) y endpoints existen, pero falta la página que los monte.
+### GAPS de la auditoría de completitud (2026-05-12)
+
+**Bloque D — cierre de los GAPS P2:**
+- ✅ D1 (commit `3adaca7`): páginas `/terminos`, `/privacidad`, `/ayuda` + componente FAQ + enlaces en el footer. (Texto legal: borrador — lo redacta/revisa el equipo legal del cliente.)
+- ✅ D2 (commit `b0e4b1d`): página `/profile/[id]` + endpoint `GET /api/users/<id>/public-profile/` (sin email/teléfono) + sección "Editar mi cuenta" (`PATCH /api/profile/me/`).
+- ✅ D3 (commit pendiente): modelo `Notification` (+ migración `0009`) + centro `/notificaciones` + campana con badge en el Header + endpoints `/api/notifications/*` + notificaciones creadas en el signal post_save Match (mutuo) y en las views de crear/responder reseña.
+- ⬜ D4: modelo `Report` general + reportar usuarios/trades (no-show) + 2ª cola en `/admin/moderation`.
+
+**GAPS P3 (siguen abiertos — decisión: ¿V2 o fuera de alcance?):**
+- **Presencia / "en línea ahora" / Live Badge / "X coleccionistas activos ahora"** — no hay `last_seen`/`is_online`, ni WebSocket/SSE, ni componente Live Badge. (Bloquea también el "Mapa de Coleccionistas".)
 - **Mapa de Coleccionistas** (`/mapa`) — existe el mapa de *comerciantes*, no de coleccionistas.
-- **Páginas T&C / Política de Privacidad / Centro de Ayuda·FAQ** + componente FAQ — no construidas (el footer sólo tiene la línea de disclaimer; el Manual cubre parte pero es interno).
 - **GeoIP2 (geolocalización por IP)** — sólo la rama browser; sin la DB `.mmdb` ni lookup por IP → la feature "Geolocalización Dual" queda parcial.
 - **Búsqueda predictiva con dropdown de autocompletado** — el endpoint `albums/<slug>/search/` y `searchStickers()` existen + debounce 250ms, pero la UI del catálogo sólo filtra la grilla; falta el dropdown de sugerencias con previsualización (y la sugerencia de coleccionistas).
 

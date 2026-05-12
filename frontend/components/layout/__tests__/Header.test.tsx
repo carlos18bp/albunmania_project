@@ -5,13 +5,16 @@ import userEvent from '@testing-library/user-event';
 
 import Header from '../Header';
 import { useAuthStore } from '../../../lib/stores/authStore';
+import { useNotificationStore } from '../../../lib/stores/notificationStore';
 
 jest.mock('../../../lib/stores/authStore', () => ({ useAuthStore: jest.fn() }));
+jest.mock('../../../lib/stores/notificationStore', () => ({ useNotificationStore: jest.fn() }));
 jest.mock('@/components/theme-toggle', () => ({
   ThemeToggle: () => <div data-testid="mock-theme-toggle" />,
 }));
 
 const mockUseAuthStore = useAuthStore as unknown as jest.Mock;
+const mockUseNotificationStore = useNotificationStore as unknown as jest.Mock;
 
 const setAuthState = (state: { isAuthenticated: boolean; signOut?: jest.Mock }) => {
   const full = { signOut: jest.fn(), ...state };
@@ -20,8 +23,18 @@ const setAuthState = (state: { isAuthenticated: boolean; signOut?: jest.Mock }) 
   );
 };
 
+const setUnreadCount = (count: number) => {
+  const full = { unreadCount: count, fetchUnreadCount: jest.fn().mockResolvedValue(count) };
+  mockUseNotificationStore.mockImplementation((selector?: (s: any) => unknown) =>
+    selector ? selector(full) : full,
+  );
+};
+
 describe('Header', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setUnreadCount(0);
+  });
 
   it('renders the brand link and the manual link in any state', () => {
     setAuthState({ isAuthenticated: false });
@@ -32,12 +45,7 @@ describe('Header', () => {
 
   it('renders the auth-neutral placeholder before mount (avoids hydration mismatch)', () => {
     setAuthState({ isAuthenticated: true });
-    // jsdom mounts useEffect synchronously after render → testing the
-    // placeholder requires checking what's rendered before effects flush.
-    // Instead we assert the post-mount surface. Existence of the slot is
-    // covered by the dom-testid presence after mount.
     render(<Header />);
-    // After mount, placeholder is gone.
     expect(screen.queryByTestId('header-auth-placeholder')).not.toBeInTheDocument();
   });
 
@@ -45,6 +53,7 @@ describe('Header', () => {
     setAuthState({ isAuthenticated: true });
     render(<Header />);
     expect(screen.getByRole('link', { name: 'Match' })).toHaveAttribute('href', '/match');
+    expect(screen.getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('href', '/profile/me');
     expect(screen.getByRole('link', { name: 'Cuenta' })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByTestId('header-signout')).toBeInTheDocument();
   });
@@ -54,6 +63,34 @@ describe('Header', () => {
     render(<Header />);
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/sign-in');
     expect(screen.getByRole('link', { name: 'Registrarse' })).toHaveAttribute('href', '/sign-up');
+  });
+
+  it('shows the notifications bell (no badge) when authenticated with zero unread', () => {
+    setAuthState({ isAuthenticated: true });
+    setUnreadCount(0);
+    render(<Header />);
+    expect(screen.getByTestId('header-notifications')).toHaveAttribute('href', '/notificaciones');
+    expect(screen.queryByTestId('header-notifications-badge')).not.toBeInTheDocument();
+  });
+
+  it('shows the unread count badge on the bell', () => {
+    setAuthState({ isAuthenticated: true });
+    setUnreadCount(3);
+    render(<Header />);
+    expect(screen.getByTestId('header-notifications-badge')).toHaveTextContent('3');
+  });
+
+  it('caps the unread badge at 9+', () => {
+    setAuthState({ isAuthenticated: true });
+    setUnreadCount(42);
+    render(<Header />);
+    expect(screen.getByTestId('header-notifications-badge')).toHaveTextContent('9+');
+  });
+
+  it('hides the bell for guests', () => {
+    setAuthState({ isAuthenticated: false });
+    render(<Header />);
+    expect(screen.queryByTestId('header-notifications')).not.toBeInTheDocument();
   });
 
   it('signOut button calls the store action', async () => {

@@ -9,7 +9,7 @@ ESTADO DE COMPLETITUD (auditoría 2026-05-12) — leyenda de los comentarios inl
   [ ] + <!-- fuera de Release 01 -->= módulo opcional con costo extra (➕/💰) o visión v2 — intencionalmente fuera de alcance.
   <!-- desviación: ... -->          = implementado pero difiere del nombre/forma descrito en la propuesta (funciona igual).
 Pendientes operacionales para "aceptado": deploy real al VPP por ProjectApp + creds reales (Google OAuth, hCaptcha, VAPID, DJANGO_SECRET_KEY, MySQL pwd). Ver deploy/staging/RUNBOOK.md.
-GAPS detectados (auditoría 2026-05-12): los P2 se están cerrando en "Bloque D" — D1 ✅ (T&C/Privacidad/FAQ pages + componente FAQ + footer), D2 ✅ (página /profile/[id] + endpoint public-profile + "Editar mi cuenta"); pendientes D3 (centro de notificaciones + modelo Notification) y D4 (modelo Report general + moderación de usuarios/trades). GAPS P3 (siguen `<!-- NO IMPLEMENTADO -->`/`<!-- V2 -->`): "en línea ahora"/Live Badge/presencia, Mapa de Coleccionistas, Geolocalización por IP (GeoIP2), dropdown de búsqueda predictiva.
+GAPS detectados (auditoría 2026-05-12): los P2 se están cerrando en "Bloque D" — D1 ✅ (T&C/Privacidad/FAQ pages + componente FAQ + footer), D2 ✅ (página /profile/[id] + endpoint public-profile + "Editar mi cuenta"), D3 ✅ (centro de notificaciones in-app + modelo Notification + campana en el Header); pendiente D4 (modelo Report general + moderación de usuarios/trades). GAPS P3 (siguen `<!-- NO IMPLEMENTADO -->`/`<!-- V2 -->`): "en línea ahora"/Live Badge/presencia, Mapa de Coleccionistas, Geolocalización por IP (GeoIP2), dropdown de búsqueda predictiva.
 -->
 
 ---
@@ -70,7 +70,8 @@ Cada vista es una pantalla o sección de Albunmanía. Su propósito es guiar al 
 - [x] **Perfil del Usuario** — Página personal del coleccionista con estadísticas (% del álbum completo, intercambios realizados), datos de contacto opt-in, configuración de cuenta y una pestaña dedicada de Reseñas: rating promedio (★ 1–5), distribución por estrellas, tags más recibidos, listado paginado con filtro por estrellas y respuesta pública del calificado cuando aplica. <!-- app/profile/[id]/page.tsx — ProfileHeader (avatar/nombre/ciudad/bio + métricas % álbum / intercambios / reseñas + ReviewSummary) + sección "Reseñas" (ReviewCard + filtro por estrellas) + endpoint GET /api/users/<id>/public-profile/ (sin email/teléfono). /profile/me además muestra "Editar mi cuenta" (ciudad, bio, push opt-in, WhatsApp opt-in + número → PATCH /api/profile/me/). El nombre no es editable (viene de Google). El botón "Reportar a este coleccionista" llega en Bloque D4. -->
 
 
-- [ ] **Notificaciones** — Centro de notificaciones con matches nuevos, mensajes y alertas de actividad. Sincronizado con notificaciones push de la PWA. <!-- NO IMPLEMENTADO: no hay modelo Notification ni vista "centro de notificaciones". Sí está el push Web (PushSubscription + push_notify + opt-in en /dashboard), pero no el listado in-app de notificaciones. -->
+- [x] **Notificaciones** — Centro de notificaciones con matches nuevos, mensajes y alertas de actividad. Sincronizado con notificaciones push de la PWA. <!-- app/notificaciones/page.tsx — lista de NotificationItem (modelo Notification: match_mutual / review_received / review_reply) + "sólo no leídas" + "marcar todas como leídas"; campana con badge de no leídas en el Header. Endpoints /api/notifications/ (list ?unread=), /unread-count/, /<id>/read/, /read-all/. Las notificaciones se crean en el signal post_save Match (mutuo) y en las views de crear/responder reseña. "Cromo buscado disponible cerca" requiere un job Huey → V2. -->
+
 
 - [x] **Términos y Condiciones** — Documento legal que explica el modelo de monetización por anuncios, política de datos, edad mínima y aclaración de NO afiliación oficial con FIFA o Panini. <!-- página /terminos (app/terminos/page.tsx + LegalPage + lib/legal/content.ts TERMS_SECTIONS) + enlace en el footer. NOTA: el texto es un borrador de trabajo (banner "legal-draft-notice") — la versión definitiva la debe revisar/redactar el equipo legal del cliente (edad mínima exacta, jurisdicción, limitación de responsabilidad, contacto). -->
 
@@ -95,7 +96,8 @@ Cada vista es una pantalla o sección de Albunmanía. Su propósito es guiar al 
 
 Componentes visuales y funcionales reutilizados en toda la plataforma para mantener coherencia y optimizar el desarrollo.
 
-- [x] **Encabezado (Header)** — Logo de Albunmanía, navegación principal, indicador de notificaciones, avatar del usuario y selector de álbum activo. <!-- components/layout/Header.tsx — logo + nav + slot auth (Cerrar sesión) + patrón mounted. SIN indicador de notificaciones ni selector de álbum activo (no implementados — el álbum activo se fija en el onboarding). -->
+- [x] **Encabezado (Header)** — Logo de Albunmanía, navegación principal, indicador de notificaciones, avatar del usuario y selector de álbum activo. <!-- components/layout/Header.tsx — logo + nav + campana de notificaciones con badge de no leídas (header-notifications) + enlace "Mi perfil" + slot auth (Cerrar sesión) + patrón mounted. SIN selector de álbum activo (el álbum activo se fija en el onboarding) ni avatar gráfico (el avatar gráfico vive en /profile/[id]). -->
+
 
 - [x] **Tarjeta de Cromo (Sticker Card)** — Componente visual reutilizable que muestra cromo, número, equipo y estado (poseído / faltante / repetido). <!-- components/catalog/StickerCard.tsx (data-state missing/owned/repeated, data-count). -->
 
@@ -387,7 +389,8 @@ Creación, venta y canje de tarjetas de regalo digitales con saldo configurable,
 - [x] **AdCreative** — Creatividad subida por el Web Manager para una campaña. Imagen, texto y enlace. <!-- models/ad_creative.py — campaign/image_url/headline/body/click_url/weight/is_active (el campo es `body`, no `body_text`). -->
 - [x] **AdImpression** — Registro de cada impresión servida. Crítico para reportes a anunciantes y sponsor. Particionable por mes para evitar tabla gigante. <!-- models/ad_impression.py — creative/user/slot/city/served_at; AdClick (impression/clicked_at) en el mismo archivo. Desviación: slot = `home | feed` (no `home_top|feed_inline|sponsor_splash`). Aún no particionada (preparada para V2). -->
 - [ ] **Report** — Reporte de moderación: usuarios, contenido inapropiado, no-shows. Procesados por rol Admin. <!-- PARCIAL: sólo existe `ReviewReport` (reportar reseñas) en models/review.py. NO hay modelo Report general con target_user_id/target_trade_id — no se puede reportar perfiles ni intercambios fallidos. Decisión pendiente: ¿V2 o se considera fuera de alcance? -->
-- [ ] **Notification** — Notificación enviada al usuario (push y/o in-app). Trazabilidad de delivery y aperturas. <!-- NO IMPLEMENTADO: no existe modelo Notification. El push Web sí (modelo PushSubscription + push_notify.send_to + sw-push.js), pero NO hay registro in-app de notificaciones (type/title/body/deep_link/sent_at/opened_at) ni la vista "centro de notificaciones". Decisión pendiente: ¿V2? -->
+- [x] **Notification** — Notificación enviada al usuario (push y/o in-app). Trazabilidad de delivery y aperturas. <!-- models/notification.py — user / kind (match_mutual|review_received|review_reply) / title / body / url / actor (FK null) / match (FK null) / review (FK null) / read_at (null hasta abrir) / created_at. Indexes (user, read_at) y (user, -created_at). El push Web es aparte (PushSubscription). El "delivery tracking" del push no se persiste; `read_at` cubre las aperturas in-app. -->
+
 
 
 ---
@@ -620,8 +623,9 @@ Sistema de reseñas post-trade entre coleccionistas: calificación con estrellas
 - [x] Solicitud de banner para slot (con segmentación), tracking de impresión y de clic, gestión de campañas y creatividades por Web Manager. <!-- /api/ads/serve/?slot=, /api/ads/click/<impression_id>/ (302), /api/ads/admin/campaigns/ (+ stats JSON). -->
 ### /api/v1/reports → /api/... (PARCIAL)
 - [ ] Crear reportes de moderación (todos los usuarios). Gestión de cola de reportes (rol Admin). <!-- PARCIAL: sólo /api/reviews/<id>/report/ + /api/admin/reviews/reports/ (reportes de reseñas). NO hay endpoints para reportar perfiles de usuario ni trades/no-shows (no hay modelo Report general). -->
-### /api/v1/notifications → /api/push/... (PARCIAL)
-- [ ] Suscripción y desuscripción de Web Push, listado in-app de notificaciones del usuario. <!-- PARCIAL: /api/push/public-key/, /api/push/subscribe/, /api/push/unsubscribe/ (Web Push) están; el "listado in-app de notificaciones del usuario" NO (no hay modelo Notification ni endpoint /notifications). -->
+### /api/v1/notifications → /api/push/... + /api/notifications/...
+- [x] Suscripción y desuscripción de Web Push, listado in-app de notificaciones del usuario. <!-- Web Push: /api/push/public-key/, /api/push/subscribe/, /api/push/unsubscribe/. Centro in-app: /api/notifications/ (list ?unread=&page=&page_size=), /api/notifications/unread-count/, /api/notifications/<id>/read/, /api/notifications/read-all/. -->
+
 ### /api/v1/admin → /api/admin/...
 - [x] Endpoints de administración: gestión de usuarios y roles, cola de moderación, generación de reportes para sponsor y anunciantes, exportaciones. <!-- /api/admin/users/ (+ .../role/, .../active/), /api/admin/reviews/reports/, /api/admin/analytics/overview/, /api/admin/analytics/export.csv. La "generación de reportes para sponsor y anunciantes" (PDF/CSV segmentado) → V2; sólo está el export.csv del overview. -->
 

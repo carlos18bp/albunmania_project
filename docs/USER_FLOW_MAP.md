@@ -4,7 +4,7 @@
 
 Use this document to understand each flow's steps, branching conditions, role restrictions, and API contracts before writing or reviewing E2E tests. It is paired with `frontend/e2e/flow-definitions.json` (machine-readable registry) and `frontend/e2e/helpers/flow-tags.ts` (`@flow:` tag constants).
 
-**Version:** 2.2.0
+**Version:** 2.3.0
 **Last Updated:** 2026-05-12
 **Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual).
 
@@ -46,6 +46,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `review-post-trade-create` | Post-trade review (stars + tags + comment) | reviews | P1 | collector | `/match/[matchId]` |
 | `review-reply` | Reviewee public reply | reviews | P2 | collector | profile / trade detail |
 | `profile-view` | Collector profile page | profile | P2 | guest | `/profile/[id]` |
+| `notifications-center` | In-app notification center | notifications | P2 | all (authed) | `/notificaciones` + Header bell |
 | `review-profile-summary` | Review tab + rating summary on profile | reviews | P2 | guest | `/profile/[id]` |
 | `review-drawer` | Review drawer on Match / trade detail | reviews | P2 | collector | `/match`, `/match/[matchId]` |
 | `review-moderation` | Admin review-report moderation queue | reviews | P2 | web-manager / admin | `/admin/moderation` |
@@ -918,6 +919,33 @@ Use this document to understand each flow's steps, branching conditions, role re
 |-----------|----------|
 | Ranking empty | `ranking-empty` state |
 | City / album not set | `ranking-empty-config` state |
+
+---
+
+## Notifications Module
+
+### notifications-center
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | collector / merchant / web-manager / admin (authenticated) |
+| **Frontend route** | `/notificaciones` (+ the Header bell) |
+| **API endpoints** | `GET /api/notifications/?unread=&page=&page_size=`, `GET /api/notifications/unread-count/`, `POST /api/notifications/<id>/read/`, `POST /api/notifications/read-all/` |
+
+**Preconditions:** Authenticated (the route uses `useRequireAuth` → redirect to `/sign-in` otherwise).
+
+**Steps:**
+1. The Header (authed) shows a bell (`header-notifications` → `/notificaciones`) with a badge (`header-notifications-badge`) of the unread count (`GET /api/notifications/unread-count/`, capped at "9+").
+2. On `/notificaciones`, `NotificationItem` rows render newest-first (`notification-<id>`, `data-read=true|false`, an unread dot when unread). Each item links to `notification.url` and, on click, is marked read (`POST /api/notifications/<id>/read/`) before navigating.
+3. The "Sólo no leídas" checkbox (`notifications-unread-only`) re-fetches with `?unread=true`. "Marcar todas como leídas" (`notifications-mark-all`) → `POST /api/notifications/read-all/`.
+4. Notifications are **created** server-side: on a new mutual `Match` (`post_save Match` signal — one per participant, `kind=match_mutual`, url `/match/<id>`); on creating a review (`trade_review_create` view — for the reviewee, `kind=review_received`, url `/profile/me`); on replying to a review (`review_reply` view — for the reviewer, `kind=review_reply`, url `/profile/<reviewee>`). (This is in-app only — the Web Push for the match is sent in parallel; see `push-match-mutual-delivery`.)
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Not authenticated | Redirect to `/sign-in` |
+| No notifications | `notifications-empty` state (text differs for the "sólo no leídas" filter) |
+| Unread count == 0 | The bell renders without a badge |
 
 ---
 

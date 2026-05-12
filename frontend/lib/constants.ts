@@ -11,6 +11,7 @@ export const ROUTES = {
   HELP: '/ayuda',
   PROFILE: '/profile',
   PROFILE_ME: '/profile/me',
+  NOTIFICATIONS: '/notificaciones',
 } as const;
 
 export const API_ENDPOINTS = {

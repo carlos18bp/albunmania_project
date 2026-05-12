@@ -28,6 +28,8 @@ const merchant = (id: number): Merchant => ({
   address: 'Cra 7',
   lat: '4.65',
   lng: '-74.07',
+  opening_hours: {},
+  is_listing_visible: true,
 });
 
 describe('MerchantMap', () => {

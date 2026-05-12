@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from albunmania_app.models import (
-    Profile, Review, ReviewReport, Trade, User,
+    Notification, Profile, Review, ReviewReport, Trade, User,
 )
 from albunmania_app.serializers.review import (
     RatingSummarySerializer,
@@ -60,6 +60,15 @@ def trade_review_create(request, trade_id: int):
         comment=serializer.validated_data.get('comment', ''),
         tags=serializer.validated_data.get('tags', []),
     )
+    Notification.objects.create(
+        user_id=other_id,
+        kind=Notification.Kind.REVIEW_RECEIVED,
+        title='Recibiste una reseña',
+        body=f'{request.user.email} te calificó con {review.stars}★.',
+        url='/profile/me',
+        actor=request.user,
+        review=review,
+    )
     return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
 
 
@@ -97,6 +106,15 @@ def review_reply(request, review_id: int):
     review.reply = serializer.validated_data['reply']
     review.replied_at = timezone.now()
     review.save(update_fields=['reply', 'replied_at', 'updated_at'])
+    Notification.objects.create(
+        user_id=review.reviewer_id,
+        kind=Notification.Kind.REVIEW_REPLY,
+        title='Respondieron a tu reseña',
+        body=f'{request.user.email} respondió a la reseña que escribiste.',
+        url=f'/profile/{review.reviewee_id}',
+        actor=request.user,
+        review=review,
+    )
     return Response(ReviewSerializer(review).data)
 
 

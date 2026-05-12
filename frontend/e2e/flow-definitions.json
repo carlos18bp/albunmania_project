@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -360,6 +360,14 @@
       "roles": ["guest"],
       "priority": "P2",
       "description": "/profile/[id] renders the public profile (name/city/avatar/bio + reputation + % album + completed trades via GET /api/users/<id>/public-profile/) and the Reseñas section; /profile/me also shows the 'Editar mi cuenta' form (PATCH /api/profile/me/); linked from the Header avatar",
+      "expectedSpecs": 1
+    },
+    "notifications-center": {
+      "name": "In-app notification center",
+      "module": "notifications",
+      "roles": ["collector", "merchant", "web-manager", "admin"],
+      "priority": "P2",
+      "description": "/notificaciones lists the user's in-app notifications (GET /api/notifications/?unread=), 'sólo no leídas' filter, 'marcar todas como leídas' (POST /read-all/); clicking a notification marks it read (POST /<id>/read/) and navigates to its url. Header bell shows the unread count (GET /api/notifications/unread-count/). Notifications are created on a mutual match and on a review received/replied.",
       "expectedSpecs": 1
     }
   }

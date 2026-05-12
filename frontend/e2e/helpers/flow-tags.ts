@@ -86,3 +86,6 @@ export const HELP_FAQ = ['@flow:help-faq', '@module:help', '@priority:P2'];
 
 // ── Profile ──
 export const PROFILE_VIEW = ['@flow:profile-view', '@module:profile', '@priority:P2'];
+
+// ── Notifications ──
+export const NOTIFICATIONS_CENTER = ['@flow:notifications-center', '@module:notifications', '@priority:P2'];
