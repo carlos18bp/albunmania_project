@@ -12,7 +12,7 @@
   - ✅ Fase 1 (docs E2E): `USER_FLOW_MAP.md` + `flow-definitions.json` reescritos para las 14 épicas; los 46 tests de validación tagueados con `@flow:`; eliminados los 12 `page.waitForTimeout()`; `auth.spec.ts` + `smoke.spec.ts` actualizados a la realidad post-rewrite de `/sign-in`.
   - ✅ Fase 2 (tests backend): `tests/services/test_email_service.py` (6) + `tests/services/test_push_notify.py` (10).
   - ✅ Fase 3 (seeds): `create_fake_data` ahora seedea Review (×2, una con reply) + ReviewReport (×1) + MerchantSubscriptionPayment (×2) + AdImpression (×200) + AdClick (×10) + PushSubscription (1/colector). `TradeWhatsAppOptIn` se deja **sin seed a propósito** (los tests E2E session-03 necesitan que el trade #1 arranque con 0 opt-ins) y `create_fake_data` lo **limpia** del trade seedeado en cada corrida → re-seedear antes de la suite de validación reemplaza el `globalSetup` pendiente. `PasswordCode` se salta (legacy del template). El trade seedeado pasa a estado `completed`.
-  - ⬜ Fase 4 (tests de componentes frontend): backfill de `*.test.tsx` para los subdirs flacos (manual/ 0/3, merchant/ 1/4, onboarding/ 1/4, match/ 2/6, catalog/ 1/3, + singletons). Meta: cobertura de componentes ~40% → ≥80%.
+  - ✅ Fase 4 (tests de componentes frontend): backfilleados los ~20 componentes sin test (manual/×3, KpiTile, GoogleSignInButton, ReviewCard, ReviewSummary, SponsorHeaderBand, MutualMatchModal, RankingList, WhatsAppLinkButton, CatalogFilters, StickerGrid, QRDisplay, QRScanner, MatchFeed, MerchantDashboardForm, MerchantMap, MerchantMapInner, StepAlbumSelect, StepGeolocation, StepPermissions). Borrado `components/layout/Footer.tsx` (dead code con string del template). **Cobertura de componentes: ~90% statements/branches/lines, 79% functions** (umbral del estándar: ≥60%). Suite frontend completa: **321/321 verde** (era 221).
 - **Bloque C — Validación E2E + deploy prep**: ✅ completado.
 
 ## Bloque B — Estado por épica (todas ✅)
@@ -52,18 +52,18 @@
 | Backend views (módulos) | 17 |
 | Backend URL modules | 17 (60 `path()` totales) |
 | Backend migrations | 8 (`0001_initial` → `0008_push_subscription`) |
-| Backend test files | 49 |
-| Frontend components (.tsx, sin tests) | 43 |
+| Backend test files | 51 (+ `test_email_service.py`, `test_push_notify.py`) |
+| Frontend components (.tsx, sin tests) | 42 (`Footer.tsx` borrado por dead code; **cada subdir cubierto**) |
 | Frontend app pages (`page.tsx`) | 20 |
 | Frontend Zustand stores (sin tests) | 16 |
-| Frontend unit test files | 47 |
+| Frontend unit test files | 69 (+ ~20 nuevos de componentes en la auditoría) |
 | E2E spec files | 7 (5 validation + auth + smoke) |
 
 ## Testing status
 
-- Backend: **337/337 verde** (`source backend/venv/bin/activate && pytest --no-cov`).
-- Frontend unit: **221/221 verde** (`cd frontend && npm test`).
-- E2E: 5 specs de validación verde (`PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 npx playwright test e2e/validation/`).
+- Backend: **353/353 verde** (`source backend/venv/bin/activate && pytest --no-cov`; +16 de la auditoría).
+- Frontend unit: **321/321 verde** (`cd frontend && npm test`). Cobertura de componentes ~90% statements/branches/lines.
+- E2E: 46/46 specs de validación + 12/12 `auth/auth.spec.ts` + 1/1 `public/smoke.spec.ts` verde (`PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 npx playwright test`). Re-seedear `create_fake_data` antes de correr la suite de validación (limpia `TradeWhatsAppOptIn`).
 
 ## Known issues / pendientes
 

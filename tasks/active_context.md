@@ -6,7 +6,7 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-12
-**Foco:** Auditoría de Release 01 contra el `/new-feature-checklist` — remediación por fases (Fase 1 ✅ docs E2E + flujos; pendientes: tests backend, seeds, tests de componentes). El Memory Bank refresh quedó cerrado en el commit `30479fd`.
+**Foco:** Auditoría de Release 01 contra el `/new-feature-checklist` — **completada**, las 4 fases: (1) docs E2E + flujos reescritos + tags + sin `waitForTimeout`; (2) tests backend `email_service`/`push_notify`; (3) seeds de los modelos sin fixture en `create_fake_data`; (4) ~20 tests de componentes nuevos (cobertura de componentes ~90%) + borrado de `Footer.tsx` (dead code). El Memory Bank refresh quedó cerrado en el commit `30479fd`. Commits de la auditoría: `9f99425`, `9419fd7`, `aa9fc6c`, `d8896e8`, `82683c4`, `6b44f50`, `88cfbf4` (todos pushed).
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado del producto
@@ -26,9 +26,9 @@
 
 ## Tests
 
-- Backend: **337/337 verde** (`pytest --no-cov`).
-- Frontend unit: **221/221 verde** (`npm test`).
-- E2E: 5 specs de validación + `auth/auth.spec.ts` + `public/smoke.spec.ts`.
+- Backend: **353/353 verde** (`pytest --no-cov`; +16 de la auditoría: `test_email_service.py` + `test_push_notify.py`).
+- Frontend unit: **321/321 verde** (`npm test`; +~100 tests de componentes en la auditoría). Cobertura de componentes ~90% statements/branches/lines.
+- E2E: 46/46 specs de validación (todos `@flow:` tagueados, sin `waitForTimeout`) + 12/12 `auth/auth.spec.ts` + 1/1 `public/smoke.spec.ts`, verificados en vivo.
 
 ## Últimos commits relevantes (mayo 2026)
 

@@ -405,4 +405,36 @@ Se cerró el Release 01 con **5 sesiones iterativas de validación E2E** (`front
 
 ### Deuda de tooling identificada (no bloqueante)
 - `.claude/skills/playwright-validation/` está untracked — decidir si se trackea (las otras skills sí están en git).
-- Falta un `globalSetup` de Playwright que limpie `TradeWhatsAppOptIn` antes de la suite de validación (hoy se limpia manual entre runs, porque el opt-in es per-trade y persiste).
+- ~~Falta un `globalSetup` de Playwright que limpie `TradeWhatsAppOptIn`~~ — resuelto en la auditoría: `create_fake_data` resetea las opt-ins del trade seedeado en cada corrida, así que re-seedear antes de la suite de validación deja el estado limpio.
+
+---
+
+## 15. Auditoría retroactiva con `/new-feature-checklist` (mayo 2026)
+
+Se corrió el checklist de feature nueva sobre las 14 épicas del Release 01 (4 fases: docs de flujos, tests backend, seeds, tests de componentes). Lecciones:
+
+### El "carryover del template" es el mayor riesgo de obsolescencia
+- `docs/USER_FLOW_MAP.md` y `frontend/e2e/flow-definitions.json` documentaban flujos de blog/products/cart/checkout que ya no existían; `frontend/e2e/auth/auth.spec.ts` y `public/smoke.spec.ts` testeaban un form email/password y un hero que el rewrite de `/sign-in` (commit `c738634`) había eliminado; `components/layout/Footer.tsx` era dead code con el copyright del template. **Cuando se reescribe una pantalla, hay que barrer también los specs y la doc de flujos que la describían** — no solo el código.
+
+### `jest.mock` + el global `jest` (trampa de hoisting)
+- Si el archivo de test hace `import { jest } from '@jest/globals'` **y** usa `jest.mock(...)`, el `babel-plugin-jest-hoist` **no** hoistea la llamada (sólo reconoce el `jest` global), así que el mock se aplica *después* de los `import` → no surte efecto. Síntoma: el módulo real se ejecuta igual ("must be used within Provider", etc.). **Fix:** no importar `jest` de `@jest/globals`; usar el global (tipado vía `/// <reference types="jest" />`). Igual de importante: no referenciar un `const`/`let` de scope de módulo dentro del factory de `jest.mock` (TDZ) — para variables que el factory necesita, prefijarlas con `mock` o usar el patrón `useStore: jest.fn()` + `(useStore as unknown as jest.Mock).mockImplementation(...)` en `beforeEach`.
+
+### Patrón estándar para testear un componente que lee un store Zustand
+```ts
+jest.mock('@/lib/stores/xStore', () => ({ __esModule: true, useXStore: jest.fn() }));
+import { useXStore } from '@/lib/stores/xStore';
+const mockUseXStore = useXStore as unknown as jest.Mock;
+let storeState: { ...; setter: jest.Mock };
+beforeEach(() => {
+  storeState = { ...defaults };
+  mockUseXStore.mockImplementation((selector) => selector(storeState));
+});
+// luego cada test muta storeState ANTES de render() y assert.
+```
+Evita mockear `@/lib/services/http` y manejar promesas no-resueltas; las acciones del store quedan como `jest.fn()` (no disparan red).
+
+### Mockear los boundaries externos, no la lógica del componente
+- `next/image` → `<img>` stub; `next/dynamic({ssr:false})` → devolver un componente stub (así no se carga el módulo lazy ni `react-leaflet`); `react-leaflet` (`MapContainer`/`TileLayer`/`Marker`/`Popup`) → stubs que renderizan children (testear qué props recibe el `MerchantMapInner`, no que Leaflet pinte un canvas); `@zxing/browser` (`BrowserQRCodeReader.decodeFromVideoDevice`) → controlar resolve/reject/callback para los caminos cámara-ok / cámara-falla; `navigator.geolocation` → stub `getCurrentPosition(success, error)`; `@react-oauth/google` `useGoogleLogin` → devolver un `jest.fn()` (el real exige `GoogleOAuthProvider`). `qrcode.react` y `fuse.js` se usan reales (funcionan en jsdom).
+
+### El audit subió la cobertura de componentes de ~40% a ~90%
+- `npm test -- --coverage --collectCoverageFrom='components/**/*.{ts,tsx}'` → 89.6% statements/branches/lines, 79% functions. Los stores ya estaban 16/16. El umbral del estándar (≥60% componentes, ≥75% stores) está holgadamente cubierto.
