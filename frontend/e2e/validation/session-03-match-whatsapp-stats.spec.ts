@@ -18,6 +18,17 @@
 import { expect, test } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {
+  MATCH_SWIPE_FEED,
+  MATCH_LIKE_MUTUAL,
+  MATCH_LIST_MINE,
+  MATCH_QR_MINE,
+  MATCH_QR_SCAN_CONFIRM,
+  MATCH_DETAIL_TRADE,
+  WHATSAPP_OPTIN_PER_TRADE,
+  STATS_DASHBOARD_TILES,
+  STATS_CITY_RANKING,
+} from '../helpers/flow-tags';
 
 const SESSIONS_DIR = path.join(__dirname, '..', '..', '..', '.playwright_local', 'sessions');
 
@@ -29,7 +40,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
   test.use({ storageState: loadStorageState('user.json') });
 
   test.describe('Match feed (swipe)', () => {
-    test('renders the nearby candidate and tab navigation', async ({ page }) => {
+    test('renders the nearby candidate and tab navigation', { tag: [...MATCH_SWIPE_FEED] }, async ({ page }) => {
       await page.goto('/match');
       await expect(page.getByRole('heading', { name: 'Match' })).toBeVisible();
       await expect(page.getByTestId('tab-swipe')).toBeVisible();
@@ -41,7 +52,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
       await expect(card).toBeVisible();
     });
 
-    test('clicking Like fires POST /match/like/ with the right payload', async ({ page }) => {
+    test('clicking Like fires POST /match/like/ with the right payload', { tag: [...MATCH_LIKE_MUTUAL] }, async ({ page }) => {
       await page.goto('/match');
       const card = page.locator('[data-testid^="swipe-card-"]');
       await card.waitFor({ timeout: 10_000 });
@@ -73,7 +84,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
       expect([true, false]).toContain(responseBody.mutual);
     });
 
-    test('"Mis matches" tab lists at least the seeded mutual', async ({ page }) => {
+    test('"Mis matches" tab lists at least the seeded mutual', { tag: [...MATCH_LIST_MINE] }, async ({ page }) => {
       await page.goto('/match');
       await page.getByTestId('tab-mine').click();
       const list = page.getByTestId('my-matches');
@@ -83,7 +94,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
   });
 
   test.describe('QR presencial', () => {
-    test('"Mi QR" tab renders the QR code SVG', async ({ page }) => {
+    test('"Mi QR" tab renders the QR code SVG', { tag: [...MATCH_QR_MINE] }, async ({ page }) => {
       await page.goto('/match/qr');
       await expect(page.getByRole('heading', { name: 'Match presencial' })).toBeVisible();
       const qrDisplay = page.getByTestId('qr-display');
@@ -92,7 +103,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
       await expect(qrDisplay.locator('svg')).toBeVisible();
     });
 
-    test('switching to "Escanear" mounts the scanner placeholder', async ({ page }) => {
+    test('switching to "Escanear" mounts the scanner placeholder', { tag: [...MATCH_QR_SCAN_CONFIRM] }, async ({ page }) => {
       await page.goto('/match/qr');
       await page.getByTestId('tab-scan').click();
       // Either the video stream renders (camera available) or the
@@ -110,7 +121,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
   });
 
   test.describe('WhatsApp opt-in (per-trade)', () => {
-    test('match detail renders trade items and WhatsApp toggle', async ({ page }) => {
+    test('match detail renders trade items and WhatsApp toggle', { tag: [...MATCH_DETAIL_TRADE, ...WHATSAPP_OPTIN_PER_TRADE] }, async ({ page }) => {
       await page.goto('/match/1');
       await expect(page.getByRole('heading', { name: /Match #1/ })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByTestId('trade-items')).toBeVisible();
@@ -121,7 +132,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
       await expect(page.getByTestId('whatsapp-link-disabled')).toBeVisible();
     });
 
-    test('user opt-in alone keeps the link disabled (waits for peer)', async ({ page }) => {
+    test('user opt-in alone keeps the link disabled (waits for peer)', { tag: [...WHATSAPP_OPTIN_PER_TRADE] }, async ({ page }) => {
       await page.goto('/match/1');
       const checkbox = page.getByTestId('whatsapp-optin-checkbox');
       await checkbox.waitFor({ timeout: 10_000 });
@@ -140,7 +151,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
       await expect(page.getByTestId('whatsapp-link-disabled')).toBeVisible();
     });
 
-    test('mutual opt-in unlocks the wa.me deep link', async ({ browser }) => {
+    test('mutual opt-in unlocks the wa.me deep link', { tag: [...WHATSAPP_OPTIN_PER_TRADE] }, async ({ browser }) => {
       // Set up two contexts: user + user2. Each opts in for trade #1.
       const userState = loadStorageState('user.json');
       const user2State = loadStorageState('user2.json');
@@ -183,7 +194,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
   });
 
   test.describe('Stats dashboard', () => {
-    test('StatCard renders six aggregate tiles', async ({ page }) => {
+    test('StatCard renders six aggregate tiles', { tag: [...STATS_DASHBOARD_TILES] }, async ({ page }) => {
       await page.goto('/dashboard');
       await expect(page.getByRole('heading', { name: 'Mi álbum' })).toBeVisible();
       const card = page.getByTestId('stat-card');
@@ -199,7 +210,7 @@ test.describe('Session 3 — Match + WhatsApp + Stats', () => {
       await expect(card).toContainText('ETA finalización');
     });
 
-    test('RankingList renders Bogotá entries (or empty state)', async ({ page }) => {
+    test('RankingList renders Bogotá entries (or empty state)', { tag: [...STATS_CITY_RANKING] }, async ({ page }) => {
       await page.goto('/dashboard');
       // The seed user has city=Bogotá and active_album_id=1, so the
       // ranking should at least render *something* — either the list

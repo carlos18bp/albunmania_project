@@ -18,6 +18,13 @@
 import { expect, test } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {
+  CATALOG_GRID_FILTERS,
+  CATALOG_SPECIAL_EDITION,
+  CATALOG_INVENTORY_TAP,
+  SPONSOR_SPLASH_HEADER,
+  THEME_DARK_TOGGLE,
+} from '../helpers/flow-tags';
 
 const SESSIONS_DIR = path.join(__dirname, '..', '..', '..', '.playwright_local', 'sessions');
 
@@ -29,36 +36,35 @@ test.describe('Session 2 — Catalog + Inventory + Sponsor + Theming', () => {
   test.use({ storageState: loadStorageState('user.json') });
 
   test.describe('Catalog grid', () => {
-    test('renders all seeded stickers and special filter narrows results', async ({ page }) => {
+    test('renders all seeded stickers and special filter narrows results', { tag: [...CATALOG_GRID_FILTERS, ...CATALOG_SPECIAL_EDITION] }, async ({ page }) => {
       await page.goto('/catalog/mundial-26');
-      // Wait for the grid to render at least one card.
-      await page.waitForSelector('[data-testid^="sticker-card-"]', { timeout: 15_000 });
-      const allCards = await page.locator('[data-testid^="sticker-card-"]').count();
-      expect(allCards).toBeGreaterThanOrEqual(50);
+      // Wait for the grid to settle — the seed has 50 stickers; the list
+      // briefly re-renders while the inventory store hydrates, so poll
+      // rather than counting once after a single waitForSelector.
+      await expect
+        .poll(() => page.locator('[data-testid^="sticker-card-"]').count(), { timeout: 15_000 })
+        .toBeGreaterThanOrEqual(50);
 
-      // Toggle the "Solo ediciones especiales" checkbox and let the
-      // debounced filter (250ms) hit the API.
+      // Toggle the "Solo ediciones especiales" checkbox; the debounced
+      // filter (250ms) hits the API and the grid re-renders to the 4
+      // seeded special stickers.
       await page.getByTestId('catalog-filter-special').check();
       await page.waitForResponse((res) =>
         res.url().includes('/api/albums/mundial-26/stickers/') &&
         res.url().includes('special=true'),
         { timeout: 5_000 },
       );
-      await page.waitForTimeout(500);
-
-      const filteredCards = await page.locator('[data-testid^="sticker-card-"]').count();
-      expect(filteredCards).toBe(4); // seed has 4 special stickers
+      await expect(page.locator('[data-testid^="sticker-card-"]')).toHaveCount(4, { timeout: 5_000 });
     });
 
-    test('special-edition cards render the ★ badge', async ({ page }) => {
+    test('special-edition cards render the ★ badge', { tag: [...CATALOG_SPECIAL_EDITION] }, async ({ page }) => {
       await page.goto('/catalog/mundial-26');
       await page.getByTestId('catalog-filter-special').check();
-      await page.waitForTimeout(800);
-      const badges = await page.getByTestId('special-badge').count();
-      expect(badges).toBeGreaterThan(0);
+      await expect(page.getByTestId('special-badge').first()).toBeVisible({ timeout: 5_000 });
+      expect(await page.getByTestId('special-badge').count()).toBeGreaterThan(0);
     });
 
-    test('search input filters stickers server-side', async ({ page }) => {
+    test('search input filters stickers server-side', { tag: [...CATALOG_GRID_FILTERS] }, async ({ page }) => {
       await page.goto('/catalog/mundial-26');
       await page.waitForSelector('[data-testid^="sticker-card-"]');
       const search = page.getByTestId('catalog-search');
@@ -67,15 +73,13 @@ test.describe('Session 2 — Catalog + Inventory + Sponsor + Theming', () => {
         res.url().includes('/api/albums/mundial-26/stickers/') && res.url().includes('q=Argentina'),
         { timeout: 5_000 },
       );
-      await page.waitForTimeout(500);
-      const cards = await page.locator('[data-testid^="sticker-card-"]').count();
       // seed cycles 10 teams over 50 stickers → exactly 5 match "Argentina".
-      expect(cards).toBe(5);
+      await expect(page.locator('[data-testid^="sticker-card-"]')).toHaveCount(5, { timeout: 5_000 });
     });
   });
 
   test.describe('Inventory tap UX (0 / 1 / 2+ / long-press)', () => {
-    test('three taps increment data-count by +3 from the seeded value', async ({ page }) => {
+    test('three taps increment data-count by +3 from the seeded value', { tag: [...CATALOG_INVENTORY_TAP] }, async ({ page }) => {
       await page.goto('/catalog/mundial-26');
       const firstCard = page.locator('[data-testid^="sticker-card-"]').first();
       await firstCard.waitFor();
@@ -92,18 +96,13 @@ test.describe('Session 2 — Catalog + Inventory + Sponsor + Theming', () => {
       await firstCard.click();
       await firstCard.click();
       await firstCard.click();
-      await page.waitForTimeout(200);
 
-      const finalCount = Number(
-        (await firstCard.getAttribute('data-count')) ?? '0',
-      );
-      expect(finalCount).toBe(initialCount + 3);
-
-      const finalState = await firstCard.getAttribute('data-state');
-      expect(finalState).toBe('repeated'); // count >= 2 always after +3 taps
+      await expect(firstCard).toHaveAttribute('data-count', String(initialCount + 3), { timeout: 5_000 });
+      // count >= 2 always after +3 taps
+      await expect(firstCard).toHaveAttribute('data-state', 'repeated');
     });
 
-    test('bulk sync POSTs after the 2s debounce', async ({ page }) => {
+    test('bulk sync POSTs after the 2s debounce', { tag: [...CATALOG_INVENTORY_TAP] }, async ({ page }) => {
       await page.goto('/catalog/mundial-26');
       const firstCard = page.locator('[data-testid^="sticker-card-"]').first();
       await firstCard.waitFor();
@@ -126,33 +125,29 @@ test.describe('Session 2 — Catalog + Inventory + Sponsor + Theming', () => {
   });
 
   test.describe('Sponsor (splash + header band)', () => {
-    test('header band renders "Presentado por …"', async ({ page }) => {
+    test('header band renders "Presentado por …"', { tag: [...SPONSOR_SPLASH_HEADER] }, async ({ page }) => {
       await page.goto('/');
       await expect(page.getByTestId('sponsor-header-band')).toBeVisible();
       // Should mention the seed Coca-Cola brand.
       await expect(page.getByTestId('sponsor-header-band')).toContainText(/Presentado por/);
     });
 
-    test('splash mounts on first paint and dismisses', async ({ page }) => {
+    test('splash mounts on first paint and dismisses', { tag: [...SPONSOR_SPLASH_HEADER] }, async ({ page }) => {
       await page.goto('/');
-      // Splash mounts client-side after the sponsor store hydrates.
-      // It auto-dismisses after 1800ms — verify it appeared at least
-      // once or that the page renders normally even if the seed sponsor
-      // is null.
+      // Splash mounts client-side after the sponsor store hydrates and
+      // auto-dismisses after ~1800ms. It may also be skipped entirely if
+      // there is no seeded Sponsor — both states are acceptable; the
+      // observable invariant is that it is NOT visible once settled.
       const splash = page.getByTestId('sponsor-splash');
       const appeared = await splash.isVisible().catch(() => false);
-      // Wait past the auto-dismiss window.
-      await page.waitForTimeout(2200);
-      const stillThere = await splash.isVisible().catch(() => false);
-      // Either it appeared briefly, or it skipped (no sponsor seed).
-      expect(stillThere).toBe(false);
+      await expect(splash).toBeHidden({ timeout: 5_000 });
       // No assertion on appeared — both states are acceptable.
       expect(typeof appeared).toBe('boolean');
     });
   });
 
   test.describe('Theme toggle (light/dark)', () => {
-    test('toggle flips documentElement.dark class', async ({ page }) => {
+    test('toggle flips documentElement.dark class', { tag: [...THEME_DARK_TOGGLE] }, async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
@@ -165,12 +160,10 @@ test.describe('Session 2 — Catalog + Inventory + Sponsor + Theming', () => {
       const darkOption = page.getByRole('menuitemradio', { name: 'Dark' });
       await darkOption.waitFor({ timeout: 5_000 });
       await darkOption.click();
-      await page.waitForTimeout(400);
 
-      const afterDark = await page.evaluate(() =>
-        document.documentElement.classList.contains('dark'),
-      );
-      expect(afterDark).toBe(true);
+      await expect
+        .poll(() => page.evaluate(() => document.documentElement.classList.contains('dark')), { timeout: 5_000 })
+        .toBe(true);
     });
   });
 });

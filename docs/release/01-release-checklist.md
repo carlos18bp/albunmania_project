@@ -393,7 +393,7 @@ Catálogo del álbum precargado con búsqueda predictiva, ediciones especiales d
 
   - Configuración: Campos is_special_edition, special_tier y market_value_estimate en Sticker. UI diferencia visualmente con animación dorada.
 
-- [ ] **Búsqueda con autocompletado** — Búsqueda predictiva sobre nombre de jugador, equipo, número y coleccionistas. Sugerencias visuales con previsualización.
+- [ ] **Búsqueda con autocompletado** <!-- V2: el buscador del catálogo filtra server-side; falta el autocompletado predictivo con previsualización --> — Búsqueda predictiva sobre nombre de jugador, equipo, número y coleccionistas. Sugerencias visuales con previsualización.
 
   - Configuración: Endpoint dedicado con índices full-text en MySQL. Debounce de 300ms en frontend.
 
@@ -467,9 +467,9 @@ Configuración del branding del Presenting Sponsor: logo en splash, header persi
 
 - [x] **Header persistente discreto** — Banda inferior o lateral con 'Presentado por [Logo]' visible en todas las pantallas, sin invadir UX.
 
-- [ ] **Branding sutil en notificaciones oficiales** — Emails y notificaciones push oficiales incluyen pie con 'Albunmanía + [Marca]'.
+- [ ] **Branding sutil en notificaciones oficiales** <!-- V2 --> — Emails y notificaciones push oficiales incluyen pie con 'Albunmanía + [Marca]'.
 
-- [ ] **Reportes de exposición para el Sponsor** — Generación de reportes mensuales con impresiones del logo en splash, header, push y eventos. Vital para renovar el contrato.
+- [ ] **Reportes de exposición para el Sponsor** <!-- V2: pipeline Huey + storage + descarga firmada --> — Generación de reportes mensuales con impresiones del logo en splash, header, push y eventos. Vital para renovar el contrato.
 
   - Configuración: Cálculo agregado en Huey nocturno. Exportable a PDF con branding.
 
@@ -489,7 +489,7 @@ Inventario publicitario rotativo con segmentación geográfica, control de frecu
 
   - Configuración: Tabla particionada por mes. Redirect server-side con UTM tracking.
 
-- [ ] **Reportes para anunciantes** — PDF/CSV descargable con impresiones, clics, CTR y alcance geográfico por campaña. Generado on-demand desde el panel admin.
+- [ ] **Reportes para anunciantes** <!-- V2: los datos ya se exponen como JSON en /ads/admin/campaigns/{id}/stats/; falta el PDF/CSV descargable --> — PDF/CSV descargable con impresiones, clics, CTR y alcance geográfico por campaña. Generado on-demand desde el panel admin.
 
   - Configuración: Generación en Huey, almacenamiento temporal, descarga firmada.
 
@@ -497,7 +497,7 @@ Inventario publicitario rotativo con segmentación geográfica, control de frecu
 
 Panel propio para Web Manager y Admin con gestión completa de los 3 motores de monetización, álbumes, usuarios, moderación y reportes.
 
-- [ ] **Gestor de álbumes** — Crear, editar y archivar álbumes. Carga masiva del catálogo de cromos vía CSV.
+- [ ] **Gestor de álbumes** <!-- V2: la gestión de álbumes existe vía Django Admin; falta la carga masiva por CSV en el panel propio --> — Crear, editar y archivar álbumes. Carga masiva del catálogo de cromos vía CSV.
 
 - [x] **Gestor de usuarios y roles** — Asignación de roles (Coleccionista, Comerciante, Web Manager, Admin), bloqueo y desbloqueo de cuentas.
 
@@ -509,13 +509,13 @@ Panel propio para Web Manager y Admin con gestión completa de los 3 motores de 
 
 Capacidades de aplicación instalable, modo offline parcial y notificaciones push.
 
-- [ ] **PWA instalable en dispositivo** — Web App Manifest + Service Worker para que la PWA se instale como app desde el navegador en móvil y escritorio.
+- [x] **PWA instalable en dispositivo** — Web App Manifest + Service Worker para que la PWA se instale como app desde el navegador en móvil y escritorio.
 
   - Configuración: next-pwa con manifest configurado. Iconos para iOS, Android y desktop. Splash screen con identidad de Albunmanía.
 
-- [ ] **Funcionamiento offline parcial** — Catálogo del álbum, inventario propio y matches recientes accesibles sin conexión. Sincronización al reconectarse.
+- [x] **Funcionamiento offline parcial** — Catálogo del álbum, inventario propio y matches recientes accesibles sin conexión. Sincronización al reconectarse.
 
-  - Configuración: Estrategia stale-while-revalidate para catálogo. Cola de mutaciones pendientes en IndexedDB.
+  - Configuración: Estrategia stale-while-revalidate para catálogo (next-pwa runtimeCaching). Cruce QR presencial offline sobre inventario cacheado en IndexedDB (`idb-keyval`).
 
 - [x] **Notificaciones push de matches y mensajes** — Push API con opt-in explícito. Notificación al recibir match nuevo, respuesta a un match o cromo buscado disponible cerca.
 
@@ -525,11 +525,11 @@ Capacidades de aplicación instalable, modo offline parcial y notificaciones pus
 
 Multi-idioma nativo (español, inglés, portugués) y dark mode automático según preferencia del sistema.
 
-- [ ] **Soporte multi-idioma** — Tres idiomas soportados: español (default), inglés, portugués. Selector visible y persistencia de preferencia. Detección automática del navegador en primer ingreso.
+- [ ] **Soporte multi-idioma** <!-- V2: messages/{es,en,pt}.json existen y están poblados + i18n/request.ts; falta el wiring real en las páginas (hoy copy hardcoded en español) --> — Tres idiomas soportados: español (default), inglés, portugués. Selector visible y persistencia de preferencia. Detección automática del navegador en primer ingreso.
 
   - Configuración: next-intl con archivos JSON por idioma. Backend usa Django translation para emails y push.
 
-- [ ] **Modo claro y oscuro automático** — Paleta dual con detección de prefers-color-scheme y persistencia de elección manual del usuario.
+- [x] **Modo claro y oscuro automático** — Paleta dual con detección de prefers-color-scheme y persistencia de elección manual del usuario.
 
   - Configuración: Tailwind dark mode class strategy. Variables CSS para colores dinámicos del sponsor.
 

@@ -1,23 +1,78 @@
 /**
  * Flow tag constants for consistent E2E test tagging.
  *
- * Each constant bundles @flow:, @module:, and @priority: tags.
- * Use spread syntax to compose tags in tests:
+ * Each constant bundles @flow:, @module:, and @priority: tags. Use spread
+ * syntax to compose tags in tests:
  *
- *   import { AUTH_LOGIN_INVALID } from '../helpers/flow-tags';
- *   test('...', { tag: [...AUTH_LOGIN_INVALID] }, async ({ page }) => { ... });
+ *   import { AUTH_GOOGLE_SIGNIN } from '../helpers/flow-tags';
+ *   test('...', { tag: [...AUTH_GOOGLE_SIGNIN] }, async ({ page }) => { ... });
  *
- * Albunmanía-specific tags (catálogo del álbum, match swipe + QR, WhatsApp,
- * sponsor, banners CPM, reseñas) will be added here as their epics land in
- * Bloque B.
+ * The flow IDs here MUST match `e2e/flow-definitions.json` and the
+ * `### <flow-id>` headings in `docs/USER_FLOW_MAP.md`. See the
+ * "Maintenance Rules" section there before adding/removing a flow.
  */
 
-// ── Home ──
-export const HOME_LOADS = ['@flow:home-loads', '@module:home', '@priority:P1'];
+// ── Public ──
+export const PUBLIC_HOME_LOADS = ['@flow:public-home-loads', '@module:public', '@priority:P1'];
 
 // ── Auth ──
-export const AUTH_SIGN_IN_FORM = ['@flow:auth-sign-in-form', '@module:auth', '@priority:P1'];
-export const AUTH_SIGN_UP_FORM = ['@flow:auth-sign-up-form', '@module:auth', '@priority:P1'];
-export const AUTH_LOGIN_INVALID = ['@flow:auth-login-invalid', '@module:auth', '@priority:P1'];
+export const AUTH_GOOGLE_SIGNIN = ['@flow:auth-google-signin', '@module:auth', '@priority:P1'];
+export const AUTH_GOOGLE_SIGNUP = ['@flow:auth-google-signup', '@module:auth', '@priority:P1'];
+export const AUTH_HCAPTCHA_GATE = ['@flow:auth-hcaptcha-gate', '@module:auth', '@priority:P1'];
+export const AUTH_ONBOARDING_WIZARD = ['@flow:auth-onboarding-wizard', '@module:auth', '@priority:P1'];
+export const AUTH_GUEST_BROWSE = ['@flow:auth-guest-browse', '@module:auth', '@priority:P2'];
 export const AUTH_PROTECTED_REDIRECT = ['@flow:auth-protected-redirect', '@module:auth', '@priority:P1'];
-export const AUTH_FORGOT_PASSWORD_FORM = ['@flow:auth-forgot-password-form', '@module:auth', '@priority:P2'];
+export const AUTH_SESSION_PERSISTENCE = ['@flow:auth-session-persistence', '@module:auth', '@priority:P2'];
+
+// ── Catalog ──
+export const CATALOG_GRID_FILTERS = ['@flow:catalog-grid-filters', '@module:catalog', '@priority:P1'];
+export const CATALOG_INVENTORY_TAP = ['@flow:catalog-inventory-tap', '@module:catalog', '@priority:P1'];
+export const CATALOG_SPECIAL_EDITION = ['@flow:catalog-special-edition', '@module:catalog', '@priority:P2'];
+
+// ── Match ──
+export const MATCH_SWIPE_FEED = ['@flow:match-swipe-feed', '@module:match', '@priority:P1'];
+export const MATCH_LIKE_MUTUAL = ['@flow:match-like-mutual', '@module:match', '@priority:P1'];
+export const MATCH_LIST_MINE = ['@flow:match-list-mine', '@module:match', '@priority:P2'];
+export const MATCH_QR_MINE = ['@flow:match-qr-mine', '@module:match', '@priority:P1'];
+export const MATCH_QR_SCAN_CONFIRM = ['@flow:match-qr-scan-confirm', '@module:match', '@priority:P1'];
+export const MATCH_DETAIL_TRADE = ['@flow:match-detail-trade', '@module:match', '@priority:P1'];
+
+// ── WhatsApp ──
+export const WHATSAPP_OPTIN_PER_TRADE = ['@flow:whatsapp-optin-per-trade', '@module:whatsapp', '@priority:P1'];
+
+// ── Merchant ──
+export const MERCHANT_PUBLIC_LIST_MAP = ['@flow:merchant-public-list-map', '@module:merchant', '@priority:P1'];
+export const MERCHANT_DASHBOARD_EDIT = ['@flow:merchant-dashboard-edit', '@module:merchant', '@priority:P1'];
+export const MERCHANT_ADMIN_PROMOTE_PAY = ['@flow:merchant-admin-promote-pay', '@module:merchant', '@priority:P2'];
+
+// ── Sponsor / Theme ──
+export const SPONSOR_SPLASH_HEADER = ['@flow:sponsor-splash-header', '@module:sponsor', '@priority:P2'];
+export const THEME_DARK_TOGGLE = ['@flow:theme-dark-toggle', '@module:theme', '@priority:P2'];
+
+// ── Ads ──
+export const ADS_BANNER_SERVE_CLICK = ['@flow:ads-banner-serve-click', '@module:ads', '@priority:P1'];
+export const ADS_FREQUENCY_CAP = ['@flow:ads-frequency-cap', '@module:ads', '@priority:P2'];
+
+// ── Reviews ──
+export const REVIEW_POST_TRADE_CREATE = ['@flow:review-post-trade-create', '@module:reviews', '@priority:P1'];
+export const REVIEW_REPLY = ['@flow:review-reply', '@module:reviews', '@priority:P2'];
+export const REVIEW_PROFILE_SUMMARY = ['@flow:review-profile-summary', '@module:reviews', '@priority:P2'];
+export const REVIEW_DRAWER = ['@flow:review-drawer', '@module:reviews', '@priority:P2'];
+export const REVIEW_MODERATION = ['@flow:review-moderation', '@module:reviews', '@priority:P2'];
+
+// ── Stats ──
+export const STATS_DASHBOARD_TILES = ['@flow:stats-dashboard-tiles', '@module:stats', '@priority:P1'];
+export const STATS_CITY_RANKING = ['@flow:stats-city-ranking', '@module:stats', '@priority:P2'];
+
+// ── Push ──
+export const PUSH_SUBSCRIBE = ['@flow:push-subscribe', '@module:push', '@priority:P2'];
+export const PUSH_MATCH_MUTUAL_DELIVERY = ['@flow:push-match-mutual-delivery', '@module:push', '@priority:P2'];
+
+// ── Admin ──
+export const ADMIN_LANDING_GATED = ['@flow:admin-landing-gated', '@module:admin', '@priority:P1'];
+export const ADMIN_USERS_ROLES = ['@flow:admin-users-roles', '@module:admin', '@priority:P1'];
+export const ADMIN_MODERATION_QUEUE = ['@flow:admin-moderation-queue', '@module:admin', '@priority:P2'];
+export const ADMIN_ANALYTICS_OVERVIEW = ['@flow:admin-analytics-overview', '@module:admin', '@priority:P1'];
+
+// ── Manual ──
+export const MANUAL_SEARCH_BROWSE = ['@flow:manual-search-browse', '@module:manual', '@priority:P2'];

@@ -1,45 +1,53 @@
 {
-  "version": "1.0.0",
-  "lastUpdated": "2026-05-11",
+  "version": "2.0.0",
+  "lastUpdated": "2026-05-12",
   "flows": {
-    "home-loads": {
-      "name": "Home page loads",
-      "module": "home",
-      "roles": ["shared"],
+    "public-home-loads": {
+      "name": "Landing page loads",
+      "module": "public",
+      "roles": ["guest"],
       "priority": "P1",
-      "description": "Albunmanía landing page renders with main heading visible",
+      "description": "Albunmanía landing renders hero + CTAs, sponsor splash/header band mount, banner slot and footer disclaimer present",
       "expectedSpecs": 1
     },
-    "auth-sign-in-form": {
-      "name": "Sign-in form display and interaction",
+    "auth-google-signin": {
+      "name": "Sign in with Google",
       "module": "auth",
-      "roles": ["shared"],
+      "roles": ["guest"],
       "priority": "P1",
-      "description": "User can navigate to sign-in, see the form, and interact with inputs",
+      "description": "Sign-in page renders Google OAuth button + hCaptcha; exchange validates account age (>=30 days) and issues JWT cookies",
       "expectedSpecs": 1
     },
-    "auth-sign-up-form": {
-      "name": "Sign-up form display and validation",
+    "auth-google-signup": {
+      "name": "Sign up with Google",
       "module": "auth",
-      "roles": ["shared"],
+      "roles": ["guest"],
       "priority": "P1",
-      "description": "User can see sign-up form fields and triggers password mismatch validation",
+      "description": "Sign-up page renders Google OAuth + hCaptcha; get-or-create user then redirect to onboarding",
       "expectedSpecs": 1
     },
-    "auth-forgot-password-form": {
-      "name": "Forgot password form",
+    "auth-hcaptcha-gate": {
+      "name": "hCaptcha gate on auth pages",
       "module": "auth",
-      "roles": ["shared"],
+      "roles": ["guest"],
+      "priority": "P1",
+      "description": "hCaptcha widget fetches the sitekey and mounts on /sign-in and /sign-up; token required before Google submission",
+      "expectedSpecs": 1
+    },
+    "auth-onboarding-wizard": {
+      "name": "3-step onboarding wizard",
+      "module": "auth",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "Onboarding: pick active album, grant geolocation, set push/whatsapp prefs; saves Profile then redirect to dashboard",
+      "expectedSpecs": 1
+    },
+    "auth-guest-browse": {
+      "name": "Browse as guest",
+      "module": "auth",
+      "roles": ["guest"],
       "priority": "P2",
-      "description": "User can reach the forgot-password page and see the form",
-      "expectedSpecs": 1
-    },
-    "auth-login-invalid": {
-      "name": "Sign-in with invalid credentials",
-      "module": "auth",
-      "roles": ["shared"],
-      "priority": "P1",
-      "description": "Invalid credentials show error gracefully without a hard crash",
+      "description": "Guest can browse landing, catalog, merchants and manual without login; trade actions prompt login",
       "expectedSpecs": 1
     },
     "auth-protected-redirect": {
@@ -47,7 +55,263 @@
       "module": "auth",
       "roles": ["collector", "merchant", "web-manager", "admin"],
       "priority": "P1",
-      "description": "Unauthenticated user navigating to /dashboard or /backoffice is redirected to /sign-in",
+      "description": "Unauthenticated user on /dashboard or /admin redirected to /sign-in; role-mismatched user redirected to /dashboard",
+      "expectedSpecs": 1
+    },
+    "auth-session-persistence": {
+      "name": "Session persistence (cookies)",
+      "module": "auth",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "JWT stored in cookies survives reload; access token refreshed via /api/token/refresh/ when expired",
+      "expectedSpecs": 1
+    },
+    "catalog-grid-filters": {
+      "name": "Browse catalog + filters/search",
+      "module": "catalog",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "Catalog grid renders one card per sticker; team/number/player filters and server-side search narrow results",
+      "expectedSpecs": 1
+    },
+    "catalog-inventory-tap": {
+      "name": "Inventory 0/1/2+ tap + sync",
+      "module": "catalog",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "Tap increments data-count (missing -> owned -> repeated); long-press resets; bulk sync POSTs after ~2s debounce",
+      "expectedSpecs": 1
+    },
+    "catalog-special-edition": {
+      "name": "Special-edition badge + filter",
+      "module": "catalog",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "Special-edition filter narrows the grid to flagged stickers; each renders the golden ★ badge",
+      "expectedSpecs": 1
+    },
+    "match-swipe-feed": {
+      "name": "Match swipe feed renders",
+      "module": "match",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "/match shows swipe/mine tabs and the nearby candidate cards (bbox + haversine, complementary inventory, review preview)",
+      "expectedSpecs": 1
+    },
+    "match-like-mutual": {
+      "name": "Like -> mutual match",
+      "module": "match",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "Like POSTs /api/match/like/ with {to_user, sticker_offered, sticker_wanted}; mirror Like -> mutual modal + push",
+      "expectedSpecs": 1
+    },
+    "match-list-mine": {
+      "name": "My matches list",
+      "module": "match",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "The 'mine' tab lists existing mutual matches, each linking to /match/<id>",
+      "expectedSpecs": 1
+    },
+    "match-qr-mine": {
+      "name": "My QR code (share lists)",
+      "module": "match",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "/match/qr 'Mi QR' tab fetches a signed HMAC token (TTL 24h) and renders the QR SVG; shareable available/wanted lists",
+      "expectedSpecs": 1
+    },
+    "match-qr-scan-confirm": {
+      "name": "Scan QR -> cross lists offline -> confirm",
+      "module": "match",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "Scanner mounts (or camera-error fallback); scan returns counterpart inventory; computeOfflineCross runs client-side; confirm re-runs server-side and creates Trade",
+      "expectedSpecs": 1
+    },
+    "match-detail-trade": {
+      "name": "Match/trade detail view",
+      "module": "match",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "/match/[matchId] renders trade items, WhatsApp opt-in toggle, review mini-block; 'Calificar' CTA after completion",
+      "expectedSpecs": 1
+    },
+    "whatsapp-optin-per-trade": {
+      "name": "Per-trade WhatsApp opt-in -> wa.me link",
+      "module": "whatsapp",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "Per-trade opt-in checkbox; link disabled until both sides opt in, then wa.me deep link with server-side template",
+      "expectedSpecs": 1
+    },
+    "merchant-public-list-map": {
+      "name": "Merchant public list + Leaflet map",
+      "module": "merchant",
+      "roles": ["guest"],
+      "priority": "P1",
+      "description": "/merchants lists active-subscription merchants, city filter narrows, Leaflet map (ssr:false) mounts",
+      "expectedSpecs": 1
+    },
+    "merchant-dashboard-edit": {
+      "name": "Merchant self-service dashboard",
+      "module": "merchant",
+      "roles": ["merchant"],
+      "priority": "P1",
+      "description": "/merchants/me pre-populated form + subscription badge; PATCH /api/merchants/me/ saves edits with confirmation",
+      "expectedSpecs": 1
+    },
+    "merchant-admin-promote-pay": {
+      "name": "Admin promotes merchant + registers payment",
+      "module": "merchant",
+      "roles": ["web-manager", "admin"],
+      "priority": "P2",
+      "description": "Admin assigns role=merchant and registers MerchantSubscriptionPayment; listing visible while current",
+      "expectedSpecs": 1
+    },
+    "sponsor-splash-header": {
+      "name": "Presenting Sponsor splash + header band",
+      "module": "sponsor",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "Active sponsor: splash shows ~1800ms then dismisses, header band 'Presentado por ...', CSS vars apply the palette",
+      "expectedSpecs": 1
+    },
+    "theme-dark-toggle": {
+      "name": "Dark mode toggle",
+      "module": "theme",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "ThemeToggle menu (Light/Dark/System); selecting Dark adds the 'dark' class to documentElement and persists",
+      "expectedSpecs": 1
+    },
+    "ads-banner-serve-click": {
+      "name": "Banner CPM served + click redirect",
+      "module": "ads",
+      "roles": ["collector", "guest"],
+      "priority": "P1",
+      "description": "GET /api/ads/serve/ records an AdImpression and returns a creative; the slot renders an /api/ads/click/<id>/ link (302 + AdClick)",
+      "expectedSpecs": 1
+    },
+    "ads-frequency-cap": {
+      "name": "Banner frequency cap (1 / 5 swipes)",
+      "module": "ads",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "adStore.noteSwipe() requests a feed banner at most once every 5 swipes; no serve call in between",
+      "expectedSpecs": 1
+    },
+    "review-post-trade-create": {
+      "name": "Post-trade review (stars + tags + comment)",
+      "module": "reviews",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "After a completed trade: ★1-5 + tags + comment <=500; POST validates uniqueness (trade, reviewer); 24h editable; signal recomputes Profile aggregates",
+      "expectedSpecs": 1
+    },
+    "review-reply": {
+      "name": "Reviewee public reply",
+      "module": "reviews",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "Reviewee posts a single public reply; second attempt -> 409 Conflict",
+      "expectedSpecs": 1
+    },
+    "review-profile-summary": {
+      "name": "Review tab + rating summary on profile",
+      "module": "reviews",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "Profile Reseñas tab renders RatingSummary (avg, 1-5 bars, count, top tags) + paginated review list with star filter",
+      "expectedSpecs": 1
+    },
+    "review-drawer": {
+      "name": "Review drawer on Match / trade detail",
+      "module": "reviews",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "Clicking the compact ★ preview opens a non-blocking side-sheet (never modal, never pre-opened) with a paginated, star-filterable list",
+      "expectedSpecs": 1
+    },
+    "review-moderation": {
+      "name": "Admin review-report moderation queue",
+      "module": "reviews",
+      "roles": ["web-manager", "admin"],
+      "priority": "P2",
+      "description": "Reports feed the queue; admin hides a review (is_visible=False + reason) -> removed from public/aggregates but kept for audit; reversible",
+      "expectedSpecs": 1
+    },
+    "stats-dashboard-tiles": {
+      "name": "Dashboard stat tiles (streak + ETA)",
+      "module": "stats",
+      "roles": ["collector"],
+      "priority": "P1",
+      "description": "StatCard renders %completo, Pegadas, Repetidas, Última semana, Racha (1-day grace), ETA finalización (remaining / weekly_velocity/7)",
+      "expectedSpecs": 1
+    },
+    "stats-city-ranking": {
+      "name": "City ranking leaderboard",
+      "module": "stats",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "RankingList shows top collectors in the user's city for the active album, with empty / empty-config states",
+      "expectedSpecs": 1
+    },
+    "push-subscribe": {
+      "name": "Web Push opt-in / unsubscribe",
+      "module": "push",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "Dashboard PushOptInButton: requestPermission -> public-key -> pushManager.subscribe -> POST /api/push/subscribe/; unsubscribe mirrors",
+      "expectedSpecs": 1
+    },
+    "push-match-mutual-delivery": {
+      "name": "Push delivered on mutual match",
+      "module": "push",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "post_save Match signal -> push_notify.send_to -> webpush -> SW push event -> showNotification; notificationclick focuses data.url; 404/410 -> delete subscription",
+      "expectedSpecs": 1
+    },
+    "admin-landing-gated": {
+      "name": "Admin landing role-gated",
+      "module": "admin",
+      "roles": ["web-manager", "admin"],
+      "priority": "P1",
+      "description": "/admin renders management tiles for web-manager/admin; collector router.replace('/dashboard'); endpoints also 403",
+      "expectedSpecs": 1
+    },
+    "admin-users-roles": {
+      "name": "Admin users — roles + active toggle",
+      "module": "admin",
+      "roles": ["web-manager", "admin"],
+      "priority": "P1",
+      "description": "/admin/users lists accounts, search by q; inline role change (string -> User.Role enum, mirrors Group) and active toggle; cannot_block_self",
+      "expectedSpecs": 1
+    },
+    "admin-moderation-queue": {
+      "name": "Admin moderation queue",
+      "module": "admin",
+      "roles": ["web-manager", "admin"],
+      "priority": "P2",
+      "description": "/admin/moderation lists pending review reports (or empty state); admin-side surface of review-moderation",
+      "expectedSpecs": 1
+    },
+    "admin-analytics-overview": {
+      "name": "Admin analytics + KPIs + CSV export",
+      "module": "admin",
+      "roles": ["web-manager", "admin"],
+      "priority": "P1",
+      "description": "/admin/analytics composite overview (7 blocks: community KPIs, ad KPIs, trend, top offered/wanted, devices, top cities) + CSV export link",
+      "expectedSpecs": 1
+    },
+    "manual-search-browse": {
+      "name": "Interactive manual: sections + search",
+      "module": "manual",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "/manual renders collapsible section buttons (9 sections x 14 processes) + client-side search over keywords/title/summary; ProcessCard bilingual",
       "expectedSpecs": 1
     }
   }

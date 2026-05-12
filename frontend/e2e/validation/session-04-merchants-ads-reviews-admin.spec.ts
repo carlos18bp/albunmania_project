@@ -14,6 +14,16 @@
 import { expect, test } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {
+  MERCHANT_PUBLIC_LIST_MAP,
+  MERCHANT_DASHBOARD_EDIT,
+  ADS_BANNER_SERVE_CLICK,
+  AUTH_PROTECTED_REDIRECT,
+  ADMIN_LANDING_GATED,
+  ADMIN_USERS_ROLES,
+  ADMIN_MODERATION_QUEUE,
+  REVIEW_MODERATION,
+} from '../helpers/flow-tags';
 
 const SESSIONS_DIR = path.join(__dirname, '..', '..', '..', '.playwright_local', 'sessions');
 
@@ -23,13 +33,13 @@ function loadStorageState(filename: string) {
 
 test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
   test.describe('Merchants — public list + map', () => {
-    test('renders the seed merchant on /merchants', async ({ page }) => {
+    test('renders the seed merchant on /merchants', { tag: [...MERCHANT_PUBLIC_LIST_MAP] }, async ({ page }) => {
       await page.goto('/merchants');
       await expect(page.getByRole('heading', { name: /D.+nde comprar sobres/i })).toBeVisible();
       await expect(page.getByText('Papelería El Sol')).toBeVisible({ timeout: 10_000 });
     });
 
-    test('city filter narrows the merchant list', async ({ page }) => {
+    test('city filter narrows the merchant list', { tag: [...MERCHANT_PUBLIC_LIST_MAP] }, async ({ page }) => {
       await page.goto('/merchants');
       await expect(page.getByText('Papelería El Sol')).toBeVisible({ timeout: 10_000 });
       const filter = page.getByTestId('merchant-city-filter');
@@ -39,31 +49,27 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
         (res) => res.url().includes('/api/merchants/') && res.url().includes('city=Medell'),
         { timeout: 5_000 },
       );
-      await page.waitForTimeout(500);
       // No merchant in Medellín → empty state.
-      await expect(page.getByTestId('merchant-list-empty')).toBeVisible();
+      await expect(page.getByTestId('merchant-list-empty')).toBeVisible({ timeout: 5_000 });
     });
 
-    test('leaflet map mounts (renders the marker layer)', async ({ page }) => {
+    test('leaflet map mounts (renders the marker layer)', { tag: [...MERCHANT_PUBLIC_LIST_MAP] }, async ({ page }) => {
       await page.goto('/merchants');
-      // dynamic import → wait for the wrapper, then for any leaflet svg.
+      // dynamic import → wait for the wrapper, then the leaflet container.
       await expect(page.getByTestId('merchant-map')).toBeVisible({ timeout: 10_000 });
-      // Allow leaflet a moment to inject tiles + marker icons.
-      await page.waitForTimeout(2000);
+      // At minimum, a leaflet-container must be present once the map mounts.
+      await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 10_000 });
+      // Headless may not load real OSM tiles; the tile/marker layer is
+      // best-effort, so we don't assert a positive count.
       const tiles = page.locator('.leaflet-tile-loaded, .leaflet-marker-icon');
-      const count = await tiles.count();
-      // Headless may not load real OSM tiles, but the leaflet container
-      // and pane structure must be present.
-      expect(count >= 0).toBe(true);
-      // At minimum, a leaflet-container must exist.
-      await expect(page.locator('.leaflet-container')).toBeVisible();
+      expect(await tiles.count()).toBeGreaterThanOrEqual(0);
     });
   });
 
   test.describe('Merchant dashboard (auth as merchant)', () => {
     test.use({ storageState: loadStorageState('merchant.json') });
 
-    test('renders the seeded business with active badge', async ({ page }) => {
+    test('renders the seeded business with active badge', { tag: [...MERCHANT_DASHBOARD_EDIT] }, async ({ page }) => {
       await page.goto('/merchants/me');
       await expect(page.getByRole('heading', { name: 'Mi negocio' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByTestId('merchant-dashboard-form')).toBeVisible();
@@ -72,7 +78,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
       await expect(nameInput).toHaveValue('Papelería El Sol');
     });
 
-    test('saving an edit POSTs the patch and shows confirmation', async ({ page }) => {
+    test('saving an edit POSTs the patch and shows confirmation', { tag: [...MERCHANT_DASHBOARD_EDIT] }, async ({ page }) => {
       await page.goto('/merchants/me');
       const stockField = page.getByTestId('merchant-declared-stock');
       await stockField.waitFor({ timeout: 10_000 });
@@ -91,7 +97,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
   });
 
   test.describe('Banner CPM (home slot)', () => {
-    test('landing renders the served creative as a click-through link', async ({ page }) => {
+    test('landing renders the served creative as a click-through link', { tag: [...ADS_BANNER_SERVE_CLICK] }, async ({ page }) => {
       await page.goto('/');
       // Wait for the GET /ads/serve/ response.
       await page.waitForResponse(
@@ -108,7 +114,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
   test.describe('Admin gating (auth as collector → redirect)', () => {
     test.use({ storageState: loadStorageState('user.json') });
 
-    test('non-admin gets redirected away from /admin', async ({ page }) => {
+    test('non-admin gets redirected away from /admin', { tag: [...AUTH_PROTECTED_REDIRECT, ...ADMIN_LANDING_GATED] }, async ({ page }) => {
       await page.goto('/admin');
       // useEffect router.replace('/dashboard') fires once user is loaded.
       await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
@@ -118,7 +124,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
   test.describe('Admin (auth as admin)', () => {
     test.use({ storageState: loadStorageState('admin.json') });
 
-    test('admin landing renders the management tiles', async ({ page }) => {
+    test('admin landing renders the management tiles', { tag: [...ADMIN_LANDING_GATED] }, async ({ page }) => {
       await page.goto('/admin');
       await expect(page.getByRole('heading', { name: 'Panel administrativo' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByTestId('admin-tiles')).toBeVisible();
@@ -126,7 +132,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
       await expect(page.getByText('Moderación de reseñas')).toBeVisible();
     });
 
-    test('users page lists the seed accounts', async ({ page }) => {
+    test('users page lists the seed accounts', { tag: [...ADMIN_USERS_ROLES] }, async ({ page }) => {
       await page.goto('/admin/users');
       await expect(page.getByRole('heading', { name: 'Usuarios y roles' })).toBeVisible({ timeout: 10_000 });
       await page.waitForResponse(
@@ -137,10 +143,10 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
       await expect(page.getByText('user@example.com')).toBeVisible();
     });
 
-    test('moderation page renders empty state when no reports pending', async ({ page }) => {
+    test('moderation page renders the queue (list or empty state)', { tag: [...ADMIN_MODERATION_QUEUE, ...REVIEW_MODERATION] }, async ({ page }) => {
       await page.goto('/admin/moderation');
       await expect(page.getByRole('heading', { name: 'Moderación de reseñas' })).toBeVisible({ timeout: 10_000 });
-      // No seeded ReviewReports → empty state.
+      // Either pending ReviewReports render (seeded) or the empty state.
       const empty = page.getByTestId('moderation-empty');
       const list = page.getByTestId('moderation-list');
       await Promise.race([

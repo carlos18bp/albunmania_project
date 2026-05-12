@@ -6,7 +6,7 @@
 ## Sesión actual
 
 **Fecha:** 2026-05-12
-**Foco:** Memory Bank refresh post-Release-01.
+**Foco:** Auditoría de Release 01 contra el `/new-feature-checklist` — remediación por fases (Fase 1 ✅ docs E2E + flujos; pendientes: tests backend, seeds, tests de componentes). El Memory Bank refresh quedó cerrado en el commit `30479fd`.
 **Plan de referencia:** `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`
 
 ## Estado del producto

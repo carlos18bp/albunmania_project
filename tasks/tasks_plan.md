@@ -7,7 +7,8 @@
 
 - **Bootstrap**: ✅ completado (commits `4170de8` → `fb51414`).
 - **Bloque A — Cleanup post-bootstrap** (rename, purga demo, deps, PWA bootstrap, i18n bootstrap, Memory Bank): ✅ completado (commits `0d2d857` → `8084a4d`).
-- **Bloque B — Implementación Release 01** (14 épicas): ✅ **completo al 100%** — todas las épicas del checklist `[x]`.
+- **Bloque B — Implementación Release 01** (14 épicas): ✅ **las 14 épicas implementadas**. Algunos sub-items dentro de las épicas quedan marcados `[ ]` en `docs/release/01-release-checklist.md` con comentario `<!-- V2 -->` (búsqueda con autocompletado, branding en notificaciones, reportes de exposición Sponsor, reportes para anunciantes, gestor de álbumes con CSV, wiring real de next-intl).
+- **Auditoría new-feature-checklist** (fase docs E2E): ✅ — `USER_FLOW_MAP.md` + `flow-definitions.json` reescritos para las 14 épicas; los 39 tests de validación tagueados con `@flow:`; eliminados los 12 `page.waitForTimeout()`; `auth.spec.ts` + `smoke.spec.ts` actualizados a la realidad post-rewrite de `/sign-in`. Pendiente (fases siguientes del audit): tests backend `email_service`/`push_notify`, seeds de los 8 modelos sin fixture, backfill de tests de componentes.
 - **Bloque C — Validación E2E + deploy prep**: ✅ completado.
 
 ## Bloque B — Estado por épica (todas ✅)

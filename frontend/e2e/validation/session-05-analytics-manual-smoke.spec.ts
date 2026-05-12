@@ -12,6 +12,18 @@
 import { expect, test } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {
+  ADMIN_ANALYTICS_OVERVIEW,
+  MANUAL_SEARCH_BROWSE,
+  PUBLIC_HOME_LOADS,
+  AUTH_HCAPTCHA_GATE,
+  MERCHANT_PUBLIC_LIST_MAP,
+  STATS_DASHBOARD_TILES,
+  CATALOG_GRID_FILTERS,
+  MATCH_SWIPE_FEED,
+  MATCH_QR_MINE,
+  MATCH_DETAIL_TRADE,
+} from '../helpers/flow-tags';
 
 const SESSIONS_DIR = path.join(__dirname, '..', '..', '..', '.playwright_local', 'sessions');
 
@@ -23,7 +35,7 @@ test.describe('Session 5 — Analytics + Manual + Smoke', () => {
   test.describe('/admin/analytics (auth as admin)', () => {
     test.use({ storageState: loadStorageState('admin.json') });
 
-    test('renders the seven KPI blocks', async ({ page }) => {
+    test('renders the seven KPI blocks', { tag: [...ADMIN_ANALYTICS_OVERVIEW] }, async ({ page }) => {
       await page.goto('/admin/analytics');
       await page.waitForResponse(
         (res) => res.url().includes('/api/admin/analytics/overview/'),
@@ -49,7 +61,7 @@ test.describe('Session 5 — Analytics + Manual + Smoke', () => {
       await expect(page.getByText('Top ciudades por impresiones')).toBeVisible();
     });
 
-    test('CSV export link points at /api/admin/analytics/export.csv', async ({ page }) => {
+    test('CSV export link points at /api/admin/analytics/export.csv', { tag: [...ADMIN_ANALYTICS_OVERVIEW] }, async ({ page }) => {
       await page.goto('/admin/analytics');
       const link = page.getByTestId('export-csv');
       await link.waitFor({ timeout: 10_000 });
@@ -59,7 +71,7 @@ test.describe('Session 5 — Analytics + Manual + Smoke', () => {
   });
 
   test.describe('/manual (public)', () => {
-    test('renders sidebar + wiki sections', async ({ page }) => {
+    test('renders sidebar + wiki sections', { tag: [...MANUAL_SEARCH_BROWSE] }, async ({ page }) => {
       await page.goto('/manual');
       await expect(page.getByRole('heading', { name: 'Manual interactivo' })).toBeVisible({ timeout: 10_000 });
       // Sidebar renders each section title as a collapsible <button>.
@@ -71,17 +83,16 @@ test.describe('Session 5 — Analytics + Manual + Smoke', () => {
       }
     });
 
-    test('search input narrows the visible processes', async ({ page }) => {
+    test('search input narrows the visible processes', { tag: [...MANUAL_SEARCH_BROWSE] }, async ({ page }) => {
       await page.goto('/manual');
       // Find the search input by placeholder text (Spanish or English).
       const search = page.getByPlaceholder(/Buscar|Search/i).first();
       await search.waitFor({ timeout: 10_000 });
       await search.fill('match');
-      await page.waitForTimeout(500);
-      // Process titles for "match" should still be visible; unrelated
-      // processes should not. We check that something matched.
-      const processCards = await page.locator('article, section').count();
-      expect(processCards).toBeGreaterThan(0);
+      // The list re-renders client-side on each keystroke; assert that
+      // process content is still visible (the search resolved without
+      // emptying the page).
+      await expect.poll(() => page.locator('article, section').count(), { timeout: 5_000 }).toBeGreaterThan(0);
     });
   });
 
@@ -89,35 +100,35 @@ test.describe('Session 5 — Analytics + Manual + Smoke', () => {
     test.use({ storageState: loadStorageState('user.json') });
 
     const guestSurfaces = [
-      { url: '/', heading: /Albunman.* — la comunidad/ },
-      { url: '/sign-in', anySelector: 'iframe[src*="hcaptcha"]' },
-      { url: '/manual', heading: /Manual interactivo/ },
-      { url: '/merchants', heading: /D.+nde comprar sobres/i },
+      { url: '/', heading: /Albunman.* — la comunidad/, tag: PUBLIC_HOME_LOADS },
+      { url: '/sign-in', anySelector: 'iframe[src*="hcaptcha"]', tag: AUTH_HCAPTCHA_GATE },
+      { url: '/manual', heading: /Manual interactivo/, tag: MANUAL_SEARCH_BROWSE },
+      { url: '/merchants', heading: /D.+nde comprar sobres/i, tag: MERCHANT_PUBLIC_LIST_MAP },
     ];
 
     for (const surface of guestSurfaces) {
-      test(`smoke: ${surface.url} loads without crash`, async ({ page }) => {
+      test(`smoke: ${surface.url} loads without crash`, { tag: [...surface.tag] }, async ({ page }) => {
         await page.goto(surface.url);
         if (surface.heading) {
           await expect(page.getByRole('heading', { name: surface.heading })).toBeVisible({ timeout: 10_000 });
         } else if (surface.anySelector) {
-          await page.waitForTimeout(2500);
-          const count = await page.locator(surface.anySelector).count();
-          expect(count).toBeGreaterThan(0);
+          await expect
+            .poll(() => page.locator(surface.anySelector!).count(), { timeout: 10_000 })
+            .toBeGreaterThan(0);
         }
       });
     }
 
     const authedSurfaces = [
-      { url: '/dashboard', heading: 'Mi álbum' },
-      { url: '/catalog/mundial-26', selector: '[data-testid^="sticker-card-"]' },
-      { url: '/match', heading: 'Match' },
-      { url: '/match/qr', heading: 'Match presencial' },
-      { url: '/match/1', heading: /Match #1/ },
+      { url: '/dashboard', heading: 'Mi álbum', tag: STATS_DASHBOARD_TILES },
+      { url: '/catalog/mundial-26', selector: '[data-testid^="sticker-card-"]', tag: CATALOG_GRID_FILTERS },
+      { url: '/match', heading: 'Match', tag: MATCH_SWIPE_FEED },
+      { url: '/match/qr', heading: 'Match presencial', tag: MATCH_QR_MINE },
+      { url: '/match/1', heading: /Match #1/, tag: MATCH_DETAIL_TRADE },
     ];
 
     for (const surface of authedSurfaces) {
-      test(`smoke: ${surface.url} loads with auth`, async ({ page }) => {
+      test(`smoke: ${surface.url} loads with auth`, { tag: [...surface.tag] }, async ({ page }) => {
         await page.goto(surface.url);
         if (surface.heading) {
           await expect(
