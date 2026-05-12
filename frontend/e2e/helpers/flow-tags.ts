@@ -92,3 +92,6 @@ export const NOTIFICATIONS_CENTER = ['@flow:notifications-center', '@module:noti
 
 // ── Moderation ──
 export const REPORT_USER_OR_TRADE = ['@flow:report-user-or-trade', '@module:moderation', '@priority:P2'];
+
+// ── Presence ──
+export const PRESENCE_LIVE_BADGE = ['@flow:presence-live-badge', '@module:presence', '@priority:P3'];

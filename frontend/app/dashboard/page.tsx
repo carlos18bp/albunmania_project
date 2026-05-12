@@ -5,6 +5,7 @@ import Link from 'next/link';
 import PushOptInButton from '@/components/push/PushOptInButton';
 import RankingList from '@/components/stats/RankingList';
 import StatCard from '@/components/stats/StatCard';
+import ActiveCollectorsBanner from '@/components/presence/ActiveCollectorsBanner';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { useAuthStore } from '@/lib/stores/authStore';
 
@@ -35,6 +36,8 @@ export default function DashboardPage() {
           </button>
         </div>
       </header>
+
+      <ActiveCollectorsBanner city={profile?.city || undefined} />
 
       <section className="space-y-3">
         <h2 className="font-medium">Tu progreso</h2>

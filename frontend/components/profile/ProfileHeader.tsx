@@ -2,6 +2,7 @@
 
 import type { PublicProfile } from '@/lib/stores/profileStore';
 import ReviewSummary from '@/components/reviews/ReviewSummary';
+import LiveBadge from '@/components/presence/LiveBadge';
 
 type Props = { profile: PublicProfile };
 
@@ -35,7 +36,9 @@ export default function ProfileHeader({ profile }: Props) {
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{profile.display_name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {profile.display_name} <LiveBadge online={profile.is_online} withLabel />
+          </h1>
           {profile.city && <p className="text-sm text-muted-foreground">{profile.city}</p>}
           {profile.bio_short && <p className="mt-1 text-sm">{profile.bio_short}</p>}
         </div>

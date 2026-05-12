@@ -112,4 +112,5 @@ def public_profile(request, user_id: int):
         'positive_pct': profile.positive_pct,
         'album_completion_pct': _album_completion_pct(user_id, profile.active_album_id),
         'trades_completed_count': trades_completed,
+        'is_online': profile.is_online,
     }).data)

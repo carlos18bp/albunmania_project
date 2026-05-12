@@ -12,6 +12,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   PROFILE_ME: '/profile/me',
   NOTIFICATIONS: '/notificaciones',
+  COLLECTORS_MAP: '/mapa',
 } as const;
 
 export const API_ENDPOINTS = {

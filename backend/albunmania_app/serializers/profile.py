@@ -21,6 +21,7 @@ class PublicProfileSerializer(serializers.Serializer):
     positive_pct = serializers.DecimalField(max_digits=5, decimal_places=2)
     album_completion_pct = serializers.DecimalField(max_digits=5, decimal_places=2)
     trades_completed_count = serializers.IntegerField()
+    is_online = serializers.BooleanField()
 
 
 class AccountSettingsSerializer(serializers.ModelSerializer):

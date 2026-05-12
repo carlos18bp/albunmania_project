@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Providers from './providers';
 import SponsorSplash from '@/components/sponsor/SponsorSplash';
 import SponsorHeaderBand from '@/components/sponsor/SponsorHeaderBand';
+import PresencePinger from '@/components/presence/PresencePinger';
 
 export const metadata: Metadata = {
   title: 'Albunmanía — Intercambio de cromos del Mundial 26',
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <Providers>
           <SponsorSplash />
+          <PresencePinger />
           <Header />
           <SponsorHeaderBand />
           {children}

@@ -120,8 +120,8 @@ def city_ranking(album_id: int, city: str, *, limit: int = 20) -> list[dict]:
     """Top collectors of `album_id` in `city`, ranked by pasted count desc.
 
     `city` is matched case-insensitively. Returns a list of
-    `{user_id, email, city, pasted_count}`. Excludes users with zero
-    pasted stickers in the album.
+    `{user_id, email, city, pasted_count, is_online}`. Excludes users with
+    zero pasted stickers in the album.
     """
     if not city.strip():
         return []
@@ -148,6 +148,7 @@ def city_ranking(album_id: int, city: str, *, limit: int = 20) -> list[dict]:
             'email': users_by_id[row['user_id']].email,
             'city': users_by_id[row['user_id']].profile.city,
             'pasted_count': row['pasted_count'],
+            'is_online': users_by_id[row['user_id']].profile.is_online,
         }
         for row in qs
         if row['user_id'] in users_by_id

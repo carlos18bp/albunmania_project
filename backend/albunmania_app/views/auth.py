@@ -431,6 +431,8 @@ def validate_token(request):
     Validate JWT token and return user info.
     """
     user = request.user
+    from albunmania_app.services import presence
+    presence.touch(user)
     return Response({
         'valid': True,
         'user': {

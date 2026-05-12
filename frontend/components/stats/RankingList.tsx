@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { useStatsStore } from '@/lib/stores/statsStore';
+import LiveBadge from '@/components/presence/LiveBadge';
 
 type Props = {
   albumId: number | null;
@@ -45,9 +46,10 @@ export default function RankingList({ albumId, city }: Props) {
           key={entry.user_id}
           className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
         >
-          <span>
-            <span className="font-mono text-muted-foreground mr-2">#{idx + 1}</span>
+          <span className="inline-flex items-center gap-1">
+            <span className="font-mono text-muted-foreground mr-1">#{idx + 1}</span>
             {entry.email}
+            <LiveBadge online={entry.is_online} size="sm" />
           </span>
           <span className="font-medium">{entry.pasted_count} pegadas</span>
         </li>

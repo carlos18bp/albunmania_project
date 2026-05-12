@@ -11,6 +11,7 @@ class ProfilePreviewSerializer(serializers.Serializer):
     avatar_url = serializers.URLField(allow_blank=True)
     rating_avg = serializers.DecimalField(max_digits=3, decimal_places=2)
     rating_count = serializers.IntegerField()
+    is_online = serializers.BooleanField(required=False, default=False)
 
 
 class MatchCandidateSerializer(serializers.Serializer):

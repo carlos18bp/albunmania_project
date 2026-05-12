@@ -32,6 +32,7 @@ def _profile_preview_payload(profile: Profile) -> dict:
         'avatar_url': profile.avatar_url,
         'rating_avg': profile.rating_avg,
         'rating_count': profile.rating_count,
+        'is_online': profile.is_online,
     }
 
 

@@ -15,6 +15,7 @@ export type PublicProfile = {
   positive_pct: string | number;
   album_completion_pct: string | number;
   trades_completed_count: number;
+  is_online: boolean;
 };
 
 export type AccountSettings = {

@@ -20,6 +20,7 @@ export type RankingEntry = {
   email: string;
   city: string;
   pasted_count: number;
+  is_online: boolean;
 };
 
 type StatsState = {

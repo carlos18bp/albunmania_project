@@ -3,6 +3,7 @@
 import Image from 'next/image';
 
 import ReviewWidget from '@/components/reviews/ReviewWidget';
+import LiveBadge from '@/components/presence/LiveBadge';
 import type { MatchCandidate } from '@/lib/stores/matchStore';
 
 type Props = {
@@ -26,7 +27,9 @@ export default function SwipeCard({ candidate, onLike, onPass }: Props) {
           <div className="h-12 w-12 rounded-full bg-muted" aria-hidden />
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-medium truncate">{p.email}</p>
+          <p className="font-medium truncate">
+            {p.email} <LiveBadge online={p.is_online} size="sm" />
+          </p>
           <p className="text-xs text-muted-foreground">
             {p.city || 'Cerca de ti'} · {distance_km.toFixed(1)} km
           </p>

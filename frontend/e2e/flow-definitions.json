@@ -1,5 +1,5 @@
 {
-  "version": "2.4.0",
+  "version": "2.5.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -376,6 +376,14 @@
       "roles": ["collector"],
       "priority": "P2",
       "description": "A 'Reportar' button on /profile/[id] (target=user) and /match/[matchId] (target=trade, e.g. no-show) opens a modal (reason select + detail ≤500) → POST /api/reports/ {target_kind, target_id, reason, detail}. Cannot report yourself; a trade can only be reported by a participant. The report lands in the /admin/moderation general-reports queue.",
+      "expectedSpecs": 1
+    },
+    "presence-live-badge": {
+      "name": "Presence — \"en línea ahora\" Live Badge",
+      "module": "presence",
+      "roles": ["collector", "merchant", "web-manager", "admin", "guest"],
+      "priority": "P3",
+      "description": "While signed in, PresencePinger heartbeats POST /api/presence/ping/ every 120s (and on tab focus), which bumps Profile.last_seen (throttled). A collector is 'online' if last_seen is within 5 min; the green LiveBadge then shows on /profile/[id], swipe/match cards and the city ranking. The dashboard shows GET /api/presence/active-count/?city= ('N coleccionistas en línea ahora'). validate-token also bumps last_seen.",
       "expectedSpecs": 1
     }
   }

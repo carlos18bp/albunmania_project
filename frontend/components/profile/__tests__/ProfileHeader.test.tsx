@@ -24,6 +24,7 @@ const profile: PublicProfile = {
   positive_pct: '100.00',
   album_completion_pct: '30.00',
   trades_completed_count: 5,
+  is_online: false,
 };
 
 beforeEach(() => {

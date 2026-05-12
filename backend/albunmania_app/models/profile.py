@@ -57,6 +57,12 @@ class Profile(models.Model):
         help_text=_('Reviews with stars >= 4 / rating_count * 100.'),
     )
 
+    # ── Presence ("en línea ahora" / Live Badge) ──
+    last_seen = models.DateTimeField(
+        _('last seen at'), null=True, blank=True, db_index=True,
+        help_text=_('Updated (throttled) on authenticated activity; drives the Live Badge.'),
+    )
+
     # ── Audit ──
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -72,3 +78,9 @@ class Profile(models.Model):
     def is_onboarded(self) -> bool:
         """A profile is considered onboarded once an active album is set."""
         return self.active_album_id is not None
+
+    @property
+    def is_online(self) -> bool:
+        """True if the collector has been active within the presence window."""
+        from albunmania_app.services import presence
+        return presence.is_online(self.last_seen)

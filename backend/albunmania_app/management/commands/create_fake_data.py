@@ -15,9 +15,9 @@ from django.utils import timezone
 
 from albunmania_app.models import (
     AdCampaign, AdClick, AdCreative, AdImpression, Album, Like, Match,
-    MerchantProfile, MerchantSubscriptionPayment, Notification, PushSubscription,
-    Report, Review, ReviewReport, Sponsor, Sticker, Trade, TradeWhatsAppOptIn,
-    User, UserSticker,
+    MerchantProfile, MerchantSubscriptionPayment, Notification, Profile,
+    PushSubscription, Report, Review, ReviewReport, Sponsor, Sticker, Trade,
+    TradeWhatsAppOptIn, User, UserSticker,
 )
 
 
@@ -75,6 +75,9 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('\n--- Moderation report (pending) ---'))
         self._seed_reports(trade)
+
+        self.stdout.write(self.style.SUCCESS('\n--- Presence (canonical collectors online now) ---'))
+        self._seed_presence()
 
         self.stdout.write(self.style.SUCCESS('\n==== Fake Data Creation Complete ===='))
 
@@ -431,3 +434,11 @@ class Command(BaseCommand):
             detail='El otro coleccionista no apareció en el punto acordado.',
             status=Report.Status.PENDING,
         )
+
+    def _seed_presence(self) -> None:
+        """Mark the two canonical collectors as active "now" so the Live
+        Badge / active-collectors banner render in dev and E2E. Idempotent.
+        """
+        Profile.objects.filter(
+            user__email__in=['user@example.com', 'user2@example.com'],
+        ).update(last_seen=timezone.now())

@@ -11,6 +11,7 @@ export type ProfilePreview = {
   avatar_url: string;
   rating_avg: string | number;
   rating_count: number;
+  is_online?: boolean;
 };
 
 export type MatchCandidate = {
