@@ -37,9 +37,9 @@ Flujos E2E nuevos en `flow-definitions.json` (v2.8.0) / `USER_FLOW_MAP.md` (v2.8
 
 ## Tests
 
-- Backend: **367/367 verde** (`pytest --no-cov`; tras Bloque F: −~39 tests del auth email/password + email_service + user CRUD serializer + PasswordCode model, eliminados). 56 archivos `test_*.py`.
-- Frontend unit: **371/371 verde** (`npm test`, 81 suites; tras Bloque F: −backoffice/forgot-password page tests + 6 authStore tests).
-- E2E: **15 specs, ~72 tests** — `validation/session-01..05` (39) + `auth/` (11) + `public/` (smoke 1 + legal 4) + `profile/` (3) + `notifications/` (4) + `moderation/` (2) + `presence/` (3) + `collectors/` (2) + `catalog/predictive-search` (2) + `geo/` (1). Todos `@flow:` tagueados, sin `waitForTimeout`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1`.
+- Backend: **394/394 verde**, cobertura **~94%** (`pytest --cov`; 58 archivos `test_*.py`). Tras Bloque F: −~39 tests del auth email/password + email_service + user CRUD serializer + PasswordCode model (eliminados en F2); +3 `test_tasks.py` (F3); +13 `test_sticker_filters.py` (F4) + 13 de cobertura (F5).
+- Frontend unit: **375/375 verde** (`npm test`, 81 suites; tras Bloque F: −backoffice/forgot-password page tests + 6 authStore tests; +CatalogFilters/albumStore para los filtros nuevos).
+- E2E: **16 specs, ~74 tests** — `validation/session-01..05` (39) + `auth/` (11) + `public/` (smoke 1 + legal 4) + `profile/` (3) + `notifications/` (4) + `moderation/` (2) + `presence/` (3) + `collectors/` (2) + `catalog/` (predictive-search 2 + availability-proximity 2) + `geo/` (1). Todos `@flow:` tagueados, sin `waitForTimeout`. Correr con `PLAYWRIGHT_BASE_URL=http://localhost:3000 PW_SKIP_WEBSERVER=1 E2E_REUSE_SERVER=1`.
 - ✅ `tsc --noEmit` limpio y `npm run build -- --webpack` verde (F1, Bloque F) — la deuda de los stubs `<img {...(props as never)} />` se barrió por completo (`SwipeCard`, `StickerCard`, `BannerSlot`, `SponsorSplash` + el cast de `http.test.ts`).
 
 ## Últimos commits relevantes (mayo 2026)
@@ -73,8 +73,8 @@ Ninguno técnico. Pendientes operacionales: deploy real al VPS + creds reales (V
 
 ## Próximos pasos sugeridos
 
-1. **(En curso — "Bloque F")** F1 ✅ (build verde) + F2 ✅ (rutas/backend vestigiales podados); falta F3 (push de match → tarea Huey), F4 (filtros disponibilidad/proximidad en el catálogo), F5 (subir cobertura backend). Ver `/home/dev-env/.claude/plans/propuesta-de-plataforma-radiant-cloud.md`.
-2. **Texto legal definitivo** de ProjectApp → reemplazar el scaffold de `frontend/lib/legal/content.ts`.
-3. **Deploy a staging**: ejecutar `deploy/staging/RUNBOOK.md` en el VPS (+ opcionalmente provisionar la `.mmdb` y setear `DJANGO_GEOIP_PATH`).
-4. **Items V2** (no bloqueantes): Fuentes de Tráfico (UTM + `TrafficSource`), Alertas de Rendimiento KPI (Huey nightly), Reportes PDF de Sponsor, wiring real de next-intl (hoy copy hardcoded en español), branding sutil en notificaciones oficiales, gestor admin de álbumes con CSV upload + gestor de creativas con UI, filtro "disponibilidad"/"radio de proximidad" en el catálogo, mover el push de match a Huey.
+1. **Texto legal definitivo** de ProjectApp → reemplazar el scaffold de `frontend/lib/legal/content.ts`.
+2. **Deploy a staging**: ejecutar `deploy/staging/RUNBOOK.md` en el VPS (+ opcionalmente provisionar la `.mmdb` y setear `DJANGO_GEOIP_PATH` para activar la geolocalización por IP).
+3. **`pip audit` / `npm audit`** — pendientes (checklist de seguridad de CLAUDE.md).
+4. **Items V2** (no bloqueantes): Fuentes de Tráfico (UTM + `TrafficSource`), Alertas de Rendimiento KPI (Huey nightly), Reportes PDF de Sponsor/anunciantes, wiring real de next-intl (hoy copy hardcoded en español), branding sutil en notificaciones oficiales, gestor admin de álbumes con CSV upload + gestor de comerciantes/creativas con UI, "en línea ahora" en tiempo real (SSE/WS, hoy es heartbeat + last_seen ≤5 min), mover stats nightly / reportes PDF / partición de `AdImpression` a Huey.
 5. **Tooling**: trackear `.claude/skills/playwright-validation/` si se decide.
