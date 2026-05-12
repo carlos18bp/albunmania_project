@@ -16,8 +16,8 @@ from django.utils import timezone
 from albunmania_app.models import (
     AdCampaign, AdClick, AdCreative, AdImpression, Album, Like, Match,
     MerchantProfile, MerchantSubscriptionPayment, Notification, PushSubscription,
-    Review, ReviewReport, Sponsor, Sticker, Trade, TradeWhatsAppOptIn, User,
-    UserSticker,
+    Report, Review, ReviewReport, Sponsor, Sticker, Trade, TradeWhatsAppOptIn,
+    User, UserSticker,
 )
 
 
@@ -72,6 +72,9 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('\n--- In-app notifications (canonical collectors) ---'))
         self._seed_notifications()
+
+        self.stdout.write(self.style.SUCCESS('\n--- Moderation report (pending) ---'))
+        self._seed_reports(trade)
 
         self.stdout.write(self.style.SUCCESS('\n==== Fake Data Creation Complete ===='))
 
@@ -409,4 +412,22 @@ class Command(BaseCommand):
             user=user2, kind=Notification.Kind.MATCH_MUTUAL,
             title='¡Match en Albunmanía!', body=f'{user.email} también quiere intercambiar contigo.',
             url=f'/match/{match.id}' if match else '/match', actor=user, match=match,
+        )
+
+    def _seed_reports(self, trade: 'Trade | None') -> None:
+        """One pending moderation report (trade no-show) so the
+        /admin/moderation general-reports queue isn't empty. Idempotent.
+        """
+        if trade is None:
+            self.stdout.write(self.style.WARNING('  · skipped: no trade'))
+            return
+        user = User.objects.get(email='user@example.com')
+        Report.objects.filter(target_trade=trade).delete()
+        Report.objects.create(
+            reporter=user,
+            target_kind=Report.TargetKind.TRADE,
+            target_trade=trade,
+            reason=Report.Reason.NO_SHOW,
+            detail='El otro coleccionista no apareció en el punto acordado.',
+            status=Report.Status.PENDING,
         )

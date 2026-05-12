@@ -89,3 +89,6 @@ export const PROFILE_VIEW = ['@flow:profile-view', '@module:profile', '@priority
 
 // ── Notifications ──
 export const NOTIFICATIONS_CENTER = ['@flow:notifications-center', '@module:notifications', '@priority:P2'];
+
+// ── Moderation ──
+export const REPORT_USER_OR_TRADE = ['@flow:report-user-or-trade', '@module:moderation', '@priority:P2'];

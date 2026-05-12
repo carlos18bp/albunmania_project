@@ -8,6 +8,7 @@ import ReviewForm from '@/components/reviews/ReviewForm';
 import ReviewWidget from '@/components/reviews/ReviewWidget';
 import WhatsAppLinkButton from '@/components/whatsapp/WhatsAppLinkButton';
 import WhatsAppOptInToggle from '@/components/whatsapp/WhatsAppOptInToggle';
+import ReportButton from '@/components/moderation/ReportButton';
 import { api } from '@/lib/services/http';
 import { useAuthStore } from '@/lib/stores/authStore';
 import type { MatchSummary } from '@/lib/stores/matchStore';
@@ -81,6 +82,7 @@ export default function MatchDetailPage() {
             onChange={(s) => setBothOpted(s.both_opted_in)}
           />
           <WhatsAppLinkButton tradeId={match.trade.id} enabled={bothOpted} />
+          <ReportButton targetKind="trade" targetId={match.trade.id} targetLabel="este intercambio" />
         </section>
       )}
 

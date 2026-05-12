@@ -9,6 +9,7 @@ import { useProfileStore } from '@/lib/stores/profileStore';
 import { useReviewStore, type Review } from '@/lib/stores/reviewStore';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ReviewCard from '@/components/reviews/ReviewCard';
+import ReportButton from '@/components/moderation/ReportButton';
 
 const STAR_FILTERS = [0, 5, 4, 3, 2, 1] as const;
 const EMPTY_REVIEWS: readonly Review[] = Object.freeze([]);
@@ -88,8 +89,7 @@ export default function ProfilePage() {
       <ProfileHeader profile={profile} />
 
       {!isSelf && mounted && isAuthenticated && (
-        // The "Reportar a este coleccionista" button lands in Bloque D, fase D4.
-        <p className="text-xs text-muted-foreground">¿Algún problema con este coleccionista? Pronto podrás reportarlo desde aquí.</p>
+        <ReportButton targetKind="user" targetId={targetId} targetLabel="a este coleccionista" />
       )}
 
       <section data-testid="profile-reviews" className="space-y-3">

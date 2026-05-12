@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
+  "version": "2.4.0",
   "lastUpdated": "2026-05-12",
   "flows": {
     "public-home-loads": {
@@ -311,7 +311,7 @@
       "module": "admin",
       "roles": ["web-manager", "admin"],
       "priority": "P2",
-      "description": "/admin/moderation lists pending review reports (or empty state); admin-side surface of review-moderation",
+      "description": "/admin/moderation has two queues: review reports (hide/restore via is_visible) and general reports of users/trades (GET /api/admin/reports/?status=&kind= → PATCH .../<id>/ to dismiss or action + a link to /admin/users)",
       "expectedSpecs": 1
     },
     "admin-analytics-overview": {
@@ -368,6 +368,14 @@
       "roles": ["collector", "merchant", "web-manager", "admin"],
       "priority": "P2",
       "description": "/notificaciones lists the user's in-app notifications (GET /api/notifications/?unread=), 'sólo no leídas' filter, 'marcar todas como leídas' (POST /read-all/); clicking a notification marks it read (POST /<id>/read/) and navigates to its url. Header bell shows the unread count (GET /api/notifications/unread-count/). Notifications are created on a mutual match and on a review received/replied.",
+      "expectedSpecs": 1
+    },
+    "report-user-or-trade": {
+      "name": "Report a user or a trade",
+      "module": "moderation",
+      "roles": ["collector"],
+      "priority": "P2",
+      "description": "A 'Reportar' button on /profile/[id] (target=user) and /match/[matchId] (target=trade, e.g. no-show) opens a modal (reason select + detail ≤500) → POST /api/reports/ {target_kind, target_id, reason, detail}. Cannot report yourself; a trade can only be reported by a participant. The report lands in the /admin/moderation general-reports queue.",
       "expectedSpecs": 1
     }
   }

@@ -4,9 +4,9 @@
 
 Use this document to understand each flow's steps, branching conditions, role restrictions, and API contracts before writing or reviewing E2E tests. It is paired with `frontend/e2e/flow-definitions.json` (machine-readable registry) and `frontend/e2e/helpers/flow-tags.ts` (`@flow:` tag constants).
 
-**Version:** 2.3.0
+**Version:** 2.4.0
 **Last Updated:** 2026-05-12
-**Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual).
+**Scope:** Release 01 — 14 épicas (Auth & Onboarding, Catálogo + Inventario, Match swipe + QR, WhatsApp opt-in, Comerciantes, Presenting Sponsor, Banners CPM, Panel Admin, PWA Push, Dark mode, Reseñas, Stats, Analítica, Manual) + "Bloque D" (cierre de los 4 GAPS P2 de la auditoría 2026-05-12: páginas legales/FAQ, perfil `/profile/[id]`, centro de notificaciones in-app, reportes de usuarios/intercambios + cola admin).
 
 > Roles: `guest` (sin login), `collector` (coleccionista, rol por defecto), `merchant` (comerciante), `web-manager` / `admin` (panel administrativo). JWT en cookies (`access_token` / `refresh_token`). Backend bajo `/api/` (sin prefijo `/v1/`).
 
@@ -56,8 +56,9 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `push-match-mutual-delivery` | Push delivered on mutual match | push | P2 | collector | (Service Worker) |
 | `admin-landing-gated` | Admin landing role-gated | admin | P1 | web-manager / admin | `/admin` |
 | `admin-users-roles` | Admin users — roles + active toggle | admin | P1 | web-manager / admin | `/admin/users` |
-| `admin-moderation-queue` | Admin moderation queue | admin | P2 | web-manager / admin | `/admin/moderation` |
+| `admin-moderation-queue` | Admin moderation queue (review reports + user/trade reports) | admin | P2 | web-manager / admin | `/admin/moderation` |
 | `admin-analytics-overview` | Admin analytics + KPIs + CSV export | admin | P1 | web-manager / admin | `/admin/analytics` |
+| `report-user-or-trade` | Report a user or a trade (e.g. no-show) | moderation | P2 | all (authed) | `/profile/[id]`, `/match/[matchId]` |
 | `manual-search-browse` | Interactive manual: sections + search | manual | P2 | guest | `/manual` |
 | `legal-terms` | Terms & Conditions page | legal | P2 | guest | `/terminos` |
 | `legal-privacy` | Privacy Policy page | legal | P2 | guest | `/privacidad` |
@@ -1053,16 +1054,20 @@ Use this document to understand each flow's steps, branching conditions, role re
 |-------|-------|
 | **Priority** | P2 · **Roles** | web-manager / admin |
 | **Frontend route** | `/admin/moderation` |
-| **API endpoints** | `GET /api/admin/reviews/reports/` (+ hide/restore) |
+| **API endpoints** | `GET /api/admin/reviews/reports/` (+ hide/restore); `GET /api/admin/reports/?status=&kind=`, `PATCH /api/admin/reports/<id>/` |
 
 **Preconditions:** Authenticated as web-manager / admin.
 
-**Steps:** See `review-moderation` — this is the admin-side surface (`moderation-list` / `moderation-empty`).
+**Steps:** `/admin/moderation` has two queues:
+1. **Review reports** — see `review-moderation` (`moderation-list` / `moderation-empty`, `hide-*` / `dismiss-*`, status filter chips).
+2. **User & trade reports** (`reports-section`) — `GET /api/admin/reports/` lists `Report` rows (`report-<id>`) with reporter / target / reason / detail; status filter chips (`reports-filter-*`); per-row `report-action-<id>` (mark **actioned** + notes) / `report-dismiss-<id>` (dismiss + notes) → `PATCH /api/admin/reports/<id>/`; for user reports, a link to `/admin/users` to apply a sanction (`is_active` toggle). See `report-user-or-trade` for the reporter side.
 
 **Branching conditions:**
 | Condition | Behavior |
 |-----------|----------|
-| No pending reports | `moderation-empty` |
+| No pending review reports | `moderation-empty` |
+| No reports in the selected status | `reports-empty` |
+| Not admin/web-manager | `GET /api/admin/reports/` → `403` |
 
 ---
 
@@ -1085,6 +1090,34 @@ Use this document to understand each flow's steps, branching conditions, role re
 |-----------|----------|
 | Empty data (no impressions/trades seeded) | Blocks render with zeros |
 | "Fuentes de Tráfico" / "Alertas de Rendimiento" | Not in Release 01 — V2 (UTM tracking + Huey nightly) |
+
+---
+
+## Moderation Module
+
+### report-user-or-trade
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P2 · **Roles** | all (authed) |
+| **Frontend route** | `/profile/[id]` (report a user) · `/match/[matchId]` (report a trade, e.g. no-show) |
+| **API endpoints** | `POST /api/reports/` `{ target_kind: "user"|"trade", target_id, reason, detail? }` → `201` |
+
+**Preconditions:** Authenticated. For a trade report, the reporter must be a participant of the trade. A user cannot report themselves.
+
+**Steps:**
+1. On `/profile/[id]` (when `id` is not the logged-in user) a `report-button` ("Reportar a este coleccionista") opens the `report-modal`; on `/match/[matchId]` the `report-button` ("Reportar este intercambio") does the same with `target_kind=trade`.
+2. The modal has a reason `<select>` (`report-reason` — `no_show` / `harassment` / `fake_profile` / `inappropriate` / `other`; defaults to `no_show` for trades, `fake_profile` for users) and an optional detail `<textarea>` (`report-detail`, ≤500 chars).
+3. `report-submit` → `POST /api/reports/`; on success shows `report-submitted`; on failure shows `report-error`. Backdrop click closes the modal.
+4. The new `Report` lands `pending` in the admin queue — see `admin-moderation-queue` (second queue).
+
+**Branching conditions:**
+| Condition | Behavior |
+|-----------|----------|
+| Target is the reporter (user) | `403` (validated server-side) |
+| Trade report, reporter not a participant | `403` |
+| Unknown target / kind mismatch | `400` |
+| Not authenticated | `401` |
 
 ---
 

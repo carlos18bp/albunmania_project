@@ -21,4 +21,5 @@ urlpatterns = [
     path('', include('albunmania_app.urls.analytics')),
     path('', include('albunmania_app.urls.push')),
     path('', include('albunmania_app.urls.notification')),
+    path('', include('albunmania_app.urls.report')),
 ]
