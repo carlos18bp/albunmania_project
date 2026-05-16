@@ -1,55 +1,84 @@
-asgiref==3.11.1
+# ==============================================================================
+# Albunmanía — Backend dependencies
+# Pinned to versions validated in dev/staging (pip freeze 2026-05-15).
+# Install: pip install -r requirements.txt
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Django core
+# ------------------------------------------------------------------------------
 Django==6.0.4
-django-cleanup==9.0.0
-django-cors-headers==4.9.0
-django-dbbackup>=4.0.0
-django-silk>=5.0.0
+asgiref==3.11.1
 djangorestframework==3.17.1
 djangorestframework-simplejwt==5.5.1
-python-dotenv==1.2.2
-easy-thumbnails==2.10.1
-Faker==40.15.0
-huey>=2.5.0
+django-allauth[socialaccount]==65.16.1
+django-cors-headers==4.9.0
+django-cleanup==9.0.0
+sqlparse==0.5.5
+
+# ------------------------------------------------------------------------------
+# Database
+# ------------------------------------------------------------------------------
+mysqlclient==2.2.8
+
+# ------------------------------------------------------------------------------
+# Production server
+# ------------------------------------------------------------------------------
+gunicorn==23.0.0
+
+# ------------------------------------------------------------------------------
+# Task queue (Huey + Redis)
+# ------------------------------------------------------------------------------
+huey==3.0.0
+redis==7.4.0
+
+# ------------------------------------------------------------------------------
+# Media / images
+# ------------------------------------------------------------------------------
 pillow==12.2.0
+easy-thumbnails==2.10.1
+
+# ------------------------------------------------------------------------------
+# Albunmanía — feature packages
+# ------------------------------------------------------------------------------
+
+# Google OAuth account-age verification (People API via requests)
+requests==2.33.1
+python-dateutil==2.9.0.post0
+
+# Web Push (W3C standard, no Firebase)
+pywebpush==2.3.0
+py-vapid==1.9.4
+
+# QR codes (Match QR presencial + listas compartibles)
+qrcode[pil]==8.2
+
+# Proximity match engine (haversine in-process)
+haversine==2.9.0
+
+# IP-based geolocation (MaxMind GeoLite2-City)
+geoip2==4.8.1
+
+# ------------------------------------------------------------------------------
+# Admin / observability
+# ------------------------------------------------------------------------------
+django-silk==5.5.0
+django-dbbackup==5.3.0
+
+# ------------------------------------------------------------------------------
+# Config
+# ------------------------------------------------------------------------------
+python-dotenv==1.2.2
+typing_extensions==4.15.0
+
+# ------------------------------------------------------------------------------
+# Dev / testing (safe to install in all envs; no prod impact)
+# ------------------------------------------------------------------------------
 pytest==9.0.3
 pytest-cov==7.1.0
 pytest-django==4.12.0
-freezegun==1.5.5
 coverage==7.13.5
 factory-boy==3.3.3
-redis>=4.0.0
+Faker==40.15.0
+freezegun==1.5.5
 ruff==0.15.12
-requests==2.33.1
-python-dateutil==2.9.0.post0
-six==1.17.0
-sqlparse==0.5.5
-typing_extensions==4.15.0
-
-# Production server
-gunicorn>=23.0,<24.0
-mysqlclient>=2.2,<3.0
-
-# =============================================================================
-# Albunmanía Release 01 dependencies
-# =============================================================================
-# Google OAuth + reglas de cuenta verificada (>30 días) — Epic 1.
-# django-allauth provides ready-made Google provider with token verification;
-# the 30-day age rule will be enforced server-side in a custom adapter.
-django-allauth[socialaccount]>=65.0,<66.0
-
-# Web Push (W3C estándar, sin Firebase) — Epic 9.
-pywebpush>=2.0,<3.0
-py-vapid>=1.9,<2.0
-
-# QR firmados con HMAC para Match QR Presencial + listas compartibles — Epic 3.
-qrcode[pil]>=8.0,<9.0
-
-# Proximity matching (haversine en aplicación) — Epic 3.
-haversine>=2.9,<3.0
-
-# IP-based geolocation — Epic 1 (onboarding) + Epic 5 (mapa comerciantes).
-geoip2>=4.8,<5.0
-
-# hCaptcha verification (sustituye reCAPTCHA del template) — Epic 1.
-# Verificación server-side via requests (ya disponible). Sin paquete extra
-# necesario por ahora; si la lógica crece, considerar django-hcaptcha.
