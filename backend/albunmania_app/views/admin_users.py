@@ -8,6 +8,8 @@ These complement the per-domain admin endpoints already wired by Epics
 """
 from __future__ import annotations
 
+import logging
+
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -16,6 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from albunmania_app.models import User
+from albunmania_app.utils.auth_utils import generate_auth_tokens
+
+logger = logging.getLogger(__name__)
 
 
 def _is_admin_or_wm(user) -> bool:
@@ -117,3 +122,35 @@ def admin_user_set_active(request, user_id: int):
     target.is_active = is_active
     target.save(update_fields=['is_active'])
     return Response(_user_payload(target))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_user_login_as(request, user_id: int):
+    """Issue a fresh JWT pair for `user_id` so an admin/web_manager can
+    impersonate that account from the panel UI.
+
+    Safety:
+      - request.user must be admin/web_manager (or `is_staff`).
+      - Cannot impersonate self (no-op + protects audit clarity).
+      - Cannot impersonate inactive users (matches /sign-in semantics).
+      - Cannot impersonate superusers (no privilege escalation).
+    Logging only — no DB audit trail in V1.
+    """
+    if not _is_admin_or_wm(request.user):
+        return Response({'error': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    target = get_object_or_404(User, pk=user_id)
+    if target.id == request.user.id:
+        return Response({'error': 'cannot_login_as_self'}, status=status.HTTP_400_BAD_REQUEST)
+    if not target.is_active:
+        return Response({'error': 'target_inactive'}, status=status.HTTP_400_BAD_REQUEST)
+    if target.is_superuser:
+        return Response({'error': 'target_is_superuser'}, status=status.HTTP_400_BAD_REQUEST)
+
+    logger.info(
+        'impersonation: %s (id=%s, role=%s) logged in as %s (id=%s, role=%s)',
+        request.user.email, request.user.id, request.user.role,
+        target.email, target.id, target.role,
+    )
+    return Response(generate_auth_tokens(target))

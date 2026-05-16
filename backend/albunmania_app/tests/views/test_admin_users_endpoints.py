@@ -85,3 +85,81 @@ def test_cannot_block_self(web_manager):
     client.force_authenticate(user=web_manager)
     res = client.post(f'/api/admin/users/{web_manager.id}/active/', {'is_active': False}, format='json')
     assert res.status_code == 400
+
+
+# ---------------------------------------------------------------------
+# login_as endpoint (impersonation)
+# ---------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_login_as_returns_jwt_pair_for_target(web_manager):
+    target = User.objects.create_user(email='target@x.com', password='pw')
+    target.assign_role(User.Role.COLLECTOR)
+    client = APIClient()
+    client.force_authenticate(user=web_manager)
+
+    res = client.post(f'/api/admin/users/{target.id}/login_as/')
+
+    assert res.status_code == 200
+    body = res.json()
+    assert 'access' in body and 'refresh' in body
+    assert body['user']['id'] == target.id
+    assert body['user']['email'] == 'target@x.com'
+
+
+@pytest.mark.django_db
+def test_login_as_forbidden_for_collector():
+    plain = User.objects.create_user(email='plain@x.com', password='pw')
+    target = User.objects.create_user(email='target@x.com', password='pw')
+    client = APIClient()
+    client.force_authenticate(user=plain)
+
+    res = client.post(f'/api/admin/users/{target.id}/login_as/')
+
+    assert res.status_code == 403
+
+
+@pytest.mark.django_db
+def test_login_as_self_returns_400(web_manager):
+    client = APIClient()
+    client.force_authenticate(user=web_manager)
+
+    res = client.post(f'/api/admin/users/{web_manager.id}/login_as/')
+
+    assert res.status_code == 400
+    assert res.json()['error'] == 'cannot_login_as_self'
+
+
+@pytest.mark.django_db
+def test_login_as_inactive_target_returns_400(web_manager):
+    target = User.objects.create_user(email='target@x.com', password='pw', is_active=False)
+    client = APIClient()
+    client.force_authenticate(user=web_manager)
+
+    res = client.post(f'/api/admin/users/{target.id}/login_as/')
+
+    assert res.status_code == 400
+    assert res.json()['error'] == 'target_inactive'
+
+
+@pytest.mark.django_db
+def test_login_as_superuser_target_returns_400(web_manager):
+    target = User.objects.create_superuser(email='root@x.com', password='pw')
+    client = APIClient()
+    client.force_authenticate(user=web_manager)
+
+    res = client.post(f'/api/admin/users/{target.id}/login_as/')
+
+    assert res.status_code == 400
+    assert res.json()['error'] == 'target_is_superuser'
+
+
+@pytest.mark.django_db
+def test_login_as_unknown_user_returns_404(web_manager):
+    client = APIClient()
+    client.force_authenticate(user=web_manager)
+
+    res = client.post('/api/admin/users/999999/login_as/')
+
+    assert res.status_code == 404

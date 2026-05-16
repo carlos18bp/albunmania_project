@@ -42,6 +42,7 @@ type AdminState = {
   ) => Promise<void>;
   assignRole: (userId: number, role: string) => Promise<AdminUser>;
   setActive: (userId: number, isActive: boolean) => Promise<AdminUser>;
+  loginAsUser: (userId: number) => Promise<{ access: string; refresh: string; user: AdminUser }>;
   fetchReviewReports: (status?: string) => Promise<void>;
   toggleReviewVisibility: (
     reviewId: number, isVisible: boolean, notes?: string,
@@ -89,6 +90,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     set((state) => ({
       users: state.users.map((u) => (u.id === userId ? res.data : u)),
     }));
+    return res.data;
+  },
+
+  loginAsUser: async (userId) => {
+    const res = await api.post(`admin/users/${userId}/login_as/`);
     return res.data;
   },
 

@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { useAdminStore } from '@/lib/stores/adminStore';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 const ROLES = ['collector', 'merchant', 'web_manager', 'admin'];
 
@@ -14,9 +16,29 @@ export default function AdminUsersPage() {
   const fetchUsers = useAdminStore((s) => s.fetchUsers);
   const assignRole = useAdminStore((s) => s.assignRole);
   const setActive = useAdminStore((s) => s.setActive);
+  const loginAsUser = useAdminStore((s) => s.loginAsUser);
+  const applySession = useAuthStore((s) => s.applySession);
+  const currentUser = useAuthStore((s) => s.user);
+  const router = useRouter();
 
   const [q, setQ] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const handleLoginAs = async (userId: number, email: string) => {
+    setLoginError(null);
+    if (typeof window !== 'undefined' && !window.confirm(`¿Iniciar sesión como ${email}?`)) {
+      return;
+    }
+    try {
+      const tokens = await loginAsUser(userId);
+      await applySession(tokens);
+      router.push('/profile/me');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setLoginError(axiosErr.response?.data?.error ?? 'login_as_failed');
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -81,19 +103,37 @@ export default function AdminUsersPage() {
                 </span>
               </td>
               <td className="py-2">
-                <button
-                  type="button"
-                  onClick={() => void setActive(u.id, !u.is_active)}
-                  data-testid={`admin-user-toggle-${u.id}`}
-                  className="text-xs underline"
-                >
-                  {u.is_active ? 'Bloquear' : 'Desbloquear'}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void setActive(u.id, !u.is_active)}
+                    data-testid={`admin-user-toggle-${u.id}`}
+                    className="text-xs underline"
+                  >
+                    {u.is_active ? 'Bloquear' : 'Desbloquear'}
+                  </button>
+                  {currentUser?.id !== u.id && u.is_active && !u.is_staff && (
+                    <button
+                      type="button"
+                      onClick={() => void handleLoginAs(u.id, u.email)}
+                      data-testid={`admin-user-login-as-${u.id}`}
+                      className="text-xs underline text-primary"
+                    >
+                      Entrar como…
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {loginError && (
+        <p data-testid="admin-users-login-error" className="text-sm text-destructive">
+          No se pudo iniciar sesión: {loginError}
+        </p>
+      )}
     </main>
   );
 }

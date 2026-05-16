@@ -164,4 +164,18 @@ describe('authStore', () => {
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });
+
+  it('applySession swaps the session to the impersonated user and refreshes profile', async () => {
+    mockApi.get.mockResolvedValueOnce({ data: { profile: { city: 'Bogotá' } } });
+    const target = { id: 42, email: 'target@x.com', first_name: 'T', last_name: 'U', role: 'collector', is_staff: false };
+
+    await act(async () => {
+      await useAuthStore.getState().applySession({ access: 'a-tok', refresh: 'r-tok', user: target });
+    });
+
+    expect(mockSetTokens).toHaveBeenCalledWith({ access: 'a-tok', refresh: 'r-tok' });
+    expect(useAuthStore.getState().user).toEqual(target);
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(mockApi.get).toHaveBeenCalledWith('profile/me/');
+  });
 });

@@ -45,6 +45,17 @@ describe('adminStore', () => {
     expect(useAdminStore.getState().users[0].is_active).toBe(false);
   });
 
+  it('loginAsUser POSTs to the impersonation endpoint and returns the JWT bundle', async () => {
+    mockApi.post.mockResolvedValue({
+      data: { access: 'a-tok', refresh: 'r-tok', user: { id: 7, email: 'target@x.com' } },
+    });
+
+    const tokens = await useAdminStore.getState().loginAsUser(7);
+
+    expect(mockApi.post).toHaveBeenCalledWith('admin/users/7/login_as/');
+    expect(tokens).toEqual({ access: 'a-tok', refresh: 'r-tok', user: { id: 7, email: 'target@x.com' } });
+  });
+
   it('toggleReviewVisibility refreshes the queue', async () => {
     mockApi.patch.mockResolvedValue({ data: {} });
     mockApi.get.mockResolvedValue({ data: { results: [] } });

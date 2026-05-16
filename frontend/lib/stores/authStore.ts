@@ -55,6 +55,7 @@ type AuthState = {
   syncFromCookies: () => void;
   restoreUser: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  applySession: (tokens: { access: string; refresh: string; user: User }) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -131,6 +132,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     clearTokens();
     localStorage.removeItem('user_data');
     set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
+  },
+
+  applySession: async ({ access, refresh, user }) => {
+    setTokens({ access, refresh });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user_data', JSON.stringify(user));
+    }
+    set({
+      accessToken: access,
+      refreshToken: refresh,
+      user,
+      isAuthenticated: true,
+      profile: null,
+    });
+    await get().refreshProfile().catch(() => undefined);
   },
 
   restoreUser: async () => {
