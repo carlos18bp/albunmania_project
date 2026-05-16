@@ -86,8 +86,8 @@ test.describe('Auth — protected routes', () => {
     await expect(page).toHaveURL(/.*sign-in/);
   });
 
-  test('redirects unauthenticated user from /admin to /sign-in', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
-    await page.goto('/admin');
+  test('redirects unauthenticated user from /admin-panel to /sign-in', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+    await page.goto('/admin-panel');
     await page.waitForURL(/.*sign-in/, { timeout: 10_000 });
     await expect(page).toHaveURL(/.*sign-in/);
   });

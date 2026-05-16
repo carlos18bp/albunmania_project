@@ -130,7 +130,7 @@ export default function AdminModerationPage() {
                     <button type="button" data-testid={`report-action-${r.id}`} onClick={() => void resolveReport(r.id, 'actioned', 'Atendido').catch(() => undefined)} className="rounded bg-red-600 text-white px-3 py-1 text-xs">Marcar como atendido</button>
                     <button type="button" data-testid={`report-dismiss-${r.id}`} onClick={() => void resolveReport(r.id, 'dismissed', 'Desestimado').catch(() => undefined)} className="rounded border border-border px-3 py-1 text-xs">Descartar</button>
                     {r.target_kind === 'user' && (
-                      <Link href="/admin/users" className="text-xs underline text-muted-foreground">Gestionar usuario →</Link>
+                      <Link href="/admin-panel/users" className="text-xs underline text-muted-foreground">Gestionar usuario →</Link>
                     )}
                   </div>
                 )}

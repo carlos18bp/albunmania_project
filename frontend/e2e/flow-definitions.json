@@ -1,6 +1,6 @@
 {
-  "version": "2.9.0",
-  "lastUpdated": "2026-05-12",
+  "version": "2.10.0",
+  "lastUpdated": "2026-05-16",
   "flows": {
     "public-home-loads": {
       "name": "Landing page loads",
@@ -303,7 +303,7 @@
       "module": "admin",
       "roles": ["web-manager", "admin"],
       "priority": "P1",
-      "description": "/admin/users lists accounts, search by q; inline role change (string -> User.Role enum, mirrors Group) and active toggle; cannot_block_self",
+      "description": "/admin-panel/users lists accounts, search by q; inline role change (string -> User.Role enum, mirrors Group) and active toggle; cannot_block_self",
       "expectedSpecs": 1
     },
     "admin-moderation-queue": {
@@ -311,7 +311,7 @@
       "module": "admin",
       "roles": ["web-manager", "admin"],
       "priority": "P2",
-      "description": "/admin/moderation has two queues: review reports (hide/restore via is_visible) and general reports of users/trades (GET /api/admin/reports/?status=&kind= → PATCH .../<id>/ to dismiss or action + a link to /admin/users)",
+      "description": "/admin-panel/moderation has two queues: review reports (hide/restore via is_visible) and general reports of users/trades (GET /api/admin/reports/?status=&kind= → PATCH .../<id>/ to dismiss or action + a link to /admin-panel/users)",
       "expectedSpecs": 1
     },
     "admin-analytics-overview": {
@@ -319,7 +319,7 @@
       "module": "admin",
       "roles": ["web-manager", "admin"],
       "priority": "P1",
-      "description": "/admin/analytics composite overview (7 blocks: community KPIs, ad KPIs, trend, top offered/wanted, devices, top cities) + CSV export link",
+      "description": "/admin-panel/analytics composite overview (7 blocks: community KPIs, ad KPIs, trend, top offered/wanted, devices, top cities) + CSV export link",
       "expectedSpecs": 1
     },
     "manual-search-browse": {
@@ -375,7 +375,7 @@
       "module": "moderation",
       "roles": ["collector"],
       "priority": "P2",
-      "description": "A 'Reportar' button on /profile/[id] (target=user) and /match/[matchId] (target=trade, e.g. no-show) opens a modal (reason select + detail ≤500) → POST /api/reports/ {target_kind, target_id, reason, detail}. Cannot report yourself; a trade can only be reported by a participant. The report lands in the /admin/moderation general-reports queue.",
+      "description": "A 'Reportar' button on /profile/[id] (target=user) and /match/[matchId] (target=trade, e.g. no-show) opens a modal (reason select + detail ≤500) → POST /api/reports/ {target_kind, target_id, reason, detail}. Cannot report yourself; a trade can only be reported by a participant. The report lands in the /admin-panel/moderation general-reports queue.",
       "expectedSpecs": 1
     },
     "presence-live-badge": {

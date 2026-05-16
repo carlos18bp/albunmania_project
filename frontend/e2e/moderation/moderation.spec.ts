@@ -38,7 +38,7 @@ test('a participant reports a trade from /match/1', { tag: [...REPORT_USER_OR_TR
 test('the report shows up in the admin moderation queue and can be resolved', { tag: [...ADMIN_MODERATION_QUEUE] }, async ({ browser }) => {
   const adminCtx = await browser.newContext({ storageState: loadStorageState('admin.json') });
   const adminPage = await adminCtx.newPage();
-  await adminPage.goto('/admin/moderation');
+  await adminPage.goto('/admin-panel/moderation');
   await expect(adminPage.getByTestId('reports-section')).toBeVisible({ timeout: 15_000 });
   // At least one pending report (the trade report created above, or a seeded one).
   await adminPage.waitForResponse((res) => res.url().includes('/api/admin/reports/'), { timeout: 5_000 });

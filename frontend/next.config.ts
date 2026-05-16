@@ -94,6 +94,15 @@ const nextConfig: NextConfig = {
         source: '/media/:path*',
         destination: `${backendOrigin}/media/:path*`,
       },
+      // Proxy Django admin so http://localhost:4200/admin/ opens the
+      // backend admin (instead of the Next.js panel, which lives at
+      // /admin-panel). Trailing slash on the destination matches the
+      // pattern used for /api/ — Django expects canonical /admin/<x>/
+      // URLs and would otherwise loop-redirect. The /static/admin/
+      // assets are served by Django's own admin static handler in DEBUG.
+      { source: '/admin', destination: `${backendOrigin}/admin/` },
+      { source: '/admin/:path*', destination: `${backendOrigin}/admin/:path*/` },
+      { source: '/static/admin/:path*', destination: `${backendOrigin}/static/admin/:path*` },
     ];
   },
 };

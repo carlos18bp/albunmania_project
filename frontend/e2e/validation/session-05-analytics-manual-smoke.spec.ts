@@ -2,7 +2,7 @@
  * Session 5 — Analytics + Manual + cross-feature smoke regression.
  *
  * Scope (Epics 13 + 14 + smoke):
- *  - /admin/analytics composite KPI dashboard
+ *  - /admin-panel/analytics composite KPI dashboard
  *  - CSV export link points at /api/admin/analytics/export.csv
  *  - /manual interactive wiki: 9 sections + client-side search
  *  - Smoke regression: every Sprint 1-4 entry point still loads OK
@@ -32,11 +32,11 @@ function loadStorageState(filename: string) {
 }
 
 test.describe('Session 5 — Analytics + Manual + Smoke', () => {
-  test.describe('/admin/analytics (auth as admin)', () => {
+  test.describe('/admin-panel/analytics (auth as admin)', () => {
     test.use({ storageState: loadStorageState('admin.json') });
 
     test('renders the seven KPI blocks', { tag: [...ADMIN_ANALYTICS_OVERVIEW] }, async ({ page }) => {
-      await page.goto('/admin/analytics');
+      await page.goto('/admin-panel/analytics');
       await page.waitForResponse(
         (res) => res.url().includes('/api/admin/analytics/overview/'),
         { timeout: 5_000 },
@@ -62,7 +62,7 @@ test.describe('Session 5 — Analytics + Manual + Smoke', () => {
     });
 
     test('CSV export link points at /api/admin/analytics/export.csv', { tag: [...ADMIN_ANALYTICS_OVERVIEW] }, async ({ page }) => {
-      await page.goto('/admin/analytics');
+      await page.goto('/admin-panel/analytics');
       const link = page.getByTestId('export-csv');
       await link.waitFor({ timeout: 10_000 });
       const href = await link.getAttribute('href');

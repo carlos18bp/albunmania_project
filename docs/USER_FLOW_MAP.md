@@ -22,7 +22,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `auth-hcaptcha-gate` | hCaptcha gate on auth pages | auth | P1 | guest | `/sign-in`, `/sign-up` |
 | `auth-onboarding-wizard` | 3-step onboarding wizard | auth | P1 | collector | `/onboarding` |
 | `auth-guest-browse` | Browse as guest (no login) | auth | P2 | guest | `/`, `/catalog/[slug]`, `/merchants`, `/manual` |
-| `auth-protected-redirect` | Protected route redirect | auth | P1 | all | `/dashboard`, `/admin`, `/merchants/me` |
+| `auth-protected-redirect` | Protected route redirect | auth | P1 | all | `/dashboard`, `/admin-panel-panel`, `/merchants/me` |
 | `auth-session-persistence` | Session persistence (cookies) | auth | P2 | collector | any protected route |
 | `auth-sign-out` | Sign out | auth | P2 | all (authed) | Header / `/dashboard` |
 | `catalog-grid-filters` | Browse catalog + filters/search | catalog | P1 | collector | `/catalog/[slug]` |
@@ -40,7 +40,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `whatsapp-optin-per-trade` | Per-trade WhatsApp opt-in → wa.me link | whatsapp | P1 | collector | `/match/[matchId]` |
 | `merchant-public-list-map` | Merchant public list + Leaflet map | merchant | P1 | guest | `/merchants` |
 | `merchant-dashboard-edit` | Merchant self-service dashboard | merchant | P1 | merchant | `/merchants/me` |
-| `merchant-admin-promote-pay` | Admin promotes merchant + registers payment | merchant | P2 | web-manager / admin | `/admin` |
+| `merchant-admin-promote-pay` | Admin promotes merchant + registers payment | merchant | P2 | web-manager / admin | `/admin-panel-panel` |
 | `sponsor-splash-header` | Presenting Sponsor splash + header band | sponsor | P2 | guest | all pages |
 | `theme-dark-toggle` | Dark mode toggle | theme | P2 | guest | all pages |
 | `ads-banner-serve-click` | Banner CPM served + click redirect | ads | P1 | collector | `/`, feed |
@@ -51,15 +51,15 @@ Use this document to understand each flow's steps, branching conditions, role re
 | `notifications-center` | In-app notification center | notifications | P2 | all (authed) | `/notificaciones` + Header bell |
 | `review-profile-summary` | Review tab + rating summary on profile | reviews | P2 | guest | `/profile/[id]` |
 | `review-drawer` | Review drawer on Match / trade detail | reviews | P2 | collector | `/match`, `/match/[matchId]` |
-| `review-moderation` | Admin review-report moderation queue | reviews | P2 | web-manager / admin | `/admin/moderation` |
+| `review-moderation` | Admin review-report moderation queue | reviews | P2 | web-manager / admin | `/admin-panel-panel/moderation` |
 | `stats-dashboard-tiles` | Dashboard stat tiles (streak + ETA) | stats | P1 | collector | `/dashboard` |
 | `stats-city-ranking` | City ranking leaderboard | stats | P2 | collector | `/dashboard` |
 | `push-subscribe` | Web Push opt-in / unsubscribe | push | P2 | collector | `/dashboard` |
 | `push-match-mutual-delivery` | Push delivered on mutual match | push | P2 | collector | (Service Worker) |
-| `admin-landing-gated` | Admin landing role-gated | admin | P1 | web-manager / admin | `/admin` |
-| `admin-users-roles` | Admin users — roles + active toggle | admin | P1 | web-manager / admin | `/admin/users` |
-| `admin-moderation-queue` | Admin moderation queue (review reports + user/trade reports) | admin | P2 | web-manager / admin | `/admin/moderation` |
-| `admin-analytics-overview` | Admin analytics + KPIs + CSV export | admin | P1 | web-manager / admin | `/admin/analytics` |
+| `admin-landing-gated` | Admin landing role-gated | admin | P1 | web-manager / admin | `/admin-panel-panel` |
+| `admin-users-roles` | Admin users — roles + active toggle | admin | P1 | web-manager / admin | `/admin-panel-panel/users` |
+| `admin-moderation-queue` | Admin moderation queue (review reports + user/trade reports) | admin | P2 | web-manager / admin | `/admin-panel-panel/moderation` |
+| `admin-analytics-overview` | Admin analytics + KPIs + CSV export | admin | P1 | web-manager / admin | `/admin-panel-panel/analytics` |
 | `report-user-or-trade` | Report a user or a trade (e.g. no-show) | moderation | P2 | all (authed) | `/profile/[id]`, `/match/[matchId]` |
 | `presence-live-badge` | "En línea ahora" Live Badge + active-collectors count | presence | P3 | all (authed) | profiles / match / ranking / dashboard |
 | `collectors-map` | Mapa de Coleccionistas | collectors | P3 | all (authed) | `/mapa` |
@@ -231,7 +231,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P1 · **Roles** | all |
-| **Frontend route** | `/dashboard`, `/admin`, `/admin/*`, `/merchants/me` |
+| **Frontend route** | `/dashboard`, `/admin-panel-panel`, `/admin-panel-panel/*`, `/merchants/me` |
 | **API endpoints** | `GET /api/validate_token/` |
 
 **Preconditions:** None.
@@ -239,13 +239,13 @@ Use this document to understand each flow's steps, branching conditions, role re
 **Steps:**
 1. Unauthenticated user navigates to a protected route.
 2. The auth guard reads the (absent) `access_token` cookie → `router.replace('/sign-in')`.
-3. For role-gated routes (`/admin/*`, `/merchants/me`), an authenticated user lacking the role is redirected: `/admin` collector → `/dashboard`; `/merchants/me` non-merchant → `/dashboard`. Server endpoints also return 403 (defense in depth).
+3. For role-gated routes (`/admin-panel-panel/*`, `/merchants/me`), an authenticated user lacking the role is redirected: `/admin-panel-panel` collector → `/dashboard`; `/merchants/me` non-merchant → `/dashboard`. Server endpoints also return 403 (defense in depth).
 
 **Branching conditions:**
 | Condition | Behavior |
 |-----------|----------|
 | No tokens | Redirect to `/sign-in` |
-| Authenticated collector → `/admin` | `router.replace('/dashboard')` after the user object loads |
+| Authenticated collector → `/admin-panel-panel` | `router.replace('/dashboard')` after the user object loads |
 | Authenticated non-merchant → `/merchants/me` | Redirect to `/dashboard`; `GET /api/merchants/me/` → 403 |
 
 ---
@@ -678,7 +678,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P2 · **Roles** | web-manager / admin |
-| **Frontend route** | `/admin` (merchant management section) |
+| **Frontend route** | `/admin-panel-panel` (merchant management section) |
 | **API endpoints** | merchant-admin endpoints (`/api/merchants/admin/...` — promote role, register `MerchantSubscriptionPayment`) |
 
 **Preconditions:** Authenticated as web-manager / admin.
@@ -916,14 +916,14 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P2 · **Roles** | web-manager / admin |
-| **Frontend route** | `/admin/moderation` |
+| **Frontend route** | `/admin-panel-panel/moderation` |
 | **API endpoints** | `POST /api/reviews/<id>/report/`, `GET /api/admin/reviews/reports/`, hide/restore endpoint (`PATCH ...` with `is_visible` + reason) |
 
 **Preconditions:** Authenticated as web-manager / admin.
 
 **Steps:**
 1. Any user can report a review → `POST /api/reviews/<id>/report/` creates a `ReviewReport`.
-2. The admin opens `/admin/moderation`; `moderation-list` shows pending reports (or `moderation-empty` when none).
+2. The admin opens `/admin-panel-panel/moderation`; `moderation-list` shows pending reports (or `moderation-empty` when none).
 3. The admin hides the review (`is_visible=False` + reason) → it disappears from public surfaces and aggregates immediately, but the row + report stay in the DB for audit. The action is reversible.
 
 **Branching conditions:**
@@ -1064,13 +1064,13 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P1 · **Roles** | web-manager / admin |
-| **Frontend route** | `/admin` |
+| **Frontend route** | `/admin-panel-panel` |
 | **API endpoints** | `GET /api/validate_token/` (role used for gating) |
 
 **Preconditions:** None.
 
 **Steps:**
-1. User navigates to `/admin`.
+1. User navigates to `/admin-panel-panel`.
 2. If `role ∈ {web_manager, admin}` → heading **Panel administrativo** with `admin-tiles` (Usuarios y roles, Moderación de reseñas, Analítica + KPIs, gestores de Sponsor / Comerciantes / Banners, Manual…).
 3. Otherwise → `router.replace('/dashboard')` once the user object loads; server endpoints also return 403.
 
@@ -1087,7 +1087,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P1 · **Roles** | web-manager / admin |
-| **Frontend route** | `/admin/users` |
+| **Frontend route** | `/admin-panel-panel/users` |
 | **API endpoints** | `GET /api/admin/users/?q=`, `PATCH /api/admin/users/<id>/role/`, `PATCH /api/admin/users/<id>/active/` |
 
 **Preconditions:** Authenticated as web-manager / admin.
@@ -1110,14 +1110,14 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P2 · **Roles** | web-manager / admin |
-| **Frontend route** | `/admin/moderation` |
+| **Frontend route** | `/admin-panel-panel/moderation` |
 | **API endpoints** | `GET /api/admin/reviews/reports/` (+ hide/restore); `GET /api/admin/reports/?status=&kind=`, `PATCH /api/admin/reports/<id>/` |
 
 **Preconditions:** Authenticated as web-manager / admin.
 
-**Steps:** `/admin/moderation` has two queues:
+**Steps:** `/admin-panel-panel/moderation` has two queues:
 1. **Review reports** — see `review-moderation` (`moderation-list` / `moderation-empty`, `hide-*` / `dismiss-*`, status filter chips).
-2. **User & trade reports** (`reports-section`) — `GET /api/admin/reports/` lists `Report` rows (`report-<id>`) with reporter / target / reason / detail; status filter chips (`reports-filter-*`); per-row `report-action-<id>` (mark **actioned** + notes) / `report-dismiss-<id>` (dismiss + notes) → `PATCH /api/admin/reports/<id>/`; for user reports, a link to `/admin/users` to apply a sanction (`is_active` toggle). See `report-user-or-trade` for the reporter side.
+2. **User & trade reports** (`reports-section`) — `GET /api/admin/reports/` lists `Report` rows (`report-<id>`) with reporter / target / reason / detail; status filter chips (`reports-filter-*`); per-row `report-action-<id>` (mark **actioned** + notes) / `report-dismiss-<id>` (dismiss + notes) → `PATCH /api/admin/reports/<id>/`; for user reports, a link to `/admin-panel-panel/users` to apply a sanction (`is_active` toggle). See `report-user-or-trade` for the reporter side.
 
 **Branching conditions:**
 | Condition | Behavior |
@@ -1133,7 +1133,7 @@ Use this document to understand each flow's steps, branching conditions, role re
 | Field | Value |
 |-------|-------|
 | **Priority** | P1 · **Roles** | web-manager / admin |
-| **Frontend route** | `/admin/analytics` |
+| **Frontend route** | `/admin-panel-panel/analytics` |
 | **API endpoints** | `GET /api/admin/analytics/overview/`, `GET /api/admin/analytics/export.csv` |
 
 **Preconditions:** Authenticated as web-manager / admin.

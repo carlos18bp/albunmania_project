@@ -25,9 +25,12 @@ export default function AdminLandingPage() {
   if (!ADMIN_ROLES.has(user.role) && !user.is_staff) return null;
 
   const tiles = [
-    { href: '/admin/users', title: 'Usuarios y roles', body: 'Asignar Coleccionista, Comerciante, Web Manager o Admin. Bloquear cuentas.' },
-    { href: '/admin/moderation', title: 'Moderación de reseñas', body: 'Cola de reportes pendientes. Toggle de visibilidad sin borrar.' },
+    { href: '/admin-panel/users', title: 'Usuarios y roles', body: 'Asignar Coleccionista, Comerciante, Web Manager o Admin. Bloquear cuentas.' },
+    { href: '/admin-panel/moderation', title: 'Moderación de reseñas', body: 'Cola de reportes pendientes. Toggle de visibilidad sin borrar.' },
+    { href: '/admin-panel/analytics', title: 'Analítica', body: 'KPIs comunitarios + publicitarios. Exportable a CSV.' },
   ];
+
+  const showDjangoAdminLink = user.is_staff || user.role === 'admin';
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-10 space-y-6">
@@ -51,6 +54,18 @@ export default function AdminLandingPage() {
           </li>
         ))}
       </ul>
+
+      {showDjangoAdminLink && (
+        <a
+          data-testid="open-django-admin"
+          href="/admin/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+        >
+          Abrir Django admin (superuser) →
+        </a>
+      )}
     </main>
   );
 }

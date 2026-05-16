@@ -5,9 +5,9 @@
  *  - /merchants public list + leaflet map (with seed Papelería El Sol)
  *  - /merchants/me as merchant — dashboard form pre-populated
  *  - BannerSlot on landing renders served creative + click endpoint
- *  - /admin landing role-gated (admin sees tiles; collector redirects)
- *  - /admin/users search + role + active-toggle inline editing
- *  - /admin/moderation queue accessible (may be empty)
+ *  - /admin-panel landing role-gated (admin sees tiles; collector redirects)
+ *  - /admin-panel/users search + role + active-toggle inline editing
+ *  - /admin-panel/moderation queue accessible (may be empty)
  *
  * Pre-req: backend on :8000 with create_fake_data seed; frontend on :3000.
  */
@@ -114,8 +114,8 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
   test.describe('Admin gating (auth as collector → redirect)', () => {
     test.use({ storageState: loadStorageState('user.json') });
 
-    test('non-admin gets redirected away from /admin', { tag: [...AUTH_PROTECTED_REDIRECT, ...ADMIN_LANDING_GATED] }, async ({ page }) => {
-      await page.goto('/admin');
+    test('non-admin gets redirected away from /admin-panel', { tag: [...AUTH_PROTECTED_REDIRECT, ...ADMIN_LANDING_GATED] }, async ({ page }) => {
+      await page.goto('/admin-panel');
       // useEffect router.replace('/dashboard') fires once user is loaded.
       await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
     });
@@ -125,7 +125,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
     test.use({ storageState: loadStorageState('admin.json') });
 
     test('admin landing renders the management tiles', { tag: [...ADMIN_LANDING_GATED] }, async ({ page }) => {
-      await page.goto('/admin');
+      await page.goto('/admin-panel');
       await expect(page.getByRole('heading', { name: 'Panel administrativo' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByTestId('admin-tiles')).toBeVisible();
       await expect(page.getByText('Usuarios y roles')).toBeVisible();
@@ -133,7 +133,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
     });
 
     test('users page lists the seed accounts', { tag: [...ADMIN_USERS_ROLES] }, async ({ page }) => {
-      await page.goto('/admin/users');
+      await page.goto('/admin-panel/users');
       await expect(page.getByRole('heading', { name: 'Usuarios y roles' })).toBeVisible({ timeout: 10_000 });
       await page.waitForResponse(
         (res) => res.url().includes('/api/admin/users/'),
@@ -144,7 +144,7 @@ test.describe('Session 4 — Merchants + Ads + Reviews + Admin', () => {
     });
 
     test('moderation page renders the queue (list or empty state)', { tag: [...ADMIN_MODERATION_QUEUE, ...REVIEW_MODERATION] }, async ({ page }) => {
-      await page.goto('/admin/moderation');
+      await page.goto('/admin-panel/moderation');
       await expect(page.getByRole('heading', { name: 'Moderación de reseñas' })).toBeVisible({ timeout: 10_000 });
       // Either pending ReviewReports render (seeded) or the empty state.
       const empty = page.getByTestId('moderation-empty');
