@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import BannerSlot from '@/components/ads/BannerSlot';
+import HeroCTA from '@/components/home/HeroCTA';
 
 export default function HomePage() {
   return (
@@ -21,12 +22,7 @@ export default function HomePage() {
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  className="bg-primary text-primary-foreground rounded-full px-5 py-3 hover:bg-primary/90 shadow-sm"
-                  href="/sign-up"
-                >
-                  Registrarme con Google
-                </Link>
+                <HeroCTA />
                 <Link
                   className="border border-border rounded-full px-5 py-3 hover:bg-accent hover:text-accent-foreground shadow-sm"
                   href="/manual"

@@ -87,7 +87,7 @@ export default function SignInPage() {
         picture: decoded?.picture,
         captcha_token: captchaToken ?? undefined,
       });
-      router.replace('/dashboard');
+      router.replace('/profile/me');
     } catch (err: unknown) {
       const errObj = err as { code?: string; detail?: string };
       if (errObj?.code === 'account_too_young') {

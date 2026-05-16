@@ -34,7 +34,7 @@ export default function OnboardingWizard() {
     if (isLastStep) {
       try {
         await submit();
-        router.push('/dashboard');
+        router.push('/profile/me');
       } catch {
         // submit() set errorMessage already.
       }

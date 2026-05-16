@@ -76,7 +76,7 @@ describe('OnboardingWizard', () => {
     expect(screen.getByTestId('onboarding-error')).toHaveTextContent(/WhatsApp/i);
   });
 
-  it('navigates to /dashboard after a successful submit', async () => {
+  it('navigates to /profile/me after a successful submit', async () => {
     const user = userEvent.setup();
     useOnboardingStore.getState().setActiveAlbum(1);
     useOnboardingStore.getState().goToStep('permissions');
@@ -85,6 +85,6 @@ describe('OnboardingWizard', () => {
 
     await user.click(screen.getByTestId('onboarding-next'));
 
-    expect(pushMock).toHaveBeenCalledWith('/dashboard');
+    expect(pushMock).toHaveBeenCalledWith('/profile/me');
   });
 });

@@ -91,7 +91,7 @@ describe('SignInPage', () => {
     expect(screen.getByTestId('missing-google-client-id')).toBeInTheDocument();
   });
 
-  it('logs in with Google and redirects to /dashboard', async () => {
+  it('logs in with Google and redirects to /profile/me', async () => {
     const googleLogin = jest.fn().mockResolvedValue(undefined);
     setAuthStoreState({ googleLogin });
     const replace = jest.fn();
@@ -116,7 +116,7 @@ describe('SignInPage', () => {
         captcha_token: undefined,
       });
     });
-    expect(replace).toHaveBeenCalledWith('/dashboard');
+    expect(replace).toHaveBeenCalledWith('/profile/me');
   });
 
   it('shows the Google-failed error when no credential comes back', async () => {
@@ -187,6 +187,6 @@ describe('SignInPage', () => {
         captcha_token: undefined,
       });
     });
-    expect(replace).toHaveBeenCalledWith('/dashboard');
+    expect(replace).toHaveBeenCalledWith('/profile/me');
   });
 });
