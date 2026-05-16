@@ -305,7 +305,7 @@ class Command(BaseCommand):
             },
         )
         if created or not user.has_usable_password():
-            user.set_password('password123')
+            user.set_password('password')
             user.save()
         user.assign_role(role)
         return user

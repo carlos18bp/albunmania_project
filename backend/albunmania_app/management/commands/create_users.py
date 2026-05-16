@@ -49,7 +49,7 @@ class Command(BaseCommand):
                     'is_active': True,
                 },
             )
-            user.set_password('password123')
+            user.set_password('password')
             user.save()
             user.assign_role(role)  # also wires Group membership
             users_created.append(user)
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                     'is_active': True,
                 },
             )
-            user.set_password('password123')
+            user.set_password('password')
             user.save()
             users_created.append(user)
             self.stdout.write(self.style.SUCCESS(f'  · {email} (collector)'))
