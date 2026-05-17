@@ -122,3 +122,10 @@ pids
 # Quality gate reports
 test-results/test-quality-report.json
 .playwright_local/
+
+
+# ============================================================================
+# Sync artifacts (sync-{claude,codex,windsurf,settings,shared}-base.sh backups)
+# ============================================================================
+*.bak.*
+*.bak.*/
